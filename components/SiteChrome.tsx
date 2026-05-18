@@ -34,7 +34,7 @@ const visualLabelsZh = {
 
 export function SiteChrome({ children, eyebrow, title, intro, compact = false, hideContact = false, hideVisual = false, langHref, locale = "en", visual = "home" }: Props) {
   const labels = locale === "zh" ? visualLabelsZh[visual] : visualLabels[visual];
-  const heroClassName = `${compact ? "subpage-hero compact" : "subpage-hero"}${hideVisual ? " no-visual" : ""}`;
+  const heroClassName = `${compact ? "subpage-hero compact" : "subpage-hero"} visual-${visual}-hero${hideVisual ? " no-visual" : ""}`;
   const navItems = locale === "zh" ? siteNavZh : siteNav;
   const contactContent = locale === "zh" ? contactZh : contact;
   const languageHref = langHref ?? (locale === "zh" ? "/" : "/zh");

@@ -45,8 +45,14 @@ export function NeuralFinLanding({ locale }: Props) {
             <div className="hero-copy">
               <div className="eyebrow">{t.eyebrow}</div>
               <h1>
-                <span className="title-line">{t.headlineTop}</span>
-                <span className="title-line accent">{t.headlineAccent}</span>
+                {locale === "zh" ? (
+                  <span className="title-line accent">为滑屏一代而生</span>
+                ) : (
+                  <>
+                    <span className="title-line">{t.headlineTop}</span>
+                    <span className="title-line accent">{t.headlineAccent}</span>
+                  </>
+                )}
               </h1>
               <p className="hero-sub">
                 {locale === "en" ? (
