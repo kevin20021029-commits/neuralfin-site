@@ -2456,8 +2456,9 @@ footer {
   .motion-track figure { width: 210px; }
   .ai-screen-stage { min-height: 390px; }
   .ai-loop-stack article {
-    grid-template-columns: minmax(112px, 0.34fr) minmax(0, 1fr);
+    grid-template-columns: minmax(96px, 0.3fr) minmax(0, 1fr);
     gap: 18px;
+    min-height: 132px;
     padding-left: 88px;
   }
   #milestones .timeline { grid-template-columns: 1fr; gap: 30px; padding: 0 0 0 28px; }
@@ -2609,11 +2610,14 @@ footer {
   .surface-product-row { grid-template-columns: 1fr; }
   .ai-loop-stack { height: auto; min-height: auto; grid-template-rows: none; }
   .ai-loop-stack article {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    min-height: 118px;
-    padding: 22px 24px 22px 58px;
+    grid-template-columns: minmax(96px, 0.36fr) minmax(0, 1fr);
+    gap: 14px;
+    min-height: 132px;
+    padding: 22px 20px 22px 58px;
+    align-items: center;
   }
+  .ai-loop-stack strong { font-size: 20px; overflow-wrap: anywhere; }
+  .ai-loop-stack p { font-size: 14px; line-height: 1.46; overflow-wrap: anywhere; }
   .ai-screen-stage { min-height: 342px; }
   .ai-gallery-track figure:nth-child(even) { transform: translateY(12px); }
   .feed-rail { min-height: 480px; padding: 18px; }
