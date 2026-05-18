@@ -475,7 +475,8 @@ h1 {
   backdrop-filter: blur(18px);
   transform: translateX(-50%);
   display: flex;
-  justify-content: space-around;
+  align-items: center;
+  justify-content: space-between;
   gap: 18px;
   padding: 12px 18px;
   color: var(--mint);
@@ -483,6 +484,11 @@ h1 {
   font-weight: 900;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+}
+
+.product-pulse-row span {
+  flex: 1 1 0;
+  text-align: center;
 }
 
 .strip-track {
@@ -693,20 +699,21 @@ h2 {
 }
 
 .partner-logo-plaque {
-  width: fit-content;
+  width: 172px;
   margin: 18px 0 30px;
   border: 1px solid rgba(215,183,104,0.32);
   background:
     linear-gradient(145deg, rgba(255,251,239,0.94), rgba(225,211,174,0.86)),
     radial-gradient(circle at 24% 18%, rgba(215,183,104,0.32), transparent 38%);
-  padding: 16px 18px;
+  padding: 18px;
   box-shadow: 0 24px 80px rgba(0,0,0,0.28), inset 0 0 34px rgba(215,183,104,0.12);
 }
 
 .partner-logo-plaque img {
   display: block;
-  width: 200px;
-  max-width: 100%;
+  width: 100%;
+  max-width: 136px;
+  margin: 0 auto;
   filter: saturate(0.95) contrast(1.04);
 }
 

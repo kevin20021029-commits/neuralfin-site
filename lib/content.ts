@@ -45,7 +45,7 @@ export const content = {
       label: "Technology and trading",
       title: "An AI-powered financial ecosystem with trading infrastructure underneath.",
       partnerLabel: "Trading partner",
-      partnerTitle: "Trusted trading partner: DL Securities (Hong Kong) Limited",
+      partnerTitle: "Trusted trading partner: DL Securities",
       partnerCopy:
         "NeuralFin has integrated the trading platform of DL Securities (Hong Kong) Limited, a licensed corporation regulated by the Securities and Futures Commission (SFC) of Hong Kong.",
       tags: ["SFC regulated", "Hong Kong licensed corporation", "Integrated trading platform"],
@@ -120,7 +120,7 @@ export const content = {
       label: "技术与交易",
       title: "底层连接交易基础设施的 AI 金融生态系统。",
       partnerLabel: "交易合作伙伴",
-      partnerTitle: "值得信赖的交易合作伙伴：德林证券（香港）有限公司",
+      partnerTitle: "值得信赖的交易合作伙伴：德林证券",
       partnerCopy:
         "NeuralFin 已接入德林证券（香港）有限公司的交易平台。德林证券为受香港证券及期货事务监察委员会监管的持牌法团。",
       tags: ["受 SFC 监管", "香港持牌法团", "已接入交易平台"],
@@ -155,5 +155,5 @@ export const partners = [
   ["xiaobing-logo-cropped.png", "XiaoBing", "Ecosystem partner"],
   ["qraft-logo-cropped.png", "Qraft Technologies", "Ecosystem partner"],
   ["DLH.png", "DL Holdings", "Ecosystem partner"],
-  ["DLS.png", "DL Securities (Hong Kong) Limited", "Trading partner"],
+  ["DLS.png", "DL Securities (Hong Kong)", "Trading partner"],
 ];

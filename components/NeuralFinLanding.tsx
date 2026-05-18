@@ -156,7 +156,7 @@ export function NeuralFinLanding({ locale }: Props) {
               <article className="partner-feature">
                 <div className="section-label">{t.infrastructure.partnerLabel}</div>
                 <div className="partner-logo-plaque">
-                  <img src="/assets/dl-securities-logo-cropped.png" alt="DL Securities" />
+                  <img src="/assets/DLS.png" alt="DL Securities" />
                 </div>
                 <h2>{t.infrastructure.partnerTitle}</h2>
                 <p>{t.infrastructure.partnerCopy}</p>
