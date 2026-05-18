@@ -68,7 +68,7 @@ export default function TradingZhPage() {
               <h2>面向自选股、报价、图表与交易决策的市场界面。</h2>
             </div>
           </div>
-          <div className="moving-gallery dark-moving-gallery" aria-label="NeuralFin 市场截图">
+          <div className="moving-gallery dark-moving-gallery compact-product-gallery" aria-label="NeuralFin 市场截图">
             <div className="gallery-track reverse-track">
               {[...marketScreens, ...marketScreens].map((screen, index) => (
                 <figure key={`${screen}-${index}`}>

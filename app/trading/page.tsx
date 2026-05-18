@@ -59,7 +59,7 @@ export default function TradingPage() {
               <h2>Market screens built for watchlists, quotes, charts, and trading-ready context.</h2>
             </div>
           </div>
-          <div className="moving-gallery dark-moving-gallery" aria-label="Animated NeuralFin market screenshots">
+          <div className="moving-gallery dark-moving-gallery compact-product-gallery" aria-label="Animated NeuralFin market screenshots">
             <div className="gallery-track reverse-track">
               {[...marketScreens, ...marketScreens].map((screen, index) => (
                 <figure key={`${screen}-${index}`}>

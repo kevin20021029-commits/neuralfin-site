@@ -68,7 +68,7 @@ export const content = {
     },
     contact: {
       label: "Contact us",
-      title: "Build the next financial interface with NeuralFin.",
+      title: "Build the next generation financial interface with us.",
       copy: "For platform, partnership, investor relations, and company enquiries.",
       location: "Headquartered in Hong Kong",
       address: "20/F DL Tower, 92 Wellington Street, Central, Hong Kong",
@@ -142,7 +142,7 @@ export const content = {
     },
     contact: {
       label: "联系我们",
-      title: "与 NeuralFin 一起构建下一代金融界面。",
+      title: "与我们一起构建下一代金融界面。",
       copy: "平台、合作、投资者关系与公司咨询。",
       location: "总部位于香港",
       address: "香港中环威灵顿街 92 号 DL Tower 20 楼",

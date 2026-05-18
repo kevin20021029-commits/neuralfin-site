@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function ContactPage() {
   return (
-    <SiteChrome langHref="/zh/contact" hideContact eyebrow="Contact" title="Build the next financial interface with NeuralFin." intro="For platform, partnership, investor relations, and company enquiries related to NeuralFin's AI-native social trading platform.">
+    <SiteChrome langHref="/zh/contact" hideContact eyebrow="Contact" title="Build the next generation financial interface with us." intro="For platform, partnership, investor relations, and company enquiries related to NeuralFin's AI-native social trading platform.">
       <section className="section paper">
         <div className="section-inner contact-page-grid">
           <article>

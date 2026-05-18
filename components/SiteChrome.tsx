@@ -103,7 +103,7 @@ export function SiteChrome({ children, eyebrow, title, intro, compact = false, h
           <div className="contact-inner">
             <div>
               <div className="section-label">{locale === "zh" ? "联系我们" : "Contact us"}</div>
-              <h2>{locale === "zh" ? "与 NeuralFin 一起构建下一代金融界面。" : "Build the next financial interface with NeuralFin."}</h2>
+              <h2>{locale === "zh" ? "与我们一起构建下一代金融界面。" : "Build the next generation financial interface with us."}</h2>
               <p>{locale === "zh" ? "适用于平台、合作、投资者关系及公司相关咨询。" : "For platform, partnership, investor relations, and company enquiries."}</p>
             </div>
             <div className="contact-actions">

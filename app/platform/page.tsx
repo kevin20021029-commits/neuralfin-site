@@ -7,7 +7,7 @@ export const metadata = {
 };
 
 const pillars = [
-  ["Content-first investing", "Follow professionals and institutions. Absorb high-signal insights efficiently."],
+  ["Content-first investing", "Follow peers, professionals and institutions. Absorb high-signal insights efficiently."],
   ["Community-powered learning", "Investing becomes collaborative, not isolated."],
   ["Seamless transition to action", "When users are ready, they can move from learning to execution without friction."],
 ] as const;

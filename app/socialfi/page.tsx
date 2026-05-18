@@ -79,7 +79,7 @@ export default function SocialFiPage() {
               <div className="section-label">AI loop</div>
               <h2>The AI loop underpins the entire SocialFi thesis.</h2>
             </div>
-            <p className="section-copy">Our use of AI is the intelligence layer that transforms content, community, and market data into daily financial insight.</p>
+            <p className="section-copy">Our AI acts as the intelligence layer that transforms content, community, and market data into daily financial insight.</p>
           </div>
           <div className="ai-command-center">
             <div className="ai-loop-stack">
