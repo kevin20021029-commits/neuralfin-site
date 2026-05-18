@@ -1184,8 +1184,9 @@ h2 {
   z-index: 7;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 18px;
+  text-align: center;
 }
 
 .signal-readout strong,
@@ -1201,6 +1202,7 @@ h2 {
   margin-top: 0;
   font-size: 13px;
   line-height: 1.25;
+  width: 100%;
 }
 
 .split-feature,
