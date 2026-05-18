@@ -17,7 +17,7 @@ export default function SocialFiPage() {
   return (
     <SiteChrome
       eyebrow="SocialFi"
-      title="Where social discovery becomes market participation."
+      title={<>Where social<br className="mobile-break" /> discovery<br className="mobile-break" /> becomes market participation.</>}
       intro={<>NeuralFin is designed as a financial network for the <span className="accent-inline prose">scroll generation</span>: content, community, AI learning, and trading-ready action operating inside one compounding loop.</>}
       langHref="/zh/socialfi"
       visual="community"

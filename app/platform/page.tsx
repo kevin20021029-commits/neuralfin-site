@@ -23,7 +23,7 @@ export default function PlatformPage() {
   return (
     <SiteChrome
       eyebrow="Platform"
-      title={<>The consumer finance interface for the <span className="accent-inline">scroll generation.</span></>}
+      title={<>The consumer<br className="mobile-break" /> finance<br className="mobile-break" /> interface for the<br className="mobile-break" /> <span className="accent-inline">scroll generation.</span></>}
       intro="NeuralFin turns micro scrolling into micro learning, and micro spending into micro investing, bridging financial content, education, social context, and real investing."
       langHref="/zh/platform"
       hideContact
