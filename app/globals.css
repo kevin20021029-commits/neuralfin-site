@@ -2059,6 +2059,7 @@ h2 {
 
 .network-flywheel {
   position: relative;
+  isolation: isolate;
   min-height: 560px;
   border: 0;
   background:
@@ -2073,6 +2074,7 @@ h2 {
 .network-flywheel::before {
   content: "";
   position: absolute;
+  z-index: 0;
   left: 50%;
   top: 50%;
   width: min(78%, 440px);
@@ -2086,6 +2088,7 @@ h2 {
 .network-flywheel::after {
   content: "";
   position: absolute;
+  z-index: 0;
   left: 10%;
   right: 10%;
   top: 50%;
@@ -2097,13 +2100,14 @@ h2 {
 
 .network-flow-core {
   position: absolute;
+  z-index: 2;
   left: 50%;
   top: 50%;
   display: grid;
   gap: 8px;
   width: min(72%, 330px);
   border: 1px solid rgba(9,130,91,0.16);
-  background: rgba(255,255,255,0.72);
+  background: rgba(255,255,255,0.94);
   padding: 24px;
   transform: translate(-50%, -50%);
   box-shadow: 0 30px 90px rgba(7,16,13,0.12);
@@ -2126,6 +2130,7 @@ h2 {
 
 .flywheel-node {
   position: absolute;
+  z-index: 2;
   width: 190px;
   border: 1px solid rgba(7,16,13,0.1);
   background: rgba(255,255,255,0.82);
