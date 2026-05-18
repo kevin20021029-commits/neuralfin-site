@@ -918,6 +918,17 @@ h2 {
   min-height: 50svh;
 }
 
+.subpage-hero.compact.no-visual {
+  min-height: auto;
+  padding: 108px 24px 36px;
+  align-items: start;
+}
+
+.subpage-hero.compact.no-visual::before {
+  height: 34vh;
+  opacity: 0.82;
+}
+
 .subpage-hero.no-visual .subpage-hero-inner {
   grid-template-columns: 1fr;
 }
@@ -925,6 +936,18 @@ h2 {
 .subpage-hero.no-visual .subpage-copy h1,
 .subpage-hero.no-visual .subpage-copy p {
   max-width: 900px;
+}
+
+.subpage-hero.compact.no-visual .subpage-copy h1 {
+  max-width: 1100px;
+  font-size: clamp(34px, 4.2vw, 58px);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.subpage-hero.compact.no-visual .subpage-copy p {
+  margin-top: 18px;
+  font-size: clamp(16px, 1.2vw, 19px);
 }
 
 .subpage-copy h1 {
@@ -2516,8 +2539,18 @@ footer {
   .product-pulse-row { display: none; }
   .subpage-hero { min-height: auto; padding: 30px 18px 42px; }
   .subpage-hero.compact { min-height: auto; }
+  .subpage-hero.compact.no-visual { padding: 30px 18px 34px; }
   .subpage-copy h1 { font-size: clamp(36px, 10.6vw, 52px); letter-spacing: -0.035em; }
   .subpage-copy p { margin-top: 14px; font-size: 15px; line-height: 1.5; }
+  .subpage-hero.compact.no-visual .subpage-copy h1 {
+    font-size: clamp(30px, 8.8vw, 40px);
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+  }
+  .subpage-hero.compact.no-visual .subpage-copy p {
+    margin-top: 14px;
+    font-size: 15px;
+  }
   .signal-board { min-height: 330px; }
   .product-signal-board { min-height: 292px; }
   .signal-grid { inset: 24px; grid-template-columns: 1fr; gap: 8px; }
