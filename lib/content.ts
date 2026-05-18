@@ -114,7 +114,7 @@ export const content = {
       ["学习", "AI 工具将内容压缩为可行动的教育。"],
       ["讨论", "社区让投资从孤立走向协作。"],
       ["行动", "受监管交易基础设施完成闭环。"],
-      ["复利", "每一次滑屏都可能成为信号、语境或行动。"],
+      ["复利", "每一次滑屏都可能成为信号、洞察或行动。"],
     ],
     infrastructure: {
       label: "技术与交易",
@@ -131,7 +131,7 @@ export const content = {
       nodes: [
         ["输入", "金融内容与市场行为流入产品层。", "实时信号"],
         ["模型", "AI 工具将发现转化为学习与决策支持。", "自适应"],
-        ["网络", "专业人士、机构与社区信号持续沉淀语境。", "社交图谱"],
+        ["网络", "专业人士、机构与社区信号持续沉淀洞察。", "社交图谱"],
         ["行动", "受监管交易基础设施完成从洞察到执行的闭环。", "就绪"],
       ],
     },
@@ -154,6 +154,6 @@ export const content = {
 export const partners = [
   ["xiaobing-logo-cropped.png", "XiaoBing", "Ecosystem partner"],
   ["qraft-logo-cropped.png", "Qraft Technologies", "Ecosystem partner"],
-  ["dl-holdings-logo-cropped.png", "DL Holdings", "Ecosystem partner"],
-  ["dl-securities-logo-cropped.png", "DL Securities (Hong Kong) Limited", "Trading partner"],
+  ["DLH.png", "DL Holdings", "Ecosystem partner"],
+  ["DLS.png", "DL Securities (Hong Kong) Limited", "Trading partner"],
 ];

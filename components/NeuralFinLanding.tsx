@@ -1,4 +1,5 @@
 import { content, Locale, partners } from "@/lib/content";
+import { appLinks, companyFacts, companyFactsZh, homeScreens, milestones, milestonesZh, siteNav, siteNavZh } from "@/lib/site";
 
 type Props = {
   locale: Locale;
@@ -6,6 +7,15 @@ type Props = {
 
 export function NeuralFinLanding({ locale }: Props) {
   const t = content[locale];
+  const facts = locale === "zh" ? companyFactsZh : companyFacts;
+  const timelineItems = locale === "zh" ? milestonesZh : milestones;
+  const partnerRolesZh = ["生态合作伙伴", "生态合作伙伴", "生态合作伙伴", "交易合作伙伴"];
+  const feedLabels = locale === "zh"
+    ? ["ETF 脉冲", "创始人分析", "中资银行观察", "AI 摘要", "市场扫描"]
+    : ["ETF pulse", "Founder analysis", "China bank watch", "AI summary", "Market scan"];
+  const pulseLabels = locale === "zh"
+    ? ["社区智能", "受监管执行", "注意力到行动"]
+    : ["community intelligence", "regulated execution", "attention to action"];
 
   return (
     <>
@@ -15,12 +25,16 @@ export function NeuralFinLanding({ locale }: Props) {
             <img src="/assets/neuralfin-logo-transparent-cropped.png" alt="NeuralFin" />
           </a>
           <div className="nav-links">
-            <a className="nav-link" href="#platform">{t.nav[0]}</a>
-            <a className="nav-link" href="#loop">{t.nav[1]}</a>
-            <a className="nav-link" href="#partners">{t.nav[2]}</a>
-            <a className="nav-link" href="#contact">{t.nav[3]}</a>
+            {locale === "en" ? (
+              siteNav.map(([label, href]) => (
+                <a className="nav-link" href={href} key={href}>{label}</a>
+              ))
+            ) : (
+              siteNavZh.map(([label, href]) => (
+                <a className="nav-link" href={href} key={href}>{label}</a>
+              ))
+            )}
             <a className="nav-link" href={t.localePath}>{t.localeLabel}</a>
-            <a className="nav-link nav-cta" href="#contact">{t.ir}</a>
           </div>
         </div>
       </nav>
@@ -34,12 +48,16 @@ export function NeuralFinLanding({ locale }: Props) {
                 <span className="title-line">{t.headlineTop}</span>
                 <span className="title-line accent">{t.headlineAccent}</span>
               </h1>
-              <p className="hero-sub">{t.subhead}</p>
+              <p className="hero-sub">
+                {locale === "en" ? (
+                  <>NeuralFin is a social-media-driven, next-generation <span className="accent-inline prose">TechFin</span> platform designed to transform daily mobile habits into powerful opportunities for growth and wealth accumulation.</>
+                ) : t.subhead}
+              </p>
               <div className="hero-actions">
-                <a className="store-button" href="#platform" aria-label={t.appStoreAlt}>
+                <a className="store-button" href={appLinks.appStore} aria-label={t.appStoreAlt} target="_blank" rel="noreferrer">
                   <img src="/assets/app-store.svg" alt={t.appStoreAlt} />
                 </a>
-                <a className="store-button" href="#platform" aria-label={t.googlePlayAlt}>
+                <a className="store-button" href={appLinks.googlePlay} aria-label={t.googlePlayAlt} target="_blank" rel="noreferrer">
                   <img src="/assets/google-play.svg" alt={t.googlePlayAlt} />
                 </a>
               </div>
@@ -55,11 +73,15 @@ export function NeuralFinLanding({ locale }: Props) {
 
             <div className="product-theater" aria-label="NeuralFin product experience">
               <div className="scroll-phone">
-                <div className="scroll-window">
-                  <img className="app-panorama" src="/assets/app-screens.png" alt="NeuralFin app screens" />
+                <div className="scroll-window product-stack-window">
+                  <div className="hero-screen-strip">
+                    {homeScreens.map((screen, index) => (
+                      <img src={`/assets/${screen}`} alt={`NeuralFin home screen ${index + 1}`} key={screen} />
+                    ))}
+                  </div>
                 </div>
                 <div className="feed-stack" aria-hidden="true">
-                  {["ETF pulse", "Founder analysis", "China bank watch", "AI summary", "Market scan"].map((item) => (
+                  {feedLabels.map((item) => (
                     <div className="feed-card" key={item}>
                       <strong>{item}</strong>
                       <div className="feed-stat"><span /><span /><span /><span /></div>
@@ -75,12 +97,10 @@ export function NeuralFinLanding({ locale }: Props) {
                 <strong>{t.heroSignals.market[0]}</strong>
                 <p>{t.heroSignals.market[1]}</p>
               </div>
-              <div className="crawl" aria-hidden="true">
-                <div className="crawl-track">
-                  {["social discovery", "AI education", "market data", "community intelligence", "regulated execution", "social discovery", "AI education", "market data", "community intelligence", "regulated execution"].map((item, index) => (
-                    <span key={`${item}-${index}`}>{item}</span>
-                  ))}
-                </div>
+              <div className="product-pulse-row" aria-hidden="true">
+                {pulseLabels.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
               </div>
             </div>
           </div>
@@ -129,7 +149,9 @@ export function NeuralFinLanding({ locale }: Props) {
             <div className="infra-grid">
               <article className="partner-feature">
                 <div className="section-label">{t.infrastructure.partnerLabel}</div>
-                <img src="/assets/dl-securities-logo-cropped.png" alt="DL Securities" />
+                <div className="partner-logo-plaque">
+                  <img src="/assets/dl-securities-logo-cropped.png" alt="DL Securities" />
+                </div>
                 <h2>{t.infrastructure.partnerTitle}</h2>
                 <p>{t.infrastructure.partnerCopy}</p>
                 <div className="license-strip">
@@ -141,7 +163,7 @@ export function NeuralFinLanding({ locale }: Props) {
                 <h2>{t.loop.title}</h2>
                 <div className="ai-loop">
                   <div className="loop-orbit" />
-                  <div className="loop-core"><strong>NeuralFin</strong><span>learning loop</span></div>
+                  <div className="loop-core"><strong>NeuralFin</strong><span>{locale === "zh" ? "学习闭环" : "learning loop"}</span></div>
                   {t.loop.nodes.map(([title, copy, tag]: string[], index: number) => (
                     <div className={`loop-node node-${index}`} key={title}>
                       <strong>{title}</strong>
@@ -165,11 +187,52 @@ export function NeuralFinLanding({ locale }: Props) {
               <p className="section-copy">{t.partners.copy}</p>
             </div>
             <div className="partners-grid">
-              {partners.map(([logo, name, role]) => (
+              {partners.map(([logo, name, role], index) => (
                 <div className="partner-cell" key={name}>
                   <div className="partner-mark"><img src={`/assets/${logo}`} alt={name} /></div>
-                  <div><strong>{name}</strong><span>{role}</span></div>
+                  <div><strong>{name}</strong><span>{locale === "zh" ? partnerRolesZh[index] : role}</span></div>
                 </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section dark company-merge" id="company">
+          <div className="section-inner">
+            <div className="section-head">
+              <div>
+                <div className="section-label">{locale === "zh" ? "公司" : "Company"}</div>
+                <h2>{locale === "zh" ? <>为<span className="accent-inline">滑屏一代</span>构建 AI 驱动的金融社区生态系统。</> : <>Building the AI-powered financial community ecosystem for the <span className="accent-inline">scroll generation.</span></>}</h2>
+              </div>
+              <p className="section-copy">
+                {locale === "zh" ? "NeuralFin 通过教育与技术推动投资普惠，降低理解市场与参与市场的门槛，让更多人能够更有信心地做出知情决策。" : "NeuralFin exists to democratize investing through education and technology, lowering barriers so more people can understand markets, participate confidently, and make informed decisions."}
+              </p>
+            </div>
+            <div className="company-proof-grid">
+              {facts.map(([title, copy]) => (
+                <article key={title}>
+                  <span>{title}</span>
+                  <strong>{copy}</strong>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section paper" id="milestones">
+          <div className="section-inner">
+            <div className="section-head">
+              <div>
+                <div className="section-label">{locale === "zh" ? "里程碑" : "Milestones"}</div>
+                <h2>{locale === "zh" ? "以速度、融资纪律与资本市场愿景推进建设。" : "Built with velocity, financing discipline, and public-market ambition."}</h2>
+              </div>
+            </div>
+            <div className="timeline">
+              {timelineItems.map(([date, copy]) => (
+                <article className="timeline-item paper-timeline-item" key={date}>
+                  <strong>{date}</strong>
+                  <p>{copy}</p>
+                </article>
               ))}
             </div>
           </div>
@@ -192,7 +255,7 @@ export function NeuralFinLanding({ locale }: Props) {
       </main>
 
       <footer>
-        <span>© 2026 NeuralFin Technologies. All rights reserved.</span>
+        <span>{locale === "zh" ? "© 2026 NeuralFin Technologies. 版权所有。" : "© 2026 NeuralFin Technologies. All rights reserved."}</span>
         <span>{t.footer}</span>
       </footer>
     </>
