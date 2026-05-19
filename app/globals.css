@@ -2520,13 +2520,13 @@ footer {
   }
   .brand img { max-width: 190px; width: 48vw; }
   .nav-links {
-    width: min(304px, calc(100vw - 28px));
-    max-width: min(304px, calc(100vw - 28px));
+    width: min(330px, calc(100vw - 36px));
+    max-width: min(330px, calc(100vw - 36px));
     display: grid;
-    grid-template-columns: minmax(0, 52px) minmax(0, 54px) minmax(0, 52px) minmax(0, 106px) minmax(0, 40px);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     align-items: center;
     justify-content: stretch;
-    gap: 0;
+    gap: 4px 8px;
     overflow: visible;
     padding-bottom: 2px;
   }
@@ -2534,12 +2534,16 @@ footer {
   .nav-link {
     justify-content: center;
     min-width: 0;
-    min-height: 32px;
-    padding: 7px 1px;
-    font-size: 8.75px;
+    min-height: 26px;
+    padding: 5px 2px;
+    font-size: 10px;
     white-space: nowrap;
   }
-  .nav-link:nth-child(4) { font-size: 8.5px; }
+  .nav-link:nth-child(1),
+  .nav-link:nth-child(2),
+  .nav-link:nth-child(3) { grid-column: span 2; }
+  .nav-link:nth-child(4) { grid-column: span 4; }
+  .nav-link:nth-child(5) { grid-column: span 2; }
   .mobile-break { display: block; }
   .hero { padding: 26px 18px 42px; min-height: auto; }
   h1 {
