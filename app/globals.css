@@ -2586,7 +2586,9 @@ footer {
     overflow-wrap: break-word;
   }
   .subpage-hero.compact.no-visual .subpage-copy h1 {
-    font-size: clamp(28px, 7.9vw, 36px);
+    width: min(100%, 330px);
+    max-width: min(100%, 330px);
+    font-size: clamp(27px, 7.4vw, 34px);
     line-height: 1.13;
     letter-spacing: -0.028em;
     text-wrap: wrap;
@@ -2705,6 +2707,17 @@ footer {
   .role-grid article { min-height: auto; }
   .role-grid p { margin-top: 44px; }
   .article-body { width: 100%; }
+  .article-body {
+    width: min(100%, 320px);
+    padding: 26px 18px;
+    overflow-wrap: anywhere;
+  }
+  .article-body p {
+    max-width: 100%;
+    font-size: 16px;
+    line-height: 1.72;
+    overflow-wrap: anywhere;
+  }
   .ai-loop { min-height: auto; display: grid; gap: 12px; }
   .loop-orbit,
   .loop-core { display: none; }
