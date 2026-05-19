@@ -50,7 +50,7 @@ export function NeuralFinLanding({ locale }: Props) {
                 ) : (
                   <>
                     <span className="title-line">{t.headlineTop}</span>
-                    <span className="title-line accent">{t.headlineAccent}</span>
+                    <span className="title-line accent">scroll <br className="mobile-break" />generation.</span>
                   </>
                 )}
               </h1>

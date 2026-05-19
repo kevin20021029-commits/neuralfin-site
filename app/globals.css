@@ -2499,20 +2499,26 @@ footer {
 
 @media (max-width: 760px) {
   .site-nav { position: sticky; }
-  .nav-inner { width: calc(100% - 28px); min-height: auto; align-items: flex-start; flex-direction: column; gap: 10px; padding: 12px 0 10px; }
+  .nav-inner {
+    width: calc(100% - 28px);
+    min-height: auto;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 0 10px;
+    text-align: center;
+  }
   .brand img { max-width: 190px; width: 48vw; }
   .nav-links {
     width: 100%;
-    flex-wrap: nowrap;
-    gap: 3px;
-    overflow-x: auto;
-    overflow-y: hidden;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px 5px;
+    overflow: visible;
     padding-bottom: 2px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
   }
   .nav-links::-webkit-scrollbar { display: none; }
-  .nav-link { flex: 0 0 auto; min-height: 32px; padding: 7px 4px; font-size: 10px; }
+  .nav-link { flex: 0 0 auto; min-height: 32px; padding: 7px 2px; font-size: 9px; }
   .mobile-break { display: block; }
   .hero { padding: 26px 18px 42px; min-height: auto; }
   h1 {
