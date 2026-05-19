@@ -2263,10 +2263,10 @@ h2 {
 .ai-loop-stack {
   position: relative;
   display: grid;
-  grid-template-rows: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(5, minmax(128px, auto));
   gap: 1px;
-  height: 430px;
-  min-height: 430px;
+  height: auto;
+  min-height: 0;
   border: 1px solid var(--paper-line);
   background: var(--paper-line);
 }
@@ -2288,6 +2288,7 @@ h2 {
   grid-template-columns: minmax(120px, 0.36fr) minmax(0, 1fr);
   align-items: center;
   gap: 24px;
+  min-height: 128px;
   background: rgba(255,255,255,0.74);
   padding: 16px 26px 16px 96px;
 }
