@@ -84,7 +84,7 @@ export const content = {
     ir: "投资者关系",
     eyebrow: "AI 原生社交交易平台",
     headlineTop: "为",
-    headlineAccent: "滑屏一代而生",
+    headlineAccent: "刷屏一代而生",
     subhead:
       "NeuralFin 是面向下一代用户的社交媒体驱动型 TechFin 平台，旨在将日常移动端使用习惯转化为增长、学习与财富积累的机会。",
     appStoreAlt: "在 App Store 下载",
@@ -110,11 +110,11 @@ export const content = {
       ],
     },
     motion: [
-      ["滑屏", "日常移动端注意力成为金融学习界面。"],
+      ["刷屏", "日常移动端注意力成为金融学习界面。"],
       ["学习", "AI 工具将内容压缩为可行动的教育。"],
       ["讨论", "社区让投资从孤立走向协作。"],
       ["行动", "受监管交易基础设施完成闭环。"],
-      ["复利", "每一次滑屏都可能成为信号、洞察或行动。"],
+      ["复利", "每一次刷屏都可能成为信号、洞察或行动。"],
     ],
     infrastructure: {
       label: "技术与交易",

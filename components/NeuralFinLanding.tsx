@@ -46,7 +46,7 @@ export function NeuralFinLanding({ locale }: Props) {
               <div className="eyebrow">{t.eyebrow}</div>
               <h1>
                 {locale === "zh" ? (
-                  <span className="title-line accent">为滑屏一代而生</span>
+                  <span className="title-line accent">为刷屏一代而生</span>
                 ) : (
                   <>
                     <span className="title-line">{t.headlineTop}</span>
@@ -208,7 +208,7 @@ export function NeuralFinLanding({ locale }: Props) {
             <div className="section-head">
               <div>
                 <div className="section-label">{locale === "zh" ? "公司" : "Company"}</div>
-                <h2>{locale === "zh" ? <>为<span className="accent-inline">滑屏一代</span>构建 AI 驱动的金融社区生态系统。</> : <>Building the AI-powered financial community ecosystem for the <span className="accent-inline">scroll generation.</span></>}</h2>
+                <h2>{locale === "zh" ? <>为<span className="accent-inline">刷屏一代</span>构建 AI 驱动的金融社区生态系统。</> : <>Building the AI-powered financial community ecosystem for the <span className="accent-inline">scroll generation.</span></>}</h2>
               </div>
               <p className="section-copy">
                 {locale === "zh" ? "NeuralFin 通过教育与技术推动投资普惠，降低理解市场与参与市场的门槛，让更多人能够更有信心地做出知情决策。" : "NeuralFin exists to democratize investing through education and technology, lowering barriers so more people can understand markets, participate confidently, and make informed decisions."}

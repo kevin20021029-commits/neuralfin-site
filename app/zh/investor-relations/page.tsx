@@ -22,7 +22,7 @@ export default function InvestorRelationsZhPage() {
       hideVisual
       eyebrow="投资者关系"
       title="投资者关系"
-      intro={<>NeuralFin 的公司动态、融资里程碑与新闻公告。公司正在为<span className="accent-inline prose">滑屏一代</span>构建 AI 原生金融平台。</>}
+      intro={<>NeuralFin 的公司动态、融资里程碑与新闻公告。公司正在为<span className="accent-inline prose">刷屏一代</span>构建 AI 原生金融平台。</>}
     >
       <section className="section paper">
         <div className="section-inner">

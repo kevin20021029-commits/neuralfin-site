@@ -35,7 +35,7 @@ export default function SocialFiZhPage() {
       langHref="/socialfi"
       eyebrow="SocialFi"
       title="当社交发现转化为市场参与。"
-      intro={<>NeuralFin 是为<span className="accent-inline prose">滑屏一代</span>设计的金融网络：内容、社区、AI 学习与交易就绪的行动在同一复利闭环内运转。</>}
+      intro={<>NeuralFin 是为<span className="accent-inline prose">刷屏一代</span>设计的金融网络：内容、社区、AI 学习与交易就绪的行动在同一复利闭环内运转。</>}
       visual="community"
       hideContact
     >
