@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { aiLearningScreens, communityScreens, contact, contactZh, homeScreens, marketScreens, siteNav, siteNavZh } from "@/lib/site";
+import { aiLearningScreens, appLinks, communityScreens, contact, contactZh, homeScreens, marketScreens, siteNav, siteNavZh } from "@/lib/site";
 
 type Props = {
   children: ReactNode;
@@ -56,6 +56,9 @@ export function SiteChrome({ children, eyebrow, title, intro, compact = false, h
               </a>
             ))}
             <a className="nav-link" href={languageHref}>{locale === "zh" ? "EN" : "中文"}</a>
+            <a className="nav-link nav-cta" href={appLinks.webApp} target="_blank" rel="noreferrer">
+              {locale === "zh" ? "启动应用" : "Launch App"}
+            </a>
           </div>
         </div>
       </nav>
