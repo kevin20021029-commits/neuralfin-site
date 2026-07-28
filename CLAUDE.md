@@ -76,5 +76,16 @@ metaphor or not at all.
 - Results API: `POST /api/scroll-results`,
   `GET /api/scroll-results/summary` (in-memory store,
   `lib/scroll/resultsStore.ts`).
-- Bilingual EN / zh-Hant; Chinese strings marked `DRAFT — native review
-  required` must not ship without native + compliance review.
+- The scroll calculator has four locales: EN / zh-Hant (繁) / zh-Hans (简) /
+  th (ไทย). Localized strings marked `DRAFT — native review required` must
+  not ship without native + compliance review; compliance strings (the
+  f1/f2/f3 footer lines) need compliance approval per script/language.
+- Locale defaults follow the confirmed rule: **language beats region** —
+  region only picks the variant for an expressed language (or fills in for
+  Thailand when no recognized preference exists); an en-HK/en-TH browser
+  stays English. See BUILD_SPEC.md.
+- The parser's label matching accepts BOTH Chinese scripts AND Thai
+  regardless of UI locale — any-locale phone can upload any-language
+  screenshot. Never fork the parser catalogs by locale.
+- The share-card canvas font stack (`lib/scroll/cardFont.ts`) must keep
+  explicitly Thai- and Han-capable families.

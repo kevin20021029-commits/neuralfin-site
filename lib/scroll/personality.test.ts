@@ -12,13 +12,11 @@ import {
   getTapeNote,
 } from "./personality";
 
-test("archetype subtitles cover all tiers in both languages", () => {
+test("archetype subtitles cover all tiers in all locales", () => {
   const sampleHours = [1, 2, 4, 6, 9];
   const en = sampleHours.map((hours) => getArchetypeCopy(hours, "en"));
-  const zh = sampleHours.map((hours) => getArchetypeCopy(hours, "zh"));
 
   assert.equal(en.length, ARCHETYPES.length);
-  assert.equal(zh.length, ARCHETYPES.length);
   assert.deepEqual(en.map((item) => item.subtitle), [
     "suspicious. nobody's this disciplined",
     "dabbling. respectable",
@@ -26,8 +24,15 @@ test("archetype subtitles cover all tiers in both languages", () => {
     "the feed knows your name",
     "the algorithm sends its regards",
   ]);
-  assert.ok(zh.every((item) => item.subtitle.length > 0));
   assert.ok(en.every((item) => item.subtitle.length <= 42));
+
+  for (const lang of ["zh-Hant", "zh-Hans"] as const) {
+    const zh = sampleHours.map((hours) => getArchetypeCopy(hours, lang));
+    assert.equal(zh.length, ARCHETYPES.length);
+    assert.ok(zh.every((item) => item.subtitle.length > 0 && item.title.length > 0));
+  }
+  assert.equal(getArchetypeCopy(4, "zh-Hant").title, "認證滑屏員");
+  assert.equal(getArchetypeCopy(4, "zh-Hans").title, "认证滑屏员");
 });
 
 test("scan stages use chief only on failure", () => {
@@ -39,7 +44,7 @@ test("scan stages use chief only on failure", () => {
 });
 
 test("share caption variants all include loss url and hashtag", () => {
-  for (const lang of ["en", "zh"] as const) {
+  for (const lang of ["en", "zh-Hant", "zh-Hans"] as const) {
     SHARE_TEXT_VARIANTS[lang].forEach((variant) => {
       const caption = variant("-1,278h", "Top 63% scroller", "www.neuralfin.ai/scroll");
       assert.match(caption, /-1,278h/);
@@ -63,8 +68,10 @@ test("tape note config includes red and green voice pools", () => {
   assert.equal(TAPE_NOTE_CONFIG.en.green.includes("locked in ✓"), true);
   assert.equal(getTapeNote("en", false, 6), "portfolio: vibes");
   assert.equal(getTapeNote("en", true, 1), "locked in ✓");
-  assert.ok(TAPE_NOTE_CONFIG.zh.red.length >= 7);
-  assert.ok(TAPE_NOTE_CONFIG.zh.green.length >= 2);
+  assert.ok(TAPE_NOTE_CONFIG["zh-Hant"].red.length >= 7);
+  assert.ok(TAPE_NOTE_CONFIG["zh-Hant"].green.length >= 2);
+  assert.ok(TAPE_NOTE_CONFIG["zh-Hans"].red.length >= 7);
+  assert.ok(TAPE_NOTE_CONFIG["zh-Hans"].green.length >= 2);
 });
 
 test("personality configs carry last reviewed dates", () => {

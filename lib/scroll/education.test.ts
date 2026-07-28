@@ -25,8 +25,10 @@ test("lesson yield display minimum and under-a-week boundary", () => {
   assert.equal(getLessonsPerDay(0), 1);
   assert.equal(formatDaysToFinish(7, "en"), "in under a week");
   assert.equal(formatDaysToFinish(8, "en"), "in 8 days");
-  assert.equal(formatDaysToFinish(7, "zh"), "一週內");
-  assert.equal(formatDaysToFinish(8, "zh"), "8 天內");
+  assert.equal(formatDaysToFinish(7, "zh-Hant"), "一週內");
+  assert.equal(formatDaysToFinish(8, "zh-Hant"), "8 天內");
+  assert.equal(formatDaysToFinish(7, "zh-Hans"), "一周内");
+  assert.equal(formatDaysToFinish(8, "zh-Hans"), "8 天内");
 });
 
 test("milestone date is runtime based and locale formatted", () => {
@@ -35,7 +37,8 @@ test("milestone date is runtime based and locale formatted", () => {
 
   assert.equal(FLIP_MINUTES_PER_DAY, 10);
   assert.equal(formatMilestoneDate(milestone, "en"), "July 2027");
-  assert.equal(formatMilestoneDate(milestone, "zh"), "2027年7月");
+  assert.equal(formatMilestoneDate(milestone, "zh-Hant"), "2027年7月");
+  assert.equal(formatMilestoneDate(milestone, "zh-Hans"), "2027年7月");
 });
 
 test("education output includes personalized card line", () => {
@@ -46,13 +49,16 @@ test("education output includes personalized card line", () => {
   assert.equal(output.cardLine, "42 lessons/day hiding in my scroll · course done by July 2027");
 });
 
-test("ladder track names come from config in both locales", () => {
+test("ladder track names come from config in all locales", () => {
   assert.equal(getTrackName("foundations", "en"), "Investing Foundations");
   assert.equal(getTrackName("statements", "en"), "Reading the Numbers");
   assert.equal(getTrackName("first-trade", "en"), "Your First Trade, Done Right");
-  assert.equal(getTrackName("foundations", "zh"), "投資基礎");
-  assert.equal(getTrackName("statements", "zh"), "看懂財務數字");
-  assert.equal(getTrackName("first-trade", "zh"), "第一筆交易做對");
+  assert.equal(getTrackName("foundations", "zh-Hant"), "投資基礎");
+  assert.equal(getTrackName("statements", "zh-Hant"), "看懂財務數字");
+  assert.equal(getTrackName("first-trade", "zh-Hant"), "第一筆交易做對");
+  assert.equal(getTrackName("foundations", "zh-Hans"), "投资基础");
+  assert.equal(getTrackName("statements", "zh-Hans"), "看懂财务数字");
+  assert.equal(getTrackName("first-trade", "zh-Hans"), "第一笔交易做对");
 });
 
 test("micro-takeaway is deterministic for fixed dates and rotates", () => {
