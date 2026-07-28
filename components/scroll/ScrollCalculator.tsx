@@ -106,7 +106,6 @@ const str = {
       if (yr < 1200) return { title: "One full watch of Titanic", sub: "The boat sinks every time.", num: `×${Math.round(yr / 3.23)}` };
       return { title: "Flying HK → New York", sub: "Without the air miles.", num: `×${Math.round(yr / 16)}` };
     },
-    nativeReview: "照這個節奏, zh step strip, zh track names, archetype subtitles, tape notes, scan stages, share variants, and micro-takeaway copy require native + compliance review before launch.",
   },
   zh: {
     pill: "為滑屏世代而生",
@@ -193,7 +192,6 @@ const str = {
       if (yr < 1200) return { title: "完整看完《鐵達尼號》", sub: "船每次都沉。", num: `×${Math.round(yr / 3.23)}` };
       return { title: "香港飛紐約", sub: "里數一分都沒有。", num: `×${Math.round(yr / 16)}` };
     },
-    nativeReview: "「照這個節奏」、步驟提示、課程名稱、卡片副標、tape note、掃描狀態、分享文案與第零課文案需 native + compliance review。",
   },
 } as const;
 
