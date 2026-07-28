@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseScreenTimeText, sanitizeParsedResult } from "./ocrSanitizer";
+import { classifyParseOutcome, guessScreenTimeLayout, parseScreenTimeText, sanitizeParsedResult } from "./ocrSanitizer";
 
 test("clean app list renders canonical names and plausible minutes", () => {
   const parsed = parseScreenTimeText(
@@ -157,6 +157,148 @@ test("total without categories falls back to total and emits no scroll chip meta
   assert.equal(Math.round((parsed.hours ?? 0) * 100) / 100, 6.03);
   assert.equal(parsed.scrollHours, null);
   assert.equal(Math.round((parsed.totalHours ?? 0) * 100) / 100, 6.03);
+});
+
+// Samsung One UI fixture — tesseract column/block ordering: the headline
+// label, then the app-name column, then the value column (headline value
+// first), then category tiles as a names block followed by a values block.
+const SAMSUNG_BLOCK_FIXTURE = [
+  "Digital Wellbeing",
+  "Screen time today",
+  "YouTube",
+  "WhatsApp",
+  "Instagram",
+  "6 h 2 m",
+  "3 h 16 m",
+  "1 h 21 m",
+  "45 m",
+  "Screen time by category",
+  "Video",
+  "Social",
+  "Productivity and finance",
+  "3 h 16 m",
+  "2 h 35 m",
+  "5 m",
+].join("\n");
+
+test("Samsung block-ordered OCR anchors headline to the day total, never an app row", () => {
+  const parsed = parseScreenTimeText(SAMSUNG_BLOCK_FIXTURE, 83);
+
+  assert.equal(parsed.source, "day-total");
+  assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 362); // 6h 2m
+  assert.notEqual(Math.round((parsed.totalHours ?? 0) * 60), 196); // never YouTube's 3h 16m
+  assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 351); // Video 3h16m + Social 2h35m
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 351); // slider driven by scroll time
+  assert.deepEqual(parsed.apps, [
+    { name: "YouTube", minutes: 196 },
+    { name: "WhatsApp", minutes: 81 },
+    { name: "Instagram", minutes: 45 },
+  ]);
+});
+
+// iOS Screen Time fixture — category legend under the usage chart, ordered
+// by usage (an excluded category first), values day-scoped.
+const IOS_DAY_FIXTURE = [
+  "SCREEN TIME",
+  "Today",
+  "2h 2m",
+  "Creativity 44m · Social 32m · Travel 9m",
+  "Show Categories",
+].join("\n");
+
+test("iOS legend counts only scroll categories, per segment", () => {
+  const parsed = parseScreenTimeText(IOS_DAY_FIXTURE, 88);
+
+  assert.equal(parsed.source, "day-total");
+  assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 122); // 2h 2m
+  assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 32); // Social only, not Creativity's 44m
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 32);
+});
+
+test("iOS week view never mixes weekly category values into a daily scroll ratio", () => {
+  const parsed = parseScreenTimeText(
+    ["SCREEN TIME", "Daily Average 5h 6m", "Social 6h 40m · Entertainment 3h 2m", "Show Categories"].join("\n"),
+    88,
+  );
+
+  assert.equal(parsed.source, "average");
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 306); // 5h 6m daily average drives the slider
+  assert.equal(parsed.scrollHours, null); // scope mismatch → total-only, no ratio
+});
+
+// Stock Android (Pixel) Digital Wellbeing — "hr"/"min" word tokens with a
+// comma, per-app list, no category tiles.
+const PIXEL_FIXTURE = [
+  "Digital Wellbeing",
+  "Screen time",
+  "4 hr, 12 min",
+  "Chrome 1 hr 2 min",
+  "YouTube 58 min",
+  "Instagram 44 min",
+].join("\n");
+
+test("Pixel comma-separated hr/min tokens parse as total-only with app roasts", () => {
+  const parsed = parseScreenTimeText(PIXEL_FIXTURE, 85);
+
+  assert.equal(parsed.source, "day-total");
+  assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 252); // 4h 12m
+  assert.equal(parsed.scrollHours, null); // no categories visible → total-only
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 252);
+  assert.deepEqual(parsed.apps, [
+    { name: "Chrome", minutes: 62 },
+    { name: "YouTube", minutes: 58 },
+    { name: "Instagram", minutes: 44 },
+  ]);
+});
+
+test("duration token formats all resolve to the same value", () => {
+  const cases = [
+    "3 h 20 m",
+    "3 hr 20 min",
+    "3 hr, 20 min",
+    "3h 20m",
+    "3:20",
+    "3 小時 20 分鐘",
+    "3 ชั่วโมง 20 นาที",
+  ];
+  for (const token of cases) {
+    const parsed = parseScreenTimeText(`Daily Average ${token}`, 90);
+    assert.equal(Math.round((parsed.hours ?? 0) * 60), 200, `token "${token}"`);
+  }
+  const minutesOnly = parseScreenTimeText("Daily Average 45 m", 90);
+  assert.equal(Math.round((minutesOnly.hours ?? 0) * 60), 45);
+});
+
+test("garbage OCR yields no hours, no apps, and a failed outcome", () => {
+  const parsed = parseScreenTimeText("ๅ ๕6 ๑ Nf 75% ol ED\n©) qwerty 999\n???\n@@##", 22);
+
+  assert.equal(parsed.hours, null);
+  assert.equal(parsed.source, null);
+  assert.equal(parsed.scrollHours, null);
+  assert.deepEqual(parsed.apps, []);
+  assert.equal(classifyParseOutcome(parsed), "failed");
+});
+
+test("unknown OEM layout with an anchored total degrades to total-only, not failure", () => {
+  const parsed = parseScreenTimeText("การใช้งานอุปกรณ์\nเวลาหน้าจอ 5 ชั่วโมง 12 นาที\nแอปที่ใช้บ่อย", 70);
+
+  assert.equal(parsed.source, "day-total");
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 312);
+  assert.equal(parsed.scrollHours, null);
+  assert.equal(classifyParseOutcome(parsed), "total_only");
+  assert.equal(guessScreenTimeLayout("การใช้งานอุปกรณ์\nเวลาหน้าจอ 5 ชั่วโมง 12 นาที"), "unknown");
+});
+
+test("layout guess separates samsung, pixel, and ios", () => {
+  assert.equal(guessScreenTimeLayout(SAMSUNG_BLOCK_FIXTURE), "samsung");
+  assert.equal(guessScreenTimeLayout(PIXEL_FIXTURE), "pixel");
+  assert.equal(guessScreenTimeLayout(IOS_DAY_FIXTURE), "ios");
+});
+
+test("parse outcome classification covers full, total_only, failed", () => {
+  assert.equal(classifyParseOutcome(parseScreenTimeText(SAMSUNG_BLOCK_FIXTURE, 83)), "full");
+  assert.equal(classifyParseOutcome(parseScreenTimeText(PIXEL_FIXTURE, 85)), "total_only");
+  assert.equal(classifyParseOutcome(parseScreenTimeText("nothing useful here", 10)), "failed");
 });
 
 test("app row only does not promote an app duration to headline", () => {

@@ -25,6 +25,24 @@ Off voice:
 - English internet slang is never literally translated into Chinese. Chinese strings get their own internet-native register and go through native review.
 - No return promises, forecasts, or investment advice in personality strings.
 
+## Pending native review
+
+Before launch, the following zh strings require native + compliance review
+(checklist moved here from internal notes previously shipped in the
+ScrollCalculator string tables):
+
+- 「照這個節奏」 (the "at your current pace" line)
+- zh step strip (步驟提示)
+- zh track names (課程名稱)
+- archetype subtitles (卡片副標)
+- tape notes
+- scan stages (掃描狀態)
+- share variants (分享文案)
+- micro-takeaway / lesson-zero copy (第零課文案)
+
+Strings marked `DRAFT — native review required` in
+`components/scroll/ScrollCalculator.tsx` are part of the same pass.
+
 ## Maintenance
 
 All personality strings live in config arrays with a `lastReviewed` date. Review and refresh them per campaign season, before launch, and whenever compliance or native-language review changes the register.

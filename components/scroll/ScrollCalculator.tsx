@@ -2,7 +2,7 @@
 
 import { ChangeEvent, KeyboardEvent, type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { appLinks } from "@/lib/site";
-import { parseScreenTimeText, type AppRoast } from "@/lib/scroll/ocrSanitizer";
+import { classifyParseOutcome, parseScreenTimeText, type AppRoast, type ParseOutcome, type ScreenTimeLayout } from "@/lib/scroll/ocrSanitizer";
 import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, normalPercentile, type ScrollRegion } from "@/lib/scroll/campaign";
 import { FLIP_MINUTES_PER_DAY, LADDER_TRACKS, getEducationOutput, getTrackName } from "@/lib/scroll/education";
 import { getArchetypeCopy, getScanStageMessage, getShareCaptionVariant, getTapeNote, type ScanStage } from "@/lib/scroll/personality";
@@ -106,7 +106,6 @@ const str = {
       if (yr < 1200) return { title: "One full watch of Titanic", sub: "The boat sinks every time.", num: `×${Math.round(yr / 3.23)}` };
       return { title: "Flying HK → New York", sub: "Without the air miles.", num: `×${Math.round(yr / 16)}` };
     },
-    nativeReview: "照這個節奏, zh step strip, zh track names, archetype subtitles, tape notes, scan stages, share variants, and micro-takeaway copy require native + compliance review before launch.",
   },
   zh: {
     pill: "為滑屏世代而生",
@@ -193,7 +192,6 @@ const str = {
       if (yr < 1200) return { title: "完整看完《鐵達尼號》", sub: "船每次都沉。", num: `×${Math.round(yr / 3.23)}` };
       return { title: "香港飛紐約", sub: "里數一分都沒有。", num: `×${Math.round(yr / 16)}` };
     },
-    nativeReview: "「照這個節奏」、步驟提示、課程名稱、卡片副標、tape note、掃描狀態、分享文案與第零課文案需 native + compliance review。",
   },
 } as const;
 
@@ -231,6 +229,17 @@ function appLink(base: string, hours: number, region: ScrollRegion, verified: bo
   url.searchParams.set(SCROLL_DEEP_LINK_PARAMS.verified, verified ? "1" : "0");
   url.searchParams.set(SCROLL_DEEP_LINK_PARAMS.lang, lang);
   return url.toString();
+}
+
+// Aggregate-only: two enums, nothing else — no image data, no OCR text,
+// no app names. Tells us which OEM layouts need fixtures post-launch.
+function sendParseTelemetry(layout: ScreenTimeLayout, outcome: ParseOutcome) {
+  void fetch("/api/scroll-telemetry", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ layout, outcome }),
+    keepalive: true,
+  }).catch(() => undefined);
 }
 
 async function parseScreenshot(file: File) {
@@ -398,6 +407,7 @@ export function ScrollCalculator() {
     try {
       const parsed = await parseScreenshot(file);
       window.clearTimeout(auditTimer);
+      sendParseTelemetry(parsed.layout, classifyParseOutcome(parsed));
       setAppRoasts(parsed.apps);
       if (parsed.hours && parsed.source !== "day-total") {
         setScanStage("success");
@@ -454,6 +464,7 @@ export function ScrollCalculator() {
       }
     } catch {
       window.clearTimeout(auditTimer);
+      sendParseTelemetry("unknown", "failed");
       setScanStage("fail");
       await wait(500);
       setParsedHours(null);

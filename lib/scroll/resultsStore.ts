@@ -1,4 +1,5 @@
 import { SCROLL_BENCHMARK, SCROLL_COMMUNITY_THRESHOLD, SCROLL_REGIONS, type ScrollRegion, normalPercentile } from "./campaign";
+import type { ParseOutcome, ScreenTimeLayout } from "./ocrSanitizer";
 
 export type ScrollResult = {
   hours: number;
@@ -9,6 +10,7 @@ export type ScrollResult = {
 type GlobalScrollStore = {
   results: ScrollResult[];
   rateLimits: Map<string, number[]>;
+  telemetry: Map<string, number>;
 };
 
 const globalStore = globalThis as typeof globalThis & {
@@ -20,7 +22,9 @@ export const scrollStore =
   (globalStore.__neuralfinScrollStore = {
     results: [],
     rateLimits: new Map<string, number[]>(),
+    telemetry: new Map<string, number>(),
   });
+scrollStore.telemetry ??= new Map<string, number>();
 
 const HOUR_MS = 60 * 60 * 1000;
 const MAX_RESULTS = 5000;
@@ -41,6 +45,17 @@ export function addScrollResult(result: ScrollResult) {
   if (scrollStore.results.length > MAX_RESULTS) {
     scrollStore.results.splice(0, scrollStore.results.length - MAX_RESULTS);
   }
+}
+
+// Aggregate-only layout telemetry: one counter per {layout, outcome} enum
+// pair. No timestamps, no IPs, no rows — nothing that could identify a user.
+export function recordScrollTelemetry(layout: ScreenTimeLayout, outcome: ParseOutcome) {
+  const key = `${layout}:${outcome}`;
+  scrollStore.telemetry.set(key, (scrollStore.telemetry.get(key) ?? 0) + 1);
+}
+
+export function buildScrollTelemetrySummary() {
+  return Object.fromEntries(scrollStore.telemetry);
 }
 
 function percentileFromDistribution(hours: number, distribution: ScrollResult[]) {
