@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,6 +12,11 @@ export const metadata: Metadata = {
       "A next-generation TechFin platform turning mobile attention into financial learning, community intelligence, and trading-ready action.",
     images: ["/assets/neuralfin-logo-transparent-cropped.png"],
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

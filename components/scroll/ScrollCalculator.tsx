@@ -29,6 +29,7 @@ const str = {
     pill: "Built for the scroll generation",
     h1a: "Your scroll has a",
     sub: "Drag to your daily screen time. See the damage, see where you rank, post the card, then flip it green in the app.",
+    steps: ["Upload", "See the damage", "Post it"],
     slider: "Your daily screen time",
     hday: "h / day",
     scales: ["30 min", "saint", "6 h", "certified scroller", "12 h"],
@@ -38,8 +39,6 @@ const str = {
     verified: "Verified",
     hrsyr: "hours per year",
     pace: "at your current pace",
-    flip: "Flip 10 minutes a day",
-    flipHide: "Hide the flip",
     learnpos: "Learning position",
     compounding: "Compounding",
     feedcould: "what your feed could have taught you",
@@ -50,7 +49,6 @@ const str = {
       ["Month 6", "Build your first watchlist thesis", "an actual opinion, not a group-chat tip"],
       ["Year 1", "≈ a university intro-to-investing course", "funded entirely by your feed"],
     ],
-    getcard: "Get my Scroll P&L card",
     dropTitle: "Upload your screen-time screenshot",
     dropSub: "Read on your device · never uploaded",
     dropHint: "iPhone: Settings → Screen Time · Android: Digital Wellbeing",
@@ -79,9 +77,7 @@ const str = {
     cardflipb: "+61 hours of finance brain per year",
     challenge: "Are you down more than me?",
     scan: "Scan yours ↓",
-    savebtn: "Download picture",
-    getapp: "Get the app",
-    closebtn: "Close",
+    savebtn: "Download picture 📸",
     sticky1: "Flip your P&L for real",
     sticky2: "10 min/day in the NeuralFin app",
     anon: "anon",
@@ -103,12 +99,13 @@ const str = {
     },
     tapeNotes: { cs: "certified scroller", algo: "the algorithm won", flip: "flipped", grass: "touch grass" },
     shareText: (loss: string, rank: string) => `I'm down ${loss} this year. ${rank} — are you down more? ${PUBLIC_SCROLL_LABEL} #ScrollAudit`,
-    nativeReview: "照這個節奏 copy requires native review before launch.",
+    nativeReview: "照這個節奏 and zh step strip copy require native review before launch.",
   },
   zh: {
     pill: "為滑屏世代而生",
     h1a: "你的滑屏也有",
     sub: "拖到你的每日螢幕時間。看看虧了多少、排第幾名、發卡挑戰朋友，再到 App 把它翻綠。",
+    steps: ["上傳", "看看虧損", "發出去"],
     slider: "你的每日螢幕時間",
     hday: "小時／天",
     scales: ["30分鐘", "聖人", "6小時", "認證滑屏員", "12小時"],
@@ -118,8 +115,6 @@ const str = {
     verified: "已驗證",
     hrsyr: "每年時數",
     pace: "照這個節奏",
-    flip: "每天翻轉 10 分鐘",
-    flipHide: "收起",
     learnpos: "學習持倉",
     compounding: "複利中",
     feedcould: "你的 feed 本來可以教你的",
@@ -130,7 +125,6 @@ const str = {
       ["第6個月", "建立你第一個自選股觀點", "自己的判斷，不是群組貼士"],
       ["第1年", "≈ 一門大學投資入門課", "全由你的 feed 贊助"],
     ],
-    getcard: "領取我的滑屏損益卡",
     dropTitle: "上傳你的螢幕時間截圖",
     dropSub: "只在你的裝置上讀取 · 永不上傳",
     dropHint: "iPhone：設定 → 螢幕使用時間 · Android：數位健康",
@@ -159,9 +153,7 @@ const str = {
     cardflipb: "每年 +61 小時財商",
     challenge: "你虧得比我多嗎？",
     scan: "掃你的 ↓",
-    savebtn: "下載圖片",
-    getapp: "下載 App",
-    closebtn: "關閉",
+    savebtn: "下載圖片 📸",
     sticky1: "真正翻轉你的損益",
     sticky2: "每天 10 分鐘，就在 NeuralFin App",
     anon: "匿名",
@@ -183,7 +175,7 @@ const str = {
     },
     tapeNotes: { cs: "認證滑屏員", algo: "演算法贏了", flip: "已翻轉", grass: "該摸摸草了" },
     shareText: (loss: string, rank: string) => `我今年已經虧了 ${loss}。${rank}——你虧得比我多嗎？${PUBLIC_SCROLL_LABEL} #ScrollAudit`,
-    nativeReview: "「照這個節奏」需 native review。",
+    nativeReview: "「照這個節奏」與步驟提示文字需 native review。",
   },
 } as const;
 
@@ -216,7 +208,6 @@ export function ScrollCalculator() {
   const [region, setRegion] = useState<ScrollRegion>("ww");
   const [verified, setVerified] = useState(false);
   const [flipped, setFlipped] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [dropDone, setDropDone] = useState(false);
   const [parsedHours, setParsedHours] = useState<number | null>(null);
@@ -226,7 +217,8 @@ export function ScrollCalculator() {
   const fileRef = useRef<HTMLInputElement>(null);
   const hoursBlockRef = useRef<HTMLDivElement>(null);
   const hoursSliderRef = useRef<HTMLInputElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const autoFlipStartedRef = useRef(false);
+  const autoFlipTimerRef = useRef<number | null>(null);
 
   const t = str[lang];
   const regionName = t.regions[region];
@@ -242,7 +234,6 @@ export function ScrollCalculator() {
   const maxBar = Math.max(hours, marketAverage) * 1.15;
   const appStoreHref = appLink(appLinks.appStore, hours, region, verified, lang);
   const playStoreHref = appLink(appLinks.googlePlay, hours, region, verified, lang);
-  const webAppHref = appLink(appLinks.webApp, hours, region, verified, lang);
   const rangeFill = ((hours - 0.5) / 11.5) * 100;
   const hasAppRoasts = appRoasts.length > 0;
   const appRoastText = appRoasts.map((app) => `${app.name} -${app.minutes}m`).join(" · ");
@@ -259,8 +250,12 @@ export function ScrollCalculator() {
   );
 
   useEffect(() => {
+    const requestedLang = new URLSearchParams(window.location.search).get("lang");
+    if (requestedLang === "en" || requestedLang === "zh") {
+      setLang(requestedLang);
+    }
     const storedLang = window.localStorage.getItem("scroll-calc-lang");
-    if (storedLang === "en" || storedLang === "zh") {
+    if (requestedLang !== "en" && requestedLang !== "zh" && (storedLang === "en" || storedLang === "zh")) {
       setLang(storedLang);
     }
     const locale = navigator.language.toLowerCase();
@@ -275,10 +270,6 @@ export function ScrollCalculator() {
   }, [lang]);
 
   useEffect(() => {
-    if (modalOpen) closeRef.current?.focus();
-  }, [modalOpen]);
-
-  useEffect(() => {
     fetch("/api/scroll-results/summary")
       .then((response) => (response.ok ? response.json() : null))
       .then((summary: { recent?: Array<{ hours: number; region: ScrollRegion }> } | null) => {
@@ -286,6 +277,14 @@ export function ScrollCalculator() {
         setTapeRows(summary.recent.map((item) => ({ hours: item.hours, region: item.region })));
       })
       .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (autoFlipTimerRef.current !== null) {
+        window.clearTimeout(autoFlipTimerRef.current);
+      }
+    };
   }, []);
 
   async function submitResult() {
@@ -305,6 +304,17 @@ export function ScrollCalculator() {
     });
   }
 
+  function scheduleAutoFlip() {
+    if (autoFlipStartedRef.current) return;
+    autoFlipStartedRef.current = true;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const delay = prefersReducedMotion ? 0 : 800;
+    autoFlipTimerRef.current = window.setTimeout(() => {
+      setFlipped(true);
+      autoFlipTimerRef.current = null;
+    }, delay);
+  }
+
   async function handleScan(file?: File) {
     if (!file || scanning) return;
     setScanning(true);
@@ -320,6 +330,7 @@ export function ScrollCalculator() {
         setVerified(true);
         setDropDone(true);
         setScanNotice(t.dropDone.replace("{hours}", rounded.toFixed(1)));
+        scheduleAutoFlip();
       } else if (parsed.hours && parsed.source === "day-total") {
         const rounded = Math.round(parsed.hours * 2) / 2;
         setHours(rounded);
@@ -485,6 +496,14 @@ export function ScrollCalculator() {
           <section className="scroll-hero scroll-rise">
             <h1><span>{t.h1a}</span> <span className={flipped ? "gain-t" : "loss-t"}>P&amp;L.</span></h1>
             <p>{t.sub}</p>
+            <div className="scroll-stepstrip" aria-label="Scroll calculator steps">
+              {t.steps.map((step, index) => (
+                <span key={step}>
+                  {index > 0 ? <i aria-hidden="true">→</i> : null}
+                  {step}
+                </span>
+              ))}
+            </div>
           </section>
 
           <section className="scroll-calc scroll-rise d1" aria-label="Scroll calculator">
@@ -544,6 +563,7 @@ export function ScrollCalculator() {
                 aria-describedby={scanNotice ? "scroll-scan-notice" : undefined}
                 style={{ "--fill": `${rangeFill}%` } as CSSProperties}
                 onChange={(event) => {
+                  scheduleAutoFlip();
                   const nextHours = Number(event.target.value);
                   const keepVerified = parsedHours !== null && Math.abs(nextHours - parsedHours) <= 0.5;
                   setHours(nextHours);
@@ -580,18 +600,14 @@ export function ScrollCalculator() {
               </div>
             ) : null}
 
-            <button className="scroll-flip" type="button" aria-pressed={flipped} onClick={() => setFlipped((value) => !value)}>
-              {flipped ? t.flipHide : `${t.flip} ↺`}
-            </button>
-
             {flipped ? (
-              <div>
+              <div className="scroll-flip-reveal">
                 <div className="scroll-pos gain">
                   <div className="name"><b>{t.learnpos} <span className="tag g">{t.compounding}</span></b><span>{t.feedcould}</span></div>
                   <div className="num mono">+61 {t.hyr}</div>
                 </div>
-                {t.ladder.map(([when, title, sub]) => (
-                  <div className="scroll-rung" key={when}>
+                {t.ladder.map(([when, title, sub], index) => (
+                  <div className="scroll-rung" key={when} style={{ "--stagger": `${index * 90}ms` } as CSSProperties}>
                     <div className="when mono">{when}</div>
                     <div><span>{title}</span><span>{sub}</span></div>
                   </div>
@@ -599,9 +615,39 @@ export function ScrollCalculator() {
               </div>
             ) : null}
 
-            <button className="scroll-share" type="button" onClick={() => { void submitResult(); setModalOpen(true); }}>
-              {t.getcard}
-            </button>
+            <section className="scroll-inline-card" aria-label="Your Scroll P&L card">
+              <div className={`scroll-card${verified ? " verified" : ""}`}>
+                <div className="glow r" /><div className="glow g" />
+                {verified ? <div className="vbadge">✓ {t.vbadge}</div> : null}
+                <div className="cb">{t.cardtitle}</div>
+                <div className="big mono">-{fmt.format(yearly)}h</div>
+                <div className="pace">{t.pace}</div>
+                <div className="rankline">{rankLine} {top <= 25 ? "💀" : "📉"}</div>
+                <div><span className="arch">{arch}</span></div>
+                <div className="roast">{fun.title} {fun.num}. <i>{fun.sub}</i></div>
+                {hasAppRoasts ? <div className="roast">{t.mostShorted} <b>{appRoastText}</b></div> : null}
+                <div className="chips">
+                  <span className="chip"><b>-{workWeeks}</b> {lang === "zh" ? "個工作週" : "work wks"}</span>
+                  <span className="chip"><b>{diff >= 0 ? "+" : ""}{diff}%</b> {lang === "zh" ? "對比市場平均" : "vs market avg"}</span>
+                </div>
+                <div className="vsbar">
+                  <div className="vlabel"><span>{lang === "zh" ? `你 · ${hours.toFixed(1)}小時` : `You · ${hours.toFixed(1)}h`}</span><span>{t.regions[region]} avg · {marketAverage.toFixed(1)}h</span></div>
+                  <div className="track you"><i style={{ width: `${Math.round((hours / maxBar) * 100)}%` }} /></div>
+                  <div className="track mkt"><i style={{ width: `${Math.round((marketAverage / maxBar) * 100)}%` }} /></div>
+                </div>
+                <div className="div" />
+                <div className="flipline"><span>{t.cardflip}</span><b>{t.cardflipb}</b></div>
+                <div className="challenge">{t.challenge}<br />{t.scan}</div>
+                <div className="brand"><b><img src="/icon.png" alt="" />{PUBLIC_SCROLL_LABEL}</b><span>#ScrollAudit</span></div>
+              </div>
+              <button className="scroll-download" type="button" onClick={() => { void submitResult(); void saveCard(); }}>
+                {t.savebtn}
+              </button>
+              <div className="scroll-stores inline-stores">
+                <a className="scroll-store-button" href={appStoreHref} aria-label="Download on the App Store"><img src="/assets/app-store.svg" alt="Download on the App Store" /></a>
+                <a className="scroll-store-button" href={playStoreHref} aria-label="Get it on Google Play"><img src="/assets/google-play.svg" alt="Get it on Google Play" /></a>
+              </div>
+            </section>
             <p className="scroll-privnote">🔒 {t.priv}</p>
           </section>
         </div>
@@ -643,46 +689,6 @@ export function ScrollCalculator() {
           <b>NeuralFin Technologies</b> · <span>{t.f1}</span> <span>{t.f2}</span> <span>{t.f3}</span>
         </footer>
       </div>
-
-      {modalOpen ? (
-        <div className="scroll-overlay open" role="dialog" aria-modal="true" aria-label="Your Scroll P&L card" onClick={(event) => { if (event.target === event.currentTarget) setModalOpen(false); }}>
-          <div className="scroll-cardwrapper" onKeyDown={(event) => { if (event.key === "Escape") setModalOpen(false); }}>
-            <div className={`scroll-card${verified ? " verified" : ""}`}>
-              <div className="glow r" /><div className="glow g" />
-              {verified ? <div className="vbadge">✓ {t.vbadge}</div> : null}
-              <div className="cb">{t.cardtitle}</div>
-              <div className="big mono">-{fmt.format(yearly)}h</div>
-              <div className="pace">{t.pace}</div>
-              <div className="rankline">{rankLine} {top <= 25 ? "💀" : "📉"}</div>
-              <div><span className="arch">{arch}</span></div>
-              <div className="roast">{fun.title} {fun.num}. <i>{fun.sub}</i></div>
-              {hasAppRoasts ? <div className="roast">{t.mostShorted} <b>{appRoastText}</b></div> : null}
-              <div className="chips">
-                <span className="chip"><b>-{workWeeks}</b> {lang === "zh" ? "個工作週" : "work wks"}</span>
-                <span className="chip"><b>{diff >= 0 ? "+" : ""}{diff}%</b> {lang === "zh" ? "對比市場平均" : "vs market avg"}</span>
-              </div>
-              <div className="vsbar">
-                <div className="vlabel"><span>{lang === "zh" ? `你 · ${hours.toFixed(1)}小時` : `You · ${hours.toFixed(1)}h`}</span><span>{t.regions[region]} avg · {marketAverage.toFixed(1)}h</span></div>
-                <div className="track you"><i style={{ width: `${Math.round((hours / maxBar) * 100)}%` }} /></div>
-                <div className="track mkt"><i style={{ width: `${Math.round((marketAverage / maxBar) * 100)}%` }} /></div>
-              </div>
-              <div className="div" />
-              <div className="flipline"><span>{t.cardflip}</span><b>{t.cardflipb}</b></div>
-              <div className="challenge">{t.challenge}<br />{t.scan}</div>
-              <div className="brand"><b><img src="/icon.png" alt="" />{PUBLIC_SCROLL_LABEL}</b><span>#ScrollAudit</span></div>
-            </div>
-            <div className="scroll-modalbtns">
-              <button className="mb save" type="button" onClick={() => void saveCard()}>{t.savebtn}</button>
-              <a className="mb app" href={webAppHref}>{t.getapp}</a>
-              <button ref={closeRef} className="mb close" type="button" onClick={() => setModalOpen(false)}>{t.closebtn}</button>
-            </div>
-            <div className="scroll-stores modal-stores">
-              <a className="scroll-store-button" href={appStoreHref} aria-label="Download on the App Store"><img src="/assets/app-store.svg" alt="Download on the App Store" /></a>
-              <a className="scroll-store-button" href={playStoreHref} aria-label="Get it on Google Play"><img src="/assets/google-play.svg" alt="Get it on Google Play" /></a>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       <div className="scroll-sticky">
         <div className="in">

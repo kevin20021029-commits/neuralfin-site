@@ -10,9 +10,16 @@
 }
 
 .scroll-wrap {
+  width: min(100%, 640px);
   max-width: 640px;
   margin: 0 auto;
   padding: 0 20px;
+}
+
+.scroll-topgrid,
+.scroll-hero,
+.scroll-calc {
+  min-width: 0;
 }
 
 .scroll-rise {
@@ -125,6 +132,28 @@
   font-size: 15px;
 }
 
+.scroll-stepstrip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.scroll-stepstrip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scroll-stepstrip i {
+  color: var(--mint);
+  font-style: normal;
+}
+
 .scroll-calc {
   margin-top: 22px;
   border: 1px solid var(--line);
@@ -166,6 +195,7 @@
   margin-bottom: 3px;
   font-size: 16px;
   font-weight: 900;
+  overflow-wrap: anywhere;
 }
 
 .scroll-drop .dsub {
@@ -180,6 +210,7 @@
   margin-top: 6px;
   color: var(--muted);
   font-size: 12px;
+  overflow-wrap: anywhere;
 }
 
 .scroll-drop.scanning {
@@ -411,8 +442,7 @@
   color: var(--gold);
 }
 
-.scroll-flip,
-.scroll-share {
+.scroll-download {
   width: 100%;
   min-height: 50px;
   border: 0;
@@ -422,25 +452,25 @@
   transition: transform 180ms ease, filter 180ms ease;
 }
 
-.scroll-flip {
-  margin-top: 8px;
+.scroll-download {
+  margin-top: 14px;
   background: linear-gradient(100deg, var(--mint), #16f0c2);
   color: var(--black);
   padding: 16px;
   font-size: 16px;
 }
 
-.scroll-share {
-  margin-top: 14px;
-  background: var(--white);
-  color: var(--black);
-  padding: 17px;
-  font-size: 16px;
+.scroll-download:hover {
+  transform: translateY(-2px);
 }
 
-.scroll-flip:hover,
-.scroll-share:hover {
-  transform: translateY(-2px);
+.scroll-flip-reveal {
+  margin-top: 8px;
+}
+
+.scroll-flip-reveal .scroll-pos.gain,
+.scroll-rung {
+  animation: riseIn 560ms var(--ease-premium) both;
 }
 
 .scroll-rung {
@@ -449,6 +479,7 @@
   border-bottom: 1px dashed var(--line);
   padding: 10px 0;
   font-size: 14px;
+  animation-delay: var(--stagger, 0ms);
 }
 
 .scroll-rung:last-child {
@@ -498,6 +529,14 @@
   background: rgba(22,240,194,0.08);
   color: var(--mint);
   font-weight: 800;
+}
+
+.scroll-inline-card {
+  margin-top: 20px;
+}
+
+.scroll-inline-card .scroll-card {
+  margin: 0 auto;
 }
 
 .scroll-botgrid {
@@ -632,32 +671,9 @@
   color: var(--mint);
 }
 
-.scroll-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 140;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(2,4,3,0.86);
-  backdrop-filter: blur(4px);
-  padding: 20px;
-}
-
-.scroll-overlay.open {
-  display: flex;
-}
-
-.scroll-cardwrapper {
-  max-height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
 .scroll-card {
   position: relative;
-  width: min(320px, 82vw);
+  width: min(320px, 100%);
   aspect-ratio: 9 / 14.5;
   overflow: hidden;
   display: flex;
@@ -667,7 +683,6 @@
   background: linear-gradient(160deg, var(--night) 0%, var(--deep) 55%, #07120f 100%);
   padding: 26px 22px;
   box-shadow: 0 30px 80px rgba(0,0,0,0.6);
-  animation: scrollCardIn 420ms var(--ease-premium) both;
 }
 
 .scroll-card::before {
@@ -882,42 +897,6 @@
   letter-spacing: 0.08em;
 }
 
-.scroll-modalbtns {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  padding: 16px 0 0;
-}
-
-.mb {
-  min-height: 48px;
-  border: 0;
-  border-radius: 12px;
-  padding: 14px 20px;
-  font-size: 14px;
-  font-weight: 900;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.mb.save {
-  background: linear-gradient(100deg, var(--mint), #16f0c2);
-  color: var(--black);
-}
-
-.mb.app {
-  background: var(--white);
-  color: var(--black);
-}
-
-.mb.close {
-  border: 1px solid var(--line);
-  background: var(--deep);
-  color: var(--white);
-  font-weight: 600;
-}
-
 .scroll-sticky {
   position: fixed;
   left: 0;
@@ -956,9 +935,9 @@
   gap: 8px;
 }
 
-.modal-stores {
+.inline-stores {
   justify-content: center;
-  padding-top: 10px;
+  padding-top: 12px;
 }
 
 .scroll-store-button {
@@ -999,11 +978,6 @@
 @keyframes scrollBeam {
   from { background-position: 200% 0; }
   to { background-position: -200% 0; }
-}
-
-@keyframes scrollCardIn {
-  from { opacity: 0; transform: translateY(22px) scale(0.96); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @media (min-width: 520px) {
@@ -1080,8 +1054,25 @@
     height: 39px;
   }
 
+  .scroll-sticky .in {
+    width: 100%;
+    max-width: 100%;
+    gap: 8px;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .scroll-sticky .scroll-store-button {
+    width: 88px;
+    height: 29px;
+  }
+
   .scroll-sticky .txt {
-    max-width: 126px;
+    max-width: 136px;
+    font-size: 11px;
+  }
+
+  .scroll-sticky .txt b {
+    font-size: 12px;
   }
 
   .scroll-scale {
@@ -1104,7 +1095,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-rise,
-  .scroll-card,
+  .scroll-flip-reveal .scroll-pos.gain,
+  .scroll-rung,
   .scroll-drop.scanning .beam,
   .scroll-hero .gain-t {
     animation: none;
