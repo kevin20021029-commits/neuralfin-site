@@ -1,0 +1,625 @@
+"use client";
+
+import { ChangeEvent, KeyboardEvent, type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import { appLinks } from "@/lib/site";
+import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, normalPercentile, type ScrollRegion } from "@/lib/scroll/campaign";
+
+const HRS_YR = 365;
+const PUBLIC_HOME_URL = "https://www.neuralfin.ai";
+const PUBLIC_SCROLL_URL = `${PUBLIC_HOME_URL}/scroll`;
+const PUBLIC_SCROLL_LABEL = "www.neuralfin.ai/scroll";
+const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+
+type Lang = "en" | "zh";
+type TapeRow = { region: ScrollRegion; hours: number; note?: "cs" | "algo" | "flip" | "grass"; flipped?: boolean };
+
+const regionOrder: ScrollRegion[] = ["ww", "hk", "sg", "th"];
+
+const demoTape: TapeRow[] = [
+  { region: "hk", hours: 6.5, note: "cs" },
+  { region: "sg", hours: 3 },
+  { region: "th", hours: 8, note: "algo" },
+  { region: "hk", hours: 2, note: "flip", flipped: true },
+  { region: "sg", hours: 5.5 },
+  { region: "hk", hours: 11, note: "grass" },
+];
+
+const str = {
+  en: {
+    pill: "Built for the scroll generation",
+    h1a: "Your scroll has a",
+    sub: "Drag to your daily screen time. See the damage, see where you rank, post the card, then flip it green in the app.",
+    slider: "Your daily screen time",
+    hday: "h / day",
+    scales: ["30 min", "saint", "6 h", "certified scroller", "12 h"],
+    regions: { ww: "Worldwide", hk: "Hong Kong", sg: "Singapore", th: "Thailand" },
+    scrollpos: "Scroll position",
+    openloss: "Open loss",
+    verified: "Verified",
+    hrsyr: "hours per year",
+    flip: "Flip 10 minutes a day",
+    flipHide: "Hide the flip",
+    learnpos: "Learning position",
+    compounding: "Compounding",
+    feedcould: "what your feed could have taught you",
+    hyr: "h/yr",
+    ladder: [
+      ["Week 1", "What an ETF actually is", "and why everyone will not stop talking about them"],
+      ["Month 1", "Read a balance sheet without sweating", "where the bodies are buried"],
+      ["Month 6", "Build your first watchlist thesis", "an actual opinion, not a group-chat tip"],
+      ["Year 1", "≈ a university intro-to-investing course", "funded entirely by your feed"],
+    ],
+    getcard: "Get my Scroll P&L card",
+    dropTitle: "Upload your screen-time screenshot",
+    dropSub: "Read on your device · never uploaded",
+    dropHint: "iPhone: Settings → Screen Time · Android: Digital Wellbeing",
+    dropScanning: "Reading on your device...",
+    dropDone: "Verified — your number is in",
+    orManual: "or drag it manually",
+    priv: "Screenshots are read on your device and never uploaded. App names stay private unless you share them.",
+    stand: "Market standings",
+    standsub: "Ranked by % flipped — the market that turns scroll into skill wins.",
+    standnote: "Demo data. Launch build: computed from the same anonymous aggregates (hours + market only). Pre-launch averages cite published statistics until community volume takes over.",
+    avgday: "avg / day",
+    flipped: "flipped",
+    youare: "your market",
+    tape: "The tape",
+    tapesub: "Recent scrolls, marked to market. Anonymous, always.",
+    tapenote: "Demo data shown. Launch build: pre-launch ranks benchmark against published screen-time statistics (sourced); community tape activates once real results accumulate. Only hours + market are stored — nothing identifying.",
+    f1: "Trading services provided through DL Securities (Hong Kong) Limited, a licensed corporation regulated by the SFC.",
+    f2: "Screenshot analysis happens locally in your browser; images and app names are not uploaded or stored. Community stats are anonymous (hours and market only).",
+    f3: "This page is a marketing illustration for education and entertainment. It is not financial advice, a forecast, or a projection of returns.",
+    vbadge: "VERIFIED SCROLL",
+    cardtitle: "My Scroll P&L · 2026",
+    cardflip: "Flipping 10 min/day →",
+    cardflipb: "+61 hours of finance brain per year",
+    challenge: "Are you down more than me?",
+    scan: "Scan yours ↓",
+    savebtn: "Download picture",
+    getapp: "Get the app",
+    closebtn: "Close",
+    sticky1: "Flip your P&L for real",
+    sticky2: "10 min/day in the NeuralFin app",
+    anon: "anon",
+    bench: "vs. published screen-time benchmarks",
+    mostShorted: "Most shorted:",
+    topN: (top: number, region: string) => `Top ${top}% scroller · ${region}`,
+    morethan: (p: number) => `you scroll more than ${p}% of people`,
+    fun: (yr: number) => {
+      if (yr < 500) return { title: "Every Star Wars film", sub: "...even the prequels.", num: `×${Math.round(yr / 25)}` };
+      if (yr < 1200) return { title: "One full watch of Titanic", sub: "The boat sinks every time.", num: `×${Math.round(yr / 3.23)}` };
+      return { title: "Flying HK → New York", sub: "Without the air miles.", num: `×${Math.round(yr / 16)}` };
+    },
+    arch: (h: number) => {
+      if (h < 1.5) return "The Saint";
+      if (h < 3) return "Casual Scroller";
+      if (h < 5) return "Certified Scroller";
+      if (h < 8) return "The Algorithm's Favorite";
+      return "Touch Grass Candidate";
+    },
+    tapeNotes: { cs: "certified scroller", algo: "the algorithm won", flip: "flipped", grass: "touch grass" },
+    shareText: (loss: string, rank: string) => `I'm down ${loss} this year. ${rank} — are you down more? ${PUBLIC_SCROLL_LABEL} #ScrollAudit`,
+  },
+  zh: {
+    pill: "為滑屏世代而生",
+    h1a: "你的滑屏也有",
+    sub: "拖到你的每日螢幕時間。看看虧了多少、排第幾名、發卡挑戰朋友，再到 App 把它翻綠。",
+    slider: "你的每日螢幕時間",
+    hday: "小時／天",
+    scales: ["30分鐘", "聖人", "6小時", "認證滑屏員", "12小時"],
+    regions: { ww: "全球", hk: "香港", sg: "新加坡", th: "泰國" },
+    scrollpos: "滑屏持倉",
+    openloss: "未平虧損",
+    verified: "已驗證",
+    hrsyr: "每年時數",
+    flip: "每天翻轉 10 分鐘",
+    flipHide: "收起",
+    learnpos: "學習持倉",
+    compounding: "複利中",
+    feedcould: "你的 feed 本來可以教你的",
+    hyr: "小時／年",
+    ladder: [
+      ["第1週", "ETF 到底是什麼", "以及為什麼人人都在講"],
+      ["第1個月", "看懂資產負債表不再冒汗", "知道數字藏在哪裡"],
+      ["第6個月", "建立你第一個自選股觀點", "自己的判斷，不是群組貼士"],
+      ["第1年", "≈ 一門大學投資入門課", "全由你的 feed 贊助"],
+    ],
+    getcard: "領取我的滑屏損益卡",
+    dropTitle: "上傳你的螢幕時間截圖",
+    dropSub: "只在你的裝置上讀取 · 永不上傳",
+    dropHint: "iPhone：設定 → 螢幕使用時間 · Android：數位健康",
+    dropScanning: "裝置本機讀取中...",
+    dropDone: "已驗證——你的數字已入市",
+    orManual: "或者手動拖一下",
+    priv: "截圖只在你的裝置上讀取，永不上傳。App 名稱除非你分享，否則保密。",
+    stand: "市場排行榜",
+    standsub: "以「翻轉率」排名——哪個市場最會把滑屏變本事，誰就贏。",
+    standnote: "目前為示範數據。正式版：由同一組匿名統計（僅時數＋市場）計算。上線初期平均值引用公開統計，社群數據足夠後切換。",
+    avgday: "平均／天",
+    flipped: "已翻轉",
+    youare: "你的市場",
+    tape: "即時行情",
+    tapesub: "最新滑屏紀錄，逐筆入市。全部匿名。",
+    tapenote: "目前為示範數據。正式版：上線初期以公開的螢幕時間統計（附來源）作基準；社群數據累積後切換為真實行情。只儲存時數＋市場，絕無任何識別資料。",
+    f1: "交易服務由德林證券（香港）有限公司提供，該公司為香港證監會持牌法團。",
+    f2: "截圖分析只在你的瀏覽器本機進行；圖片與 App 名稱不會上傳或儲存。社群統計為匿名（僅時數與市場）。",
+    f3: "本頁為市場推廣示意，僅供教育與娛樂。不構成投資建議、預測或回報推算。",
+    vbadge: "已驗證滑屏",
+    cardtitle: "我的滑屏損益 · 2026",
+    cardflip: "每天翻轉 10 分鐘 →",
+    cardflipb: "每年 +61 小時財商",
+    challenge: "你虧得比我多嗎？",
+    scan: "掃你的 ↓",
+    savebtn: "下載圖片",
+    getapp: "下載 App",
+    closebtn: "關閉",
+    sticky1: "真正翻轉你的損益",
+    sticky2: "每天 10 分鐘，就在 NeuralFin App",
+    anon: "匿名",
+    bench: "對比公開螢幕時間統計",
+    mostShorted: "最重倉：",
+    topN: (top: number, region: string) => `${region}前 ${top}% 滑屏員`,
+    morethan: (p: number) => `你滑得比 ${p}% 的人多`,
+    fun: (yr: number) => {
+      if (yr < 500) return { title: "看完全部《星球大戰》", sub: "...連前傳都看了。", num: `×${Math.round(yr / 25)}` };
+      if (yr < 1200) return { title: "完整看完《鐵達尼號》", sub: "船每次都沉。", num: `×${Math.round(yr / 3.23)}` };
+      return { title: "香港飛紐約", sub: "里數一分都沒有。", num: `×${Math.round(yr / 16)}` };
+    },
+    arch: (h: number) => {
+      if (h < 1.5) return "聖人";
+      if (h < 3) return "輕度滑友";
+      if (h < 5) return "認證滑屏員";
+      if (h < 8) return "演算法的最愛";
+      return "摸草候選人";
+    },
+    tapeNotes: { cs: "認證滑屏員", algo: "演算法贏了", flip: "已翻轉", grass: "該摸摸草了" },
+    shareText: (loss: string, rank: string) => `我今年已經虧了 ${loss}。${rank}——你虧得比我多嗎？${PUBLIC_SCROLL_LABEL} #ScrollAudit`,
+  },
+} as const;
+
+function appLink(base: string, hours: number, region: ScrollRegion, verified: boolean, lang: Lang) {
+  const url = new URL(base);
+  for (const [key, value] of Object.entries(SCROLL_CAMPAIGN_UTM)) {
+    url.searchParams.set(key, value);
+  }
+  url.searchParams.set(SCROLL_DEEP_LINK_PARAMS.hours, String(hours));
+  url.searchParams.set(SCROLL_DEEP_LINK_PARAMS.region, region);
+  url.searchParams.set(SCROLL_DEEP_LINK_PARAMS.verified, verified ? "1" : "0");
+  url.searchParams.set(SCROLL_DEEP_LINK_PARAMS.lang, lang);
+  return url.toString();
+}
+
+function extractHours(text: string) {
+  const normalized = text.replace(/\s+/g, " ");
+  const matches = Array.from(normalized.matchAll(/(\d{1,2})(?:\s*h(?:ours?)?|\s*小時|\s*小时|:)(?:\s*(\d{1,2})(?:\s*m(?:in(?:utes?)?)?|\s*分鐘|\s*分钟)?)?/gi));
+  const scored = matches
+    .map((match) => {
+      const hours = Number(match[1]);
+      const minutes = match[2] ? Number(match[2]) : 0;
+      const value = hours + minutes / 60;
+      return value >= 0.5 && value <= 12 ? value : null;
+    })
+    .filter((value): value is number => value !== null);
+  return scored[0] ?? null;
+}
+
+async function parseScreenshot(file: File) {
+  const mod = await import("tesseract.js");
+  const worker = await mod.createWorker("eng+chi_tra+tha");
+  try {
+    const result = await worker.recognize(file);
+    return extractHours(result.data.text);
+  } finally {
+    await worker.terminate();
+  }
+}
+
+export function ScrollCalculator() {
+  const [hours, setHours] = useState(3.5);
+  const [lang, setLang] = useState<Lang>("en");
+  const [region, setRegion] = useState<ScrollRegion>("ww");
+  const [verified, setVerified] = useState(false);
+  const [flipped, setFlipped] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [dropDone, setDropDone] = useState(false);
+  const [tapeRows, setTapeRows] = useState<TapeRow[]>(demoTape);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  const t = str[lang];
+  const regionName = t.regions[region];
+  const yearly = Math.round(hours * HRS_YR);
+  const percentile = normalPercentile(hours);
+  const top = Math.max(1, 100 - percentile);
+  const fun = t.fun(yearly);
+  const marketAverage = SCROLL_STANDINGS.find((item) => item.region === region)?.averageHours ?? 4.4;
+  const diff = Math.round(((hours - marketAverage) / marketAverage) * 100);
+  const workWeeks = Math.round(yearly / 40);
+  const arch = t.arch(hours);
+  const rankLine = t.topN(top, regionName);
+  const maxBar = Math.max(hours, marketAverage) * 1.15;
+  const appStoreHref = appLink(appLinks.appStore, hours, region, verified, lang);
+  const playStoreHref = appLink(appLinks.googlePlay, hours, region, verified, lang);
+  const webAppHref = appLink(appLinks.webApp, hours, region, verified, lang);
+  const rangeFill = ((hours - 0.5) / 11.5) * 100;
+
+  const sortedStandings = useMemo(
+    () => [...SCROLL_STANDINGS].sort((a, b) => b.flippedPercent - a.flippedPercent),
+    [],
+  );
+
+  useEffect(() => {
+    const storedLang = window.localStorage.getItem("scroll-calc-lang");
+    if (storedLang === "en" || storedLang === "zh") {
+      setLang(storedLang);
+    }
+    const locale = navigator.language.toLowerCase();
+    if (locale.includes("hk")) setRegion("hk");
+    else if (locale.includes("sg")) setRegion("sg");
+    else if (locale.includes("th")) setRegion("th");
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = lang === "zh" ? "zh-Hant" : "en";
+    window.localStorage.setItem("scroll-calc-lang", lang);
+  }, [lang]);
+
+  useEffect(() => {
+    if (modalOpen) closeRef.current?.focus();
+  }, [modalOpen]);
+
+  useEffect(() => {
+    fetch("/api/scroll-results/summary")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((summary: { recent?: Array<{ hours: number; region: ScrollRegion }> } | null) => {
+        if (!summary?.recent?.length) return;
+        setTapeRows(summary.recent.map((item) => ({ hours: item.hours, region: item.region })));
+      })
+      .catch(() => undefined);
+  }, []);
+
+  async function submitResult() {
+    await fetch("/api/scroll-results", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ hours, region }),
+    }).catch(() => undefined);
+  }
+
+  async function handleScan(file?: File) {
+    if (!file || scanning) return;
+    setScanning(true);
+    try {
+      const parsed = await parseScreenshot(file);
+      if (parsed) {
+        setHours(Math.round(parsed * 2) / 2);
+        setVerified(true);
+        setDropDone(true);
+      }
+    } catch {
+      setDropDone(false);
+    } finally {
+      setScanning(false);
+    }
+  }
+
+  function handleDropKey(event: KeyboardEvent<HTMLButtonElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      fileRef.current?.click();
+    }
+  }
+
+  function drawCard() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080;
+    canvas.height = 1740;
+    const c = canvas.getContext("2d");
+    if (!c) return canvas;
+    const W = canvas.width;
+    const H = canvas.height;
+    const PAD = 84;
+    const bg = c.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, "#06100d");
+    bg.addColorStop(0.55, "#0a1713");
+    bg.addColorStop(1, "#07120f");
+    c.fillStyle = bg;
+    c.fillRect(0, 0, W, H);
+    c.fillStyle = "rgba(255,92,108,.22)";
+    c.beginPath();
+    c.arc(W - 80, 80, 360, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = "rgba(0,230,138,.20)";
+    c.beginPath();
+    c.arc(80, H - 100, 390, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = "#f7fbf7";
+    c.font = "800 34px Inter, -apple-system, sans-serif";
+    c.fillText(t.cardtitle.toUpperCase(), PAD, 200);
+    if (verified) {
+      c.fillStyle = "#EDDBA8";
+      c.font = "700 28px Inter, -apple-system, sans-serif";
+      c.fillText(`✓ ${t.vbadge}`, W - 390, 200);
+    }
+    c.fillStyle = "#FF5C6C";
+    c.font = "800 170px Consolas, monospace";
+    c.fillText(`-${fmt.format(yearly)}h`, PAD - 6, 350);
+    c.fillStyle = "#EDDBA8";
+    c.font = "700 46px Inter, -apple-system, sans-serif";
+    c.fillText(rankLine, PAD, 438);
+    c.strokeStyle = "#FF5C6C";
+    c.lineWidth = 3;
+    c.strokeRect(PAD, 482, Math.min(720, arch.length * 24 + 64), 62);
+    c.fillStyle = "#FF5C6C";
+    c.font = "900 34px Inter, -apple-system, sans-serif";
+    c.fillText(arch.toUpperCase(), PAD + 22, 524);
+    c.fillStyle = "#f7fbf7";
+    c.font = "600 40px Inter, -apple-system, sans-serif";
+    c.fillText(`${fun.title} ${fun.num}.`, PAD, 640);
+    c.fillStyle = "rgba(247,251,247,.68)";
+    c.font = "italic 36px Inter, -apple-system, sans-serif";
+    c.fillText(fun.sub, PAD, 696);
+    if (verified) {
+      c.font = "600 34px Inter, -apple-system, sans-serif";
+      c.fillText(`${t.mostShorted} TikTok -37m · WeChat -31m`, PAD, 760);
+    }
+    c.font = "600 32px Inter, -apple-system, sans-serif";
+    c.fillStyle = "#f7fbf7";
+    c.fillText(`-${workWeeks} ${lang === "zh" ? "個工作週" : "work wks"}`, PAD, 850);
+    c.fillText(`${diff >= 0 ? "+" : ""}${diff}% ${lang === "zh" ? "對比市場平均" : "vs market avg"}`, PAD + 360, 850);
+    c.strokeStyle = "rgba(255,255,255,.12)";
+    c.setLineDash([12, 12]);
+    c.beginPath();
+    c.moveTo(PAD, 960);
+    c.lineTo(W - PAD, 960);
+    c.stroke();
+    c.setLineDash([]);
+    c.fillStyle = "rgba(247,251,247,.68)";
+    c.font = "400 38px Inter, -apple-system, sans-serif";
+    c.fillText(t.cardflip, PAD, 1060);
+    c.fillStyle = "#00e68a";
+    c.font = "800 48px Inter, -apple-system, sans-serif";
+    c.fillText(t.cardflipb, PAD, 1124);
+    c.fillStyle = "#f7fbf7";
+    c.font = "700 42px Inter, -apple-system, sans-serif";
+    c.fillText(t.challenge, PAD, H - 260);
+    c.fillText(t.scan, PAD, H - 202);
+    c.font = "700 36px Inter, -apple-system, sans-serif";
+    c.fillText(PUBLIC_SCROLL_LABEL, PAD, H - 92);
+    c.fillStyle = "rgba(247,251,247,.68)";
+    c.fillText("#ScrollAudit", W - 310, H - 92);
+    return canvas;
+  }
+
+  async function saveCard() {
+    const canvas = drawCard();
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const image = new File([blob], "my-scroll-pnl.png", { type: "image/png" });
+      const text = t.shareText(`-${fmt.format(yearly)}h`, rankLine);
+      const shareData = { files: [image], title: "My Scroll P&L", text };
+      if (navigator.canShare?.(shareData)) {
+        try {
+          await navigator.share(shareData);
+          return;
+        } catch (error) {
+          if (error instanceof DOMException && error.name === "AbortError") return;
+        }
+      }
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = href;
+      a.download = "my-scroll-pnl.png";
+      a.click();
+      URL.revokeObjectURL(href);
+      await navigator.clipboard?.writeText(text).catch(() => undefined);
+    }, "image/png");
+  }
+
+  return (
+    <div className="scroll-campaign">
+      <div className="scroll-wrap">
+        <header className="scroll-header">
+          <a className="scroll-logo" href={PUBLIC_HOME_URL} aria-label="NeuralFin home">
+            <img src="/assets/neuralfin-logo-transparent-cropped.png" alt="NeuralFin" />
+          </a>
+          <div className="scroll-header-right">
+            <div className="scroll-pill">{t.pill}</div>
+            <div className="scroll-lang" role="group" aria-label="Language">
+              <button className={lang === "en" ? "on" : ""} onClick={() => setLang("en")} type="button">EN</button>
+              <button className={lang === "zh" ? "on" : ""} onClick={() => setLang("zh")} type="button">中文</button>
+            </div>
+          </div>
+        </header>
+
+        <div className="scroll-topgrid">
+          <section className="scroll-hero scroll-rise">
+            <h1><span>{t.h1a}</span> <span className={flipped ? "gain-t" : "loss-t"}>P&amp;L.</span></h1>
+            <p>{t.sub}</p>
+          </section>
+
+          <section className="scroll-calc scroll-rise d1" aria-label="Scroll calculator">
+            <button
+              className={`scroll-drop${scanning ? " scanning" : ""}`}
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              onKeyDown={handleDropKey}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault();
+                void handleScan(event.dataTransfer.files[0]);
+              }}
+            >
+              <span className="di">📱</span>
+              <b>{scanning ? t.dropScanning : dropDone ? t.dropDone : t.dropTitle}</b>
+              <span className="dsub">{t.dropSub}</span>
+              {!dropDone ? <span className="dhint">{t.dropHint}</span> : null}
+              <span className="beam" />
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(event: ChangeEvent<HTMLInputElement>) => void handleScan(event.target.files?.[0])}
+            />
+
+            <div className="scroll-orsep"><span>{t.orManual}</span></div>
+            <div className="scroll-row-label">
+              <label htmlFor="hours">{t.slider}</label>
+              <div className="scroll-val mono"><span>{hours.toFixed(1)}</span> {t.hday}</div>
+            </div>
+            <input
+              id="hours"
+              className="scroll-range"
+              type="range"
+              min="0.5"
+              max="12"
+              step="0.5"
+              value={hours}
+              style={{ "--fill": `${rangeFill}%` } as CSSProperties}
+              onChange={(event) => {
+                setHours(Number(event.target.value));
+                setVerified(false);
+                setDropDone(false);
+              }}
+            />
+            <div className="scroll-scale">{t.scales.map((label) => <span key={label}>{label}</span>)}</div>
+
+            <div className="scroll-regions" role="group" aria-label="Compare against">
+              {regionOrder.map((key) => (
+                <button className={region === key ? "on" : ""} key={key} type="button" onClick={() => setRegion(key)}>
+                  {key === "ww" ? "🌏 " : ""}{t.regions[key]}
+                </button>
+              ))}
+            </div>
+
+            <div className="scroll-pos loss">
+              <div className="name"><b>{t.scrollpos} <span className="tag l">{t.openloss}</span>{verified ? <span className="tag v">✓ {t.verified}</span> : null}</b><span>{t.hrsyr}</span></div>
+              <div className="num mono">-{fmt.format(yearly)} h</div>
+            </div>
+            <div className="scroll-pos rank">
+              <div className="name"><b>{rankLine}</b><span>{t.morethan(percentile)} · {t.bench}</span></div>
+              <div className="num mono">P{percentile}</div>
+            </div>
+            <div className="scroll-pos loss">
+              <div className="name"><b>{fun.title}</b><span>{fun.sub}</span></div>
+              <div className="num mono">{fun.num}</div>
+            </div>
+
+            <button className="scroll-flip" type="button" aria-pressed={flipped} onClick={() => setFlipped((value) => !value)}>
+              {flipped ? t.flipHide : `${t.flip} ↺`}
+            </button>
+
+            {flipped ? (
+              <div>
+                <div className="scroll-pos gain">
+                  <div className="name"><b>{t.learnpos} <span className="tag g">{t.compounding}</span></b><span>{t.feedcould}</span></div>
+                  <div className="num mono">+61 {t.hyr}</div>
+                </div>
+                {t.ladder.map(([when, title, sub]) => (
+                  <div className="scroll-rung" key={when}>
+                    <div className="when mono">{when}</div>
+                    <div><span>{title}</span><span>{sub}</span></div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <button className="scroll-share" type="button" onClick={() => { void submitResult(); setModalOpen(true); }}>
+              {t.getcard}
+            </button>
+            <p className="scroll-privnote">🔒 {t.priv}</p>
+          </section>
+        </div>
+
+        <div className="scroll-botgrid">
+          <section className="scroll-standings scroll-rise d2">
+            <h2>{t.stand} 🏆</h2>
+            <p className="ssub">{t.standsub}</p>
+            {sortedStandings.map((item, index) => (
+              <div className={`srow${index === 0 ? " leader" : ""}${item.region === region ? " you" : ""}`} key={item.region}>
+                <div className="medal">{["🥇", "🥈", "🥉", "—"][index]}</div>
+                <div className="mkt"><b>{item.region === "ww" ? "🌏 " : ""}{t.regions[item.region]}</b>{item.region === region ? <span>{t.youare}</span> : null}</div>
+                <div className="avg mono">{item.averageHours.toFixed(1)}h<span>{t.avgday}</span></div>
+                <div className="flippct mono">{item.flippedPercent}%<span>{t.flipped}</span></div>
+              </div>
+            ))}
+            <p className="note">{t.standnote}</p>
+          </section>
+
+          <section className="scroll-tape scroll-rise d3">
+            <h2>{t.tape} 📟</h2>
+            <p className="tsub">{t.tapesub}</p>
+            {tapeRows.map((row, index) => {
+              const rowYear = Math.round(row.hours * HRS_YR);
+              const rowP = normalPercentile(row.hours);
+              const rowTop = Math.max(1, 100 - rowP);
+              return (
+                <div className={`trow${row.flipped ? " flipped" : ""}`} key={`${row.region}-${row.hours}-${index}`}>
+                  <span className="who"><b>{t.anon} · {t.regions[row.region]}</b>{row.note ? ` · ${t.tapeNotes[row.note]}` : ""}</span>
+                  <span><span className="tnum mono">{row.flipped ? "+10m" : `-${fmt.format(rowYear)}h`}</span><span className="pct mono">Top {rowTop}%</span></span>
+                </div>
+              );
+            })}
+            <p className="note">{t.tapenote}</p>
+          </section>
+        </div>
+
+        <footer className="scroll-footer">
+          <b>NeuralFin Technologies</b> · <span>{t.f1}</span> <span>{t.f2}</span> <span>{t.f3}</span>
+        </footer>
+      </div>
+
+      {modalOpen ? (
+        <div className="scroll-overlay open" role="dialog" aria-modal="true" aria-label="Your Scroll P&L card" onClick={(event) => { if (event.target === event.currentTarget) setModalOpen(false); }}>
+          <div className="scroll-cardwrapper" onKeyDown={(event) => { if (event.key === "Escape") setModalOpen(false); }}>
+            <div className={`scroll-card${verified ? " verified" : ""}`}>
+              <div className="glow r" /><div className="glow g" />
+              {verified ? <div className="vbadge">✓ {t.vbadge}</div> : null}
+              <div className="cb">{t.cardtitle}</div>
+              <div className="big mono">-{fmt.format(yearly)}h</div>
+              <div className="rankline">{rankLine} {top <= 25 ? "💀" : "📉"}</div>
+              <div><span className="arch">{arch}</span></div>
+              <div className="roast">{fun.title} {fun.num}. <i>{fun.sub}</i></div>
+              {verified ? <div className="roast">{t.mostShorted} <b>TikTok -37m</b> · <b>WeChat -31m</b></div> : null}
+              <div className="chips">
+                <span className="chip"><b>-{workWeeks}</b> {lang === "zh" ? "個工作週" : "work wks"}</span>
+                <span className="chip"><b>{diff >= 0 ? "+" : ""}{diff}%</b> {lang === "zh" ? "對比市場平均" : "vs market avg"}</span>
+              </div>
+              <div className="vsbar">
+                <div className="vlabel"><span>{lang === "zh" ? `你 · ${hours.toFixed(1)}小時` : `You · ${hours.toFixed(1)}h`}</span><span>{t.regions[region]} avg · {marketAverage.toFixed(1)}h</span></div>
+                <div className="track you"><i style={{ width: `${Math.round((hours / maxBar) * 100)}%` }} /></div>
+                <div className="track mkt"><i style={{ width: `${Math.round((marketAverage / maxBar) * 100)}%` }} /></div>
+              </div>
+              <div className="div" />
+              <div className="flipline"><span>{t.cardflip}</span><b>{t.cardflipb}</b></div>
+              <div className="challenge">{t.challenge}<br />{t.scan}</div>
+              <div className="brand"><b><img src="/icon.png" alt="" />{PUBLIC_SCROLL_LABEL}</b><span>#ScrollAudit</span></div>
+            </div>
+            <div className="scroll-modalbtns">
+              <button className="mb save" type="button" onClick={() => void saveCard()}>{t.savebtn}</button>
+              <a className="mb app" href={webAppHref}>{t.getapp}</a>
+              <button ref={closeRef} className="mb close" type="button" onClick={() => setModalOpen(false)}>{t.closebtn}</button>
+            </div>
+            <div className="scroll-stores modal-stores">
+              <a className="scroll-store-button" href={appStoreHref} aria-label="Download on the App Store"><img src="/assets/app-store.svg" alt="Download on the App Store" /></a>
+              <a className="scroll-store-button" href={playStoreHref} aria-label="Get it on Google Play"><img src="/assets/google-play.svg" alt="Get it on Google Play" /></a>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="scroll-sticky">
+        <div className="in">
+          <div className="txt"><b>{t.sticky1}</b><span>{t.sticky2}</span></div>
+          <div className="scroll-stores">
+            <a className="scroll-store-button" href={appStoreHref} aria-label="Download on the App Store"><img src="/assets/app-store.svg" alt="Download on the App Store" /></a>
+            <a className="scroll-store-button" href={playStoreHref} aria-label="Get it on Google Play"><img src="/assets/google-play.svg" alt="Get it on Google Play" /></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
