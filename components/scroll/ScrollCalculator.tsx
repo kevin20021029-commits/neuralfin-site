@@ -2,6 +2,7 @@
 
 import { ChangeEvent, KeyboardEvent, type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { appLinks } from "@/lib/site";
+import { parseScreenTimeText, type AppRoast } from "@/lib/scroll/ocrSanitizer";
 import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, normalPercentile, type ScrollRegion } from "@/lib/scroll/campaign";
 
 const HRS_YR = 365;
@@ -11,13 +12,6 @@ const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
 type Lang = "en" | "zh";
 type TapeRow = { region: ScrollRegion; hours: number; note?: "cs" | "algo" | "flip" | "grass"; flipped?: boolean };
-type AppRoast = { name: string; minutes: number };
-type ParsedScreenTime = {
-  hours: number | null;
-  source: "average" | "weekly-total" | "day-total" | null;
-  apps: AppRoast[];
-  confidence: number;
-};
 
 const regionOrder: ScrollRegion[] = ["ww", "hk", "sg", "th"];
 
@@ -203,95 +197,6 @@ function appLink(base: string, hours: number, region: ScrollRegion, verified: bo
   url.searchParams.set(SCROLL_DEEP_LINK_PARAMS.verified, verified ? "1" : "0");
   url.searchParams.set(SCROLL_DEEP_LINK_PARAMS.lang, lang);
   return url.toString();
-}
-
-function normalizeOcrText(text: string) {
-  return text
-    .replace(/[：﹕]/g, ":")
-    .replace(/[–—]/g, "-")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function parseDurationToHours(input: string) {
-  const text = input.toLowerCase();
-  const colon = text.match(/\b(\d{1,2})\s*:\s*(\d{2})\b/);
-  if (colon) {
-    const value = Number(colon[1]) + Number(colon[2]) / 60;
-    return value >= 0.1 && value <= 24 ? value : null;
-  }
-
-  const hoursMatch = text.match(/(\d{1,2}(?:[.,]\d+)?)\s*(?:h|hr|hrs|hour|hours|小時|小时|ชม\.?|ชั่วโมง)/i);
-  const minutesMatch = text.match(/(\d{1,3})\s*(?:m|min|mins|minute|minutes|分鐘|分钟|นาที)/i);
-  const hours = hoursMatch ? Number(hoursMatch[1].replace(",", ".")) : 0;
-  const minutes = minutesMatch ? Number(minutesMatch[1]) : 0;
-  const value = hours + minutes / 60;
-  return value >= 0.1 && value <= 24 ? value : null;
-}
-
-function firstDurationNearLabel(text: string, label: RegExp, windowChars = 140) {
-  const match = label.exec(text);
-  if (!match) return null;
-  const start = Math.max(0, match.index - 30);
-  const end = Math.min(text.length, match.index + windowChars);
-  return parseDurationToHours(text.slice(match.index + match[0].length, end)) ?? parseDurationToHours(text.slice(start, match.index));
-}
-
-function extractAppRoasts(rawText: string) {
-  const lines = rawText
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  const blocked = /screen time|digital wellbeing|settings|average|avg|daily|total|all apps|pickups|notifications|螢幕|屏幕|平均|每日|總計|总计|ทั้งหมด|เฉลี่ย|หน้าจอ/i;
-
-  return lines
-    .map((line): AppRoast | null => {
-      if (blocked.test(line)) return null;
-      const duration = parseDurationToHours(line);
-      if (!duration) return null;
-      const name = line
-        .replace(/\b\d{1,2}\s*:\s*\d{2}\b/g, "")
-        .replace(/\d{1,2}(?:[.,]\d+)?\s*(?:h|hr|hrs|hour|hours|小時|小时|ชม\.?|ชั่วโมง)/gi, "")
-        .replace(/\d{1,3}\s*(?:m|min|mins|minute|minutes|分鐘|分钟|นาที)/gi, "")
-        .replace(/[·•|-]+$/g, "")
-        .trim();
-      if (name.length < 2 || name.length > 32) return null;
-      return { name, minutes: Math.round(duration * 60) };
-    })
-    .filter((app): app is AppRoast => app !== null)
-    .sort((a, b) => b.minutes - a.minutes)
-    .slice(0, 3);
-}
-
-export function parseScreenTimeText(rawText: string, ocrConfidence = 0): ParsedScreenTime {
-  const text = normalizeOcrText(rawText);
-  const apps = extractAppRoasts(rawText);
-  const confidence = Math.max(0, Math.min(100, ocrConfidence));
-  const confidenceOk = confidence === 0 || confidence >= 45;
-
-  const average =
-    firstDurationNearLabel(text, /\b(?:daily\s+average|average|avg\.?|avg\s*\/\s*day|per\s+day)\b/i) ??
-    firstDurationNearLabel(text, /(?:每日平均|日均|平均每天|平均每日|平均|เฉลี่ยต่อวัน|เฉลี่ย|ต่อวัน)/i);
-  if (average && average >= 0.5 && average <= 12 && confidenceOk) {
-    return { hours: average, source: "average", apps, confidence };
-  }
-
-  const weeklyTotal =
-    firstDurationNearLabel(text, /\b(?:week|weekly|this\s+week)\b/i) ??
-    firstDurationNearLabel(text, /(?:本週|本周|週總計|周总计|รายสัปดาห์|สัปดาห์)/i);
-  if (weeklyTotal && weeklyTotal >= 3.5 && weeklyTotal <= 84 && confidenceOk) {
-    return { hours: weeklyTotal / 7, source: "weekly-total", apps, confidence };
-  }
-
-  const dayTotal =
-    firstDurationNearLabel(text, /\b(?:today|day|daily|screen\s+time|total)\b/i) ??
-    firstDurationNearLabel(text, /(?:今天|今日|單日|单日|螢幕使用時間|屏幕使用时间|วันนี้|รายวัน|เวลาหน้าจอ)/i);
-  if (dayTotal && dayTotal >= 0.5 && dayTotal <= 12) {
-    return { hours: dayTotal, source: "day-total", apps, confidence };
-  }
-
-  return { hours: null, source: null, apps, confidence };
 }
 
 async function parseScreenshot(file: File) {
