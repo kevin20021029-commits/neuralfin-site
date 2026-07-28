@@ -5,6 +5,7 @@ import { appLinks } from "@/lib/site";
 import { parseScreenTimeText, type AppRoast } from "@/lib/scroll/ocrSanitizer";
 import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, normalPercentile, type ScrollRegion } from "@/lib/scroll/campaign";
 import { FLIP_MINUTES_PER_DAY, LADDER_TRACKS, getEducationOutput, getTrackName } from "@/lib/scroll/education";
+import { getArchetypeCopy, getScanStageMessage, getShareCaptionVariant, getTapeNote, type ScanStage } from "@/lib/scroll/personality";
 
 const HRS_YR = 365;
 const PUBLIC_HOME_URL = "https://www.neuralfin.ai";
@@ -12,17 +13,17 @@ const PUBLIC_SCROLL_LABEL = "www.neuralfin.ai/scroll";
 const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
 type Lang = "en" | "zh";
-type TapeRow = { region: ScrollRegion; hours: number; note?: "cs" | "algo" | "flip" | "grass"; flipped?: boolean };
+type TapeRow = { region: ScrollRegion; hours: number; flipped?: boolean };
 
 const regionOrder: ScrollRegion[] = ["ww", "hk", "sg", "th"];
 
 const demoTape: TapeRow[] = [
-  { region: "hk", hours: 6.5, note: "cs" },
+  { region: "hk", hours: 6.5 },
   { region: "sg", hours: 3 },
-  { region: "th", hours: 8, note: "algo" },
-  { region: "hk", hours: 2, note: "flip", flipped: true },
+  { region: "th", hours: 8 },
+  { region: "hk", hours: 2, flipped: true },
   { region: "sg", hours: 5.5 },
-  { region: "hk", hours: 11, note: "grass" },
+  { region: "hk", hours: 11 },
 ];
 
 const str = {
@@ -60,7 +61,6 @@ const str = {
     dropTitle: "Upload your screen-time screenshot",
     dropSub: "Read on your device · never uploaded",
     dropHint: "iPhone: Settings → Screen Time · Android: Digital Wellbeing",
-    dropScanning: "Reading on your device...",
     dropDone: "We read {hours} h/day — look right?",
     dropDay: "That's a single day — use it manually below, or upload Week view for your average.",
     dropApps: "Couldn't read your hours — set them below.",
@@ -97,16 +97,7 @@ const str = {
       if (yr < 1200) return { title: "One full watch of Titanic", sub: "The boat sinks every time.", num: `×${Math.round(yr / 3.23)}` };
       return { title: "Flying HK → New York", sub: "Without the air miles.", num: `×${Math.round(yr / 16)}` };
     },
-    arch: (h: number) => {
-      if (h < 1.5) return "The Saint";
-      if (h < 3) return "Casual Scroller";
-      if (h < 5) return "Certified Scroller";
-      if (h < 8) return "The Algorithm's Favorite";
-      return "Touch Grass Candidate";
-    },
-    tapeNotes: { cs: "certified scroller", algo: "the algorithm won", flip: "flipped", grass: "touch grass" },
-    shareText: (loss: string, rank: string) => `I'm down ${loss} this year. ${rank} — are you down more? ${PUBLIC_SCROLL_LABEL} #ScrollAudit`,
-    nativeReview: "照這個節奏, zh step strip, zh track names, and micro-takeaway copy require native + compliance review before launch.",
+    nativeReview: "照這個節奏, zh step strip, zh track names, archetype subtitles, tape notes, scan stages, share variants, and micro-takeaway copy require native + compliance review before launch.",
   },
   zh: {
     pill: "為滑屏世代而生",
@@ -142,7 +133,6 @@ const str = {
     dropTitle: "上傳你的螢幕時間截圖",
     dropSub: "只在你的裝置上讀取 · 永不上傳",
     dropHint: "iPhone：設定 → 螢幕使用時間 · Android：數位健康",
-    dropScanning: "裝置本機讀取中...",
     dropDone: "我們讀到 {hours} 小時／天——看起來對嗎？",
     dropDay: "這是單日數字——可手動使用，或上傳週視圖取得平均。",
     dropApps: "讀不到你的時數——請在下方手動設定。",
@@ -179,18 +169,13 @@ const str = {
       if (yr < 1200) return { title: "完整看完《鐵達尼號》", sub: "船每次都沉。", num: `×${Math.round(yr / 3.23)}` };
       return { title: "香港飛紐約", sub: "里數一分都沒有。", num: `×${Math.round(yr / 16)}` };
     },
-    arch: (h: number) => {
-      if (h < 1.5) return "聖人";
-      if (h < 3) return "輕度滑友";
-      if (h < 5) return "認證滑屏員";
-      if (h < 8) return "演算法的最愛";
-      return "摸草候選人";
-    },
-    tapeNotes: { cs: "認證滑屏員", algo: "演算法贏了", flip: "已翻轉", grass: "該摸摸草了" },
-    shareText: (loss: string, rank: string) => `我今年已經虧了 ${loss}。${rank}——你虧得比我多嗎？${PUBLIC_SCROLL_LABEL} #ScrollAudit`,
-    nativeReview: "「照這個節奏」、步驟提示、課程名稱與第零課文案需 native + compliance review。",
+    nativeReview: "「照這個節奏」、步驟提示、課程名稱、卡片副標、tape note、掃描狀態、分享文案與第零課文案需 native + compliance review。",
   },
 } as const;
+
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
 
 function appLink(base: string, hours: number, region: ScrollRegion, verified: boolean, lang: Lang) {
   const url = new URL(base);
@@ -222,6 +207,7 @@ export function ScrollCalculator() {
   const [verified, setVerified] = useState(false);
   const [flipped, setFlipped] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [scanStage, setScanStage] = useState<ScanStage>("reading");
   const [dropDone, setDropDone] = useState(false);
   const [parsedHours, setParsedHours] = useState<number | null>(null);
   const [scanNotice, setScanNotice] = useState<string | null>(null);
@@ -242,7 +228,9 @@ export function ScrollCalculator() {
   const marketAverage = SCROLL_STANDINGS.find((item) => item.region === region)?.averageHours ?? 4.4;
   const diff = Math.round(((hours - marketAverage) / marketAverage) * 100);
   const workWeeks = Math.round(yearly / 40);
-  const arch = t.arch(hours);
+  const archetype = getArchetypeCopy(hours, lang);
+  const arch = archetype.title;
+  const archSubtitle = archetype.subtitle;
   const rankLine = t.topN(top, regionName);
   const maxBar = Math.max(hours, marketAverage) * 1.15;
   const appStoreHref = appLink(appLinks.appStore, hours, region, verified, lang);
@@ -254,7 +242,7 @@ export function ScrollCalculator() {
   const education = getEducationOutput(hours, lang);
   const ladderRows = [...t.ladder, t.milestone(education.milestoneLabel)];
   const dropTitleText = scanning
-    ? t.dropScanning
+    ? getScanStageMessage(lang, scanStage)
     : dropDone
       ? t.dropDone.replace("{hours}", parsedHoursLabel)
       : t.dropTitle;
@@ -333,12 +321,17 @@ export function ScrollCalculator() {
   async function handleScan(file?: File) {
     if (!file || scanning) return;
     setScanning(true);
+    setScanStage("reading");
     setScanNotice(null);
     setDropDone(false);
+    const auditTimer = window.setTimeout(() => setScanStage("auditing"), 450);
     try {
       const parsed = await parseScreenshot(file);
+      window.clearTimeout(auditTimer);
       setAppRoasts(parsed.apps);
       if (parsed.hours && parsed.source !== "day-total") {
+        setScanStage("success");
+        await wait(350);
         const rounded = Math.round(parsed.hours * 2) / 2;
         setHours(rounded);
         setParsedHours(rounded);
@@ -347,6 +340,8 @@ export function ScrollCalculator() {
         setScanNotice(t.dropDone.replace("{hours}", rounded.toFixed(1)));
         scheduleAutoFlip();
       } else if (parsed.hours && parsed.source === "day-total") {
+        setScanStage("fail");
+        await wait(500);
         const rounded = Math.round(parsed.hours * 2) / 2;
         setHours(rounded);
         setParsedHours(null);
@@ -354,17 +349,24 @@ export function ScrollCalculator() {
         setDropDone(false);
         setScanNotice(t.dropDay);
       } else if (parsed.apps.length > 0) {
+        setScanStage("fail");
+        await wait(500);
         setParsedHours(null);
         setVerified(false);
         setDropDone(false);
         setScanNotice(t.dropApps);
       } else {
+        setScanStage("fail");
+        await wait(500);
         setParsedHours(null);
         setVerified(false);
         setDropDone(false);
         setScanNotice(t.dropFail);
       }
     } catch {
+      window.clearTimeout(auditTimer);
+      setScanStage("fail");
+      await wait(500);
       setParsedHours(null);
       setVerified(false);
       setDropDone(false);
@@ -438,6 +440,9 @@ export function ScrollCalculator() {
     c.fillStyle = "#FF5C6C";
     c.font = "900 34px Inter, -apple-system, sans-serif";
     c.fillText(arch.toUpperCase(), PAD + 22, 556);
+    c.fillStyle = "rgba(247,251,247,.58)";
+    c.font = "600 28px Inter, -apple-system, sans-serif";
+    c.fillText(archSubtitle, PAD, 614);
     c.fillStyle = "#f7fbf7";
     c.font = "600 40px Inter, -apple-system, sans-serif";
     c.fillText(`${fun.title} ${fun.num}.`, PAD, 668);
@@ -480,7 +485,7 @@ export function ScrollCalculator() {
     canvas.toBlob(async (blob) => {
       if (!blob) return;
       const image = new File([blob], "my-scroll-pnl.png", { type: "image/png" });
-      const text = t.shareText(`-${fmt.format(yearly)}h`, rankLine);
+      const text = getShareCaptionVariant(lang, `-${fmt.format(yearly)}h`, rankLine);
       const shareData = { files: [image], title: "My Scroll P&L", text };
       if (navigator.canShare?.(shareData)) {
         try {
@@ -658,6 +663,7 @@ export function ScrollCalculator() {
                 <div className="pace">{t.pace}</div>
                 <div className="rankline">{rankLine} {top <= 25 ? "💀" : "📉"}</div>
                 <div><span className="arch">{arch}</span></div>
+                <div className="arch-subtitle">{archSubtitle}</div>
                 <div className="roast">{fun.title} {fun.num}. <i>{fun.sub}</i></div>
                 {hasAppRoasts ? <div className="roast">{t.mostShorted} <b>{appRoastText}</b></div> : null}
                 <div className="chips">
@@ -710,7 +716,7 @@ export function ScrollCalculator() {
               const rowTop = Math.max(1, 100 - rowP);
               return (
                 <div className={`trow${row.flipped ? " flipped" : ""}`} key={`${row.region}-${row.hours}-${index}`}>
-                  <span className="who"><b>{t.anon} · {t.regions[row.region]}</b>{row.note ? ` · ${t.tapeNotes[row.note]}` : ""}</span>
+                  <span className="who"><b>{t.anon} · {t.regions[row.region]}</b> · {getTapeNote(lang, Boolean(row.flipped), index)}</span>
                   <span><span className="tnum mono">{row.flipped ? "+10m" : `-${fmt.format(rowYear)}h`}</span><span className="pct mono">Top {rowTop}%</span></span>
                 </div>
               );
