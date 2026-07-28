@@ -15,6 +15,7 @@ const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
 type Lang = "en" | "zh";
 type TapeRow = { region: ScrollRegion; hours: number; flipped?: boolean };
+type UploadStatus = "idle" | "received" | "read" | "failed";
 
 const regionOrder: ScrollRegion[] = ["ww", "hk", "sg", "th"];
 
@@ -62,8 +63,12 @@ const str = {
     dropTitle: "Upload your screen-time screenshot",
     dropSub: "Read on your device · never uploaded",
     dropHint: "iPhone: Settings → Screen Time · Android: Digital Wellbeing",
+    dropReceived: "✓ Screenshot received",
+    dropRead: (duration: string) => `✓ Read from your screenshot: ${duration}`,
+    dropCouldnt: "Couldn't read that",
+    dropReplace: "Use a different screenshot",
     dropDone: "We read {hours} h/day — look right?",
-    dropDay: "That's a single day — use it manually below, or upload Week view for your average.",
+    dropDay: (duration: string) => `That's today's number (${duration}) — set. For your true average, upload the Week view.`,
     dropApps: "Couldn't read your hours — set them below.",
     dropFail: "Couldn't read your hours — set them below.",
     orManual: "or drag it manually",
@@ -132,8 +137,17 @@ const str = {
     dropTitle: "上傳你的螢幕時間截圖",
     dropSub: "只在你的裝置上讀取 · 永不上傳",
     dropHint: "iPhone：設定 → 螢幕使用時間 · Android：數位健康",
+    // DRAFT — native review required
+    dropReceived: "✓ 已收到截圖",
+    // DRAFT — native review required
+    dropRead: (duration: string) => `✓ 已從截圖讀取：${duration}`,
+    // DRAFT — native review required
+    dropCouldnt: "讀不到這張截圖",
+    // DRAFT — native review required
+    dropReplace: "改用另一張截圖",
     dropDone: "我們讀到 {hours} 小時／天——看起來對嗎？",
-    dropDay: "這是單日數字——可手動使用，或上傳週視圖取得平均。",
+    // DRAFT — native review required
+    dropDay: (duration: string) => `這是今天的數字（${duration}）——已設定。若要真實平均，請上傳週視圖。`,
     dropApps: "讀不到你的時數——請在下方手動設定。",
     dropFail: "讀不到你的時數——請在下方手動設定。",
     orManual: "或者手動拖一下",
@@ -174,6 +188,22 @@ function wait(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
+function formatDurationFromHours(hours: number, lang: Lang) {
+  const totalMinutes = Math.max(0, Math.round(hours * 60));
+  const wholeHours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (lang === "zh") {
+    if (wholeHours === 0) return `${minutes}分鐘`;
+    if (minutes === 0) return `${wholeHours}小時`;
+    return `${wholeHours}小時 ${minutes}分鐘`;
+  }
+
+  if (wholeHours === 0) return `${minutes}m`;
+  if (minutes === 0) return `${wholeHours}h`;
+  return `${wholeHours}h ${minutes}m`;
+}
+
 function appLink(base: string, hours: number, region: ScrollRegion, verified: boolean, lang: Lang) {
   const url = new URL(base);
   for (const [key, value] of Object.entries(SCROLL_CAMPAIGN_UTM)) {
@@ -205,7 +235,9 @@ export function ScrollCalculator() {
   const [flipped, setFlipped] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanStage, setScanStage] = useState<ScanStage>("reading");
-  const [dropDone, setDropDone] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
+  const [uploadReadDuration, setUploadReadDuration] = useState<string | null>(null);
+  const [uploadPreviewUrl, setUploadPreviewUrl] = useState<string | null>(null);
   const [parsedHours, setParsedHours] = useState<number | null>(null);
   const [scanNotice, setScanNotice] = useState<string | null>(null);
   const [appRoasts, setAppRoasts] = useState<AppRoast[]>([]);
@@ -213,6 +245,7 @@ export function ScrollCalculator() {
   const fileRef = useRef<HTMLInputElement>(null);
   const hoursBlockRef = useRef<HTMLDivElement>(null);
   const hoursSliderRef = useRef<HTMLInputElement>(null);
+  const uploadPreviewRef = useRef<string | null>(null);
   const autoFlipStartedRef = useRef(false);
   const autoFlipTimerRef = useRef<number | null>(null);
 
@@ -235,13 +268,17 @@ export function ScrollCalculator() {
   const rangeFill = ((hours - 0.5) / 11.5) * 100;
   const hasAppRoasts = appRoasts.length > 0;
   const appRoastText = appRoasts.map((app) => `${app.name} -${app.minutes}m`).join(" · ");
-  const parsedHoursLabel = parsedHours?.toFixed(1) ?? hours.toFixed(1);
   const education = getEducationOutput(hours, lang);
   const ladderRows = [...t.ladder, t.milestone(education.milestoneLabel)];
   const dropTitleText = scanning
     ? getScanStageMessage(lang, scanStage)
-    : dropDone
-      ? t.dropDone.replace("{hours}", parsedHoursLabel)
+    : t.dropTitle;
+  const dropStateText = scanning
+    ? t.dropReceived
+    : uploadStatus === "read" && uploadReadDuration
+      ? t.dropRead(uploadReadDuration)
+      : uploadStatus === "failed"
+        ? t.dropCouldnt
       : t.dropTitle;
 
   const sortedStandings = useMemo(
@@ -284,8 +321,20 @@ export function ScrollCalculator() {
       if (autoFlipTimerRef.current !== null) {
         window.clearTimeout(autoFlipTimerRef.current);
       }
+      if (uploadPreviewRef.current !== null) {
+        URL.revokeObjectURL(uploadPreviewRef.current);
+      }
     };
   }, []);
+
+  function replaceUploadPreview(file: File) {
+    if (uploadPreviewRef.current !== null) {
+      URL.revokeObjectURL(uploadPreviewRef.current);
+    }
+    const nextUrl = URL.createObjectURL(file);
+    uploadPreviewRef.current = nextUrl;
+    setUploadPreviewUrl(nextUrl);
+  }
 
   async function submitResult() {
     await fetch("/api/scroll-results", {
@@ -317,10 +366,12 @@ export function ScrollCalculator() {
 
   async function handleScan(file?: File) {
     if (!file || scanning) return;
+    replaceUploadPreview(file);
+    setUploadStatus("received");
+    setUploadReadDuration(null);
     setScanning(true);
     setScanStage("reading");
     setScanNotice(null);
-    setDropDone(false);
     const auditTimer = window.setTimeout(() => setScanStage("auditing"), 450);
     try {
       const parsed = await parseScreenshot(file);
@@ -330,34 +381,39 @@ export function ScrollCalculator() {
         setScanStage("success");
         await wait(350);
         const rounded = Math.round(parsed.hours * 2) / 2;
+        const duration = formatDurationFromHours(parsed.hours, lang);
         setHours(rounded);
         setParsedHours(rounded);
         setVerified(true);
-        setDropDone(true);
+        setUploadStatus("read");
+        setUploadReadDuration(duration);
         setScanNotice(t.dropDone.replace("{hours}", rounded.toFixed(1)));
         scheduleAutoFlip();
       } else if (parsed.hours && parsed.source === "day-total") {
         setScanStage("fail");
         await wait(500);
         const rounded = Math.round(parsed.hours * 2) / 2;
+        const duration = formatDurationFromHours(parsed.hours, lang);
         setHours(rounded);
         setParsedHours(null);
         setVerified(false);
-        setDropDone(false);
-        setScanNotice(t.dropDay);
+        setUploadStatus("read");
+        setUploadReadDuration(duration);
+        setScanNotice(t.dropDay(duration));
+        scheduleAutoFlip();
       } else if (parsed.apps.length > 0) {
         setScanStage("fail");
         await wait(500);
         setParsedHours(null);
         setVerified(false);
-        setDropDone(false);
+        setUploadStatus("failed");
         setScanNotice(t.dropApps);
       } else {
         setScanStage("fail");
         await wait(500);
         setParsedHours(null);
         setVerified(false);
-        setDropDone(false);
+        setUploadStatus("failed");
         setScanNotice(t.dropFail);
       }
     } catch {
@@ -366,7 +422,7 @@ export function ScrollCalculator() {
       await wait(500);
       setParsedHours(null);
       setVerified(false);
-      setDropDone(false);
+      setUploadStatus("failed");
       setScanNotice(t.dropFail);
     } finally {
       setScanning(false);
@@ -544,10 +600,19 @@ export function ScrollCalculator() {
                 void handleScan(event.dataTransfer.files[0]);
               }}
             >
-              <span className="di">📱</span>
+              {uploadPreviewUrl ? (
+                <span className="scroll-thumb" aria-hidden="true">
+                  <img src={uploadPreviewUrl} alt="" />
+                </span>
+              ) : (
+                <span className="di">📱</span>
+              )}
               <b>{dropTitleText}</b>
+              {uploadStatus !== "idle" ? (
+                <span className={`scroll-upload-state ${uploadStatus === "failed" ? "bad" : "ok"}`}>{dropStateText}</span>
+              ) : null}
               <span className="dsub">{t.dropSub}</span>
-              {!dropDone ? <span className="dhint">{t.dropHint}</span> : null}
+              <span className="dhint">{uploadStatus === "idle" ? t.dropHint : t.dropReplace}</span>
               <span className="beam" />
             </button>
             <input
@@ -594,7 +659,6 @@ export function ScrollCalculator() {
                   const keepVerified = parsedHours !== null && Math.abs(nextHours - parsedHours) <= 0.5;
                   setHours(nextHours);
                   setVerified(keepVerified);
-                  setDropDone(keepVerified);
                 }}
               />
               <div className="scroll-scale">{t.scales.map((label) => <span key={label}>{label}</span>)}</div>
