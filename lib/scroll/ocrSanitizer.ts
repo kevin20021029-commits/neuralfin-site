@@ -201,6 +201,13 @@ export function parseScreenTimeText(rawText: string, ocrConfidence = 0): ParsedS
     return sanitizeParsedResult({ hours: weeklyTotal / 7, source: "weekly-total", apps, confidence });
   }
 
+  const samsungDayTotal =
+    firstDurationNearLabel(text, /\b(?:screen\s*time\s*today|digital\s+wellbeing|screen\s+time)\b/i, 180) ??
+    firstDurationNearLabel(text, /(?:今天螢幕使用時間|今日螢幕使用時間|今天屏幕使用时间|今日屏幕使用时间|螢幕使用時間今天|屏幕使用时间今天|เวลาหน้าจอวันนี้|เวลาใช้หน้าจอวันนี้|ดิจิทัลเวลบีอิง)/i, 180);
+  if (samsungDayTotal && samsungDayTotal >= 0.5 && samsungDayTotal <= 12) {
+    return sanitizeParsedResult({ hours: samsungDayTotal, source: "day-total", apps, confidence });
+  }
+
   const dayTotal =
     firstDurationNearLabel(text, /\b(?:today|day|daily|screen\s+time|total)\b/i) ??
     firstDurationNearLabel(text, /(?:今天|今日|單日|单日|螢幕使用時間|屏幕使用时间|วันนี้|รายวัน|เวลาหน้าจอ)/i);

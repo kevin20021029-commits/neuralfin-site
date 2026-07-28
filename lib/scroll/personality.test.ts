@@ -43,6 +43,7 @@ test("share caption variants all include loss url and hashtag", () => {
     SHARE_TEXT_VARIANTS[lang].forEach((variant) => {
       const caption = variant("-1,278h", "Top 63% scroller", "www.neuralfin.ai/scroll");
       assert.match(caption, /-1,278h/);
+      assert.match(caption, /Top 63% scroller/);
       assert.match(caption, /www\.neuralfin\.ai\/scroll/);
       assert.match(caption, /#ScrollAudit/);
     });

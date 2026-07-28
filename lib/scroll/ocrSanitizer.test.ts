@@ -103,3 +103,26 @@ test("thai localized screenshot matches catalog", () => {
     { name: "Facebook", minutes: 20 },
   ]);
 });
+
+test("Samsung Digital Wellbeing day dashboard parses total and app list without verification source", () => {
+  const parsed = parseScreenTimeText(
+    [
+      "Digital Wellbeing",
+      "Screen time today",
+      "6 h 2 m",
+      "Most used apps",
+      "YouTube 3 h 16 m",
+      "WhatsApp 1 h 21 m",
+      "Instagram 45 m",
+    ].join("\n"),
+    83,
+  );
+
+  assert.equal(parsed.source, "day-total");
+  assert.equal(Math.round((parsed.hours ?? 0) * 100) / 100, 6.03);
+  assert.deepEqual(parsed.apps, [
+    { name: "YouTube", minutes: 196 },
+    { name: "WhatsApp", minutes: 81 },
+    { name: "Instagram", minutes: 45 },
+  ]);
+});

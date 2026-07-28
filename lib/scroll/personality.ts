@@ -89,14 +89,14 @@ export const SHARE_TEXT_VARIANTS = {
   lastReviewed: "2026-07-28",
   en: [
     (loss: string, rank: string, url: string) => `I'm down ${loss} this year. ${rank} — are you down more? ${url} #ScrollAudit`,
-    (loss: string, _rank: string, url: string) => `I'm down ${loss} this year and the market is me. ${url} #ScrollAudit`,
-    (loss: string, _rank: string, url: string) => `My most shorted stock is my attention span. ${loss}. ${url} #ScrollAudit`,
+    (loss: string, rank: string, url: string) => `I'm down ${loss} this year and the market is me. ${rank}. ${url} #ScrollAudit`,
+    (loss: string, rank: string, url: string) => `My most shorted stock is my attention span. ${loss}. ${rank}. ${url} #ScrollAudit`,
   ],
   // DRAFT — native review required
   zh: [
     (loss: string, rank: string, url: string) => `我今年已經虧了 ${loss}。${rank}——你虧得比我多嗎？${url} #ScrollAudit`,
-    (loss: string, _rank: string, url: string) => `我今年注意力帳面虧損 ${loss}，市場就是我本人。${url} #ScrollAudit`,
-    (loss: string, _rank: string, url: string) => `我最重倉沽空的是注意力。${loss}。${url} #ScrollAudit`,
+    (loss: string, rank: string, url: string) => `我今年注意力帳面虧損 ${loss}，市場就是我本人。${rank}。${url} #ScrollAudit`,
+    (loss: string, rank: string, url: string) => `我最重倉沽空的是注意力。${loss}。${rank}。${url} #ScrollAudit`,
   ],
 } as const;
 

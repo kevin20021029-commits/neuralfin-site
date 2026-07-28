@@ -6,6 +6,7 @@ import { parseScreenTimeText, type AppRoast } from "@/lib/scroll/ocrSanitizer";
 import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, normalPercentile, type ScrollRegion } from "@/lib/scroll/campaign";
 import { FLIP_MINUTES_PER_DAY, LADDER_TRACKS, getEducationOutput, getTrackName } from "@/lib/scroll/education";
 import { getArchetypeCopy, getScanStageMessage, getShareCaptionVariant, getTapeNote, type ScanStage } from "@/lib/scroll/personality";
+import { getRankFrame } from "@/lib/scroll/rank";
 
 const HRS_YR = 365;
 const PUBLIC_HOME_URL = "https://www.neuralfin.ai";
@@ -90,8 +91,6 @@ const str = {
     anon: "anon",
     bench: "vs. published screen-time benchmarks",
     mostShorted: "Most shorted:",
-    topN: (top: number, region: string) => `Top ${top}% scroller · ${region}`,
-    morethan: (p: number) => `you scroll more than ${p}% of people`,
     fun: (yr: number) => {
       if (yr < 500) return { title: "Every Star Wars film", sub: "...even the prequels.", num: `×${Math.round(yr / 25)}` };
       if (yr < 1200) return { title: "One full watch of Titanic", sub: "The boat sinks every time.", num: `×${Math.round(yr / 3.23)}` };
@@ -162,8 +161,6 @@ const str = {
     anon: "匿名",
     bench: "對比公開螢幕時間統計",
     mostShorted: "最重倉：",
-    topN: (top: number, region: string) => `${region}前 ${top}% 滑屏員`,
-    morethan: (p: number) => `你滑得比 ${p}% 的人多`,
     fun: (yr: number) => {
       if (yr < 500) return { title: "看完全部《星球大戰》", sub: "...連前傳都看了。", num: `×${Math.round(yr / 25)}` };
       if (yr < 1200) return { title: "完整看完《鐵達尼號》", sub: "船每次都沉。", num: `×${Math.round(yr / 3.23)}` };
@@ -223,7 +220,6 @@ export function ScrollCalculator() {
   const regionName = t.regions[region];
   const yearly = Math.round(hours * HRS_YR);
   const percentile = normalPercentile(hours);
-  const top = Math.max(1, 100 - percentile);
   const fun = t.fun(yearly);
   const marketAverage = SCROLL_STANDINGS.find((item) => item.region === region)?.averageHours ?? 4.4;
   const diff = Math.round(((hours - marketAverage) / marketAverage) * 100);
@@ -231,7 +227,8 @@ export function ScrollCalculator() {
   const archetype = getArchetypeCopy(hours, lang);
   const arch = archetype.title;
   const archSubtitle = archetype.subtitle;
-  const rankLine = t.topN(top, regionName);
+  const rankFrame = getRankFrame(percentile, regionName, lang);
+  const rankLine = rankFrame.title;
   const maxBar = Math.max(hours, marketAverage) * 1.15;
   const appStoreHref = appLink(appLinks.appStore, hours, region, verified, lang);
   const playStoreHref = appLink(appLinks.googlePlay, hours, region, verified, lang);
@@ -616,8 +613,8 @@ export function ScrollCalculator() {
               <div className="num mono">-{fmt.format(yearly)} h</div>
             </div>
             <div className="scroll-pos rank">
-              <div className="name"><b>{rankLine}</b><span>{t.morethan(percentile)} · {t.bench}</span></div>
-              <div className="num mono">P{percentile}</div>
+              <div className="name"><b>{rankLine}</b><span>{rankFrame.subtitle} · {t.bench}</span></div>
+              <div className="num mono">{rankFrame.displayPercent}</div>
             </div>
             <div className="scroll-pos loss">
               <div className="name"><b>{fun.title}</b><span>{fun.sub}</span></div>
@@ -661,7 +658,7 @@ export function ScrollCalculator() {
                 <div className="cb">{t.cardtitle}</div>
                 <div className="big mono">-{fmt.format(yearly)}h</div>
                 <div className="pace">{t.pace}</div>
-                <div className="rankline">{rankLine} {top <= 25 ? "💀" : "📉"}</div>
+                <div className="rankline">{rankLine} {percentile < 50 ? "" : Math.max(1, 100 - percentile) <= 25 ? "💀" : "📉"}</div>
                 <div><span className="arch">{arch}</span></div>
                 <div className="arch-subtitle">{archSubtitle}</div>
                 <div className="roast">{fun.title} {fun.num}. <i>{fun.sub}</i></div>
