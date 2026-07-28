@@ -63,6 +63,10 @@ dedicated fixtures post-launch: a rising `unknown`/`failed` or
 - There is intentionally no separate `/zh/scroll` route (unlike the rest of
   the site, which mirrors pages under `/zh/`) — the in-page language toggle
   is the intended design.
+- Future: when the `calculator.neuralfin.ai` subdomain is attached, re-add
+  a host-based rewrite (all paths → `/scroll`) via `vercel.json`. The file
+  was deliberately removed for zero-config Next.js deploys — re-adding it
+  should contain only the rewrite, no build-setting overrides.
 - `POST /api/scroll-results` — submit an anonymous result.
 - `GET /api/scroll-results/summary` — aggregate stats for the tape/percentiles.
 - `GET /api/health` — health check.
