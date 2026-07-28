@@ -57,8 +57,9 @@ test("Chinese card strings are native Han script in both variants", () => {
   }
 });
 
-test("Thai milestone dates use Buddhist-era years via th-TH formatting", () => {
+test("Thai milestone dates use Thai month names with Gregorian years", () => {
   const output = getEducationOutput(3.5, "th", new Date("2026-07-28T12:00:00Z"));
-  assert.match(output.milestoneLabel, /กรกฎาคม/); // July
-  assert.match(output.milestoneLabel, /2570/); // 2027 CE in Buddhist era
+  assert.match(output.milestoneLabel, /กรกฎาคม/); // July, Thai month name
+  assert.match(output.milestoneLabel, /2027/); // deliberately CE, not 2570 BE
+  assert.doesNotMatch(output.milestoneLabel, /2570/);
 });

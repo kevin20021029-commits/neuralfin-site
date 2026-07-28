@@ -95,8 +95,10 @@ export function getMilestoneDate(from = new Date()) {
 
 export function formatMilestoneDate(date: Date, lang: ScrollEducationLang) {
   if (lang === "zh-Hant" || lang === "zh-Hans") return `${date.getFullYear()}年${date.getMonth() + 1}月`;
-  // th-TH renders Buddhist-era years (2027 CE → 2570) — the native convention.
-  if (lang === "th") return new Intl.DateTimeFormat("th-TH", { month: "long", year: "numeric" }).format(date);
+  // Deliberately Gregorian (not Buddhist era): the card mixes with an
+  // English URL/hashtag, CE years are conventional in Thai fintech, and
+  // shared-card years must compare across markets. See VOICE.md (th).
+  if (lang === "th") return new Intl.DateTimeFormat("th-TH-u-ca-gregory", { month: "long", year: "numeric" }).format(date);
   return new Intl.DateTimeFormat("en-US", {
     month: "long",
     year: "numeric",

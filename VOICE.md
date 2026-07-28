@@ -73,13 +73,18 @@ review required. Judgment calls for the reviewer:
 - "Touch grass" kept as the borrowed meme (ไปสัมผัสหญ้า), which circulates
   in Thai internet culture as-is
 - Scrolling rendered as การไถฟีด/การไถ/นักเลื่อน — confirm register
-- First person is เรา (gender-neutral internet register); no ผม/ดิฉัน.
-  The card title uses ของฉัน — confirm or align with เรา
+- First person: DECIDED (pending review) — เรา everywhere, including the
+  card title (P&L การไถของเรา) and challenge line. Gender-neutral
+  consistency beats formality; reviewer may overrule.
+- Years: DECIDED (pending review) — Gregorian (2027), not Buddhist era
+  (2570), on the card and milestone dates. Rationale: the share card mixes
+  with an English URL/hashtag, CE years are conventional in Thai fintech,
+  and Buddhist-era years would break shared-card comparability across
+  markets. Thai month names are kept (กรกฎาคม 2027). Reviewer may
+  challenge.
 - "Top X%" kept in English inside Thai rank lines (internet-native mixing)
 - Company name stays in English in f1 (no official Thai name); SFC rendered
   as สำนักงาน ก.ล.ต. ฮ่องกง (SFC) — needs compliance confirmation
-- Milestone dates use th-TH formatting with Buddhist-era years
-  (2027 CE → 2570) — confirm this is desired on the share card
 - Thai spacing and ๆ usage throughout
 - The full th tables live in `components/scroll/ScrollCalculator.tsx`,
   `lib/scroll/personality.ts`, `lib/scroll/education.ts`, and
