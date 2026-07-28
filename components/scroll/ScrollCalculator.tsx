@@ -57,8 +57,8 @@ const str = {
     dropScanning: "Reading on your device...",
     dropDone: "We read {hours} h/day — look right?",
     dropDay: "That's a single day — use it manually below, or upload Week view for your average.",
-    dropApps: "We read your app list, but not your daily average — set it manually below.",
-    dropFail: "Couldn't read that screenshot — set it manually below.",
+    dropApps: "Couldn't read your hours — set them below.",
+    dropFail: "Couldn't read your hours — set them below.",
     orManual: "or drag it manually",
     priv: "Screenshots are read on your device and never uploaded. App names stay private unless you share them.",
     stand: "Market standings",
@@ -137,8 +137,8 @@ const str = {
     dropScanning: "裝置本機讀取中...",
     dropDone: "我們讀到 {hours} 小時／天——看起來對嗎？",
     dropDay: "這是單日數字——可手動使用，或上傳週視圖取得平均。",
-    dropApps: "我們讀到 App 清單，但未讀到每日平均——請在下方手動設定。",
-    dropFail: "讀不到這張截圖——請在下方手動設定。",
+    dropApps: "讀不到你的時數——請在下方手動設定。",
+    dropFail: "讀不到你的時數——請在下方手動設定。",
     orManual: "或者手動拖一下",
     priv: "截圖只在你的裝置上讀取，永不上傳。App 名稱除非你分享，否則保密。",
     stand: "市場排行榜",
@@ -224,6 +224,8 @@ export function ScrollCalculator() {
   const [appRoasts, setAppRoasts] = useState<AppRoast[]>([]);
   const [tapeRows, setTapeRows] = useState<TapeRow[]>(demoTape);
   const fileRef = useRef<HTMLInputElement>(null);
+  const hoursBlockRef = useRef<HTMLDivElement>(null);
+  const hoursSliderRef = useRef<HTMLInputElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const t = str[lang];
@@ -294,6 +296,15 @@ export function ScrollCalculator() {
     }).catch(() => undefined);
   }
 
+  function landOnHoursControl() {
+    window.requestAnimationFrame(() => {
+      hoursBlockRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.requestAnimationFrame(() => {
+        hoursSliderRef.current?.focus({ preventScroll: true });
+      });
+    });
+  }
+
   async function handleScan(file?: File) {
     if (!file || scanning) return;
     setScanning(true);
@@ -334,6 +345,7 @@ export function ScrollCalculator() {
       setScanNotice(t.dropFail);
     } finally {
       setScanning(false);
+      landOnHoursControl();
     }
   }
 
@@ -498,32 +510,49 @@ export function ScrollCalculator() {
               type="file"
               accept="image/*"
               hidden
-              onChange={(event: ChangeEvent<HTMLInputElement>) => void handleScan(event.target.files?.[0])}
-            />
-
-            <div className="scroll-orsep"><span>{t.orManual}</span></div>
-            <div className="scroll-row-label">
-              <label htmlFor="hours">{t.slider}</label>
-              <div className="scroll-val mono"><span>{hours.toFixed(1)}</span> {t.hday}</div>
-            </div>
-            <input
-              id="hours"
-              className="scroll-range"
-              type="range"
-              min="0.5"
-              max="12"
-              step="0.5"
-              value={hours}
-              style={{ "--fill": `${rangeFill}%` } as CSSProperties}
-              onChange={(event) => {
-                const nextHours = Number(event.target.value);
-                const keepVerified = parsedHours !== null && Math.abs(nextHours - parsedHours) <= 0.5;
-                setHours(nextHours);
-                setVerified(keepVerified);
-                setDropDone(keepVerified);
+              onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                void handleScan(event.target.files?.[0]);
+                event.target.value = "";
               }}
             />
-            <div className="scroll-scale">{t.scales.map((label) => <span key={label}>{label}</span>)}</div>
+
+            <div className="scroll-hours-block" ref={hoursBlockRef}>
+              {scanNotice ? (
+                <p
+                  id="scroll-scan-notice"
+                  className={`scroll-scan-notice${verified ? " ok" : ""}`}
+                  role="status"
+                  aria-live="polite"
+                >
+                  {scanNotice}
+                </p>
+              ) : null}
+              <div className="scroll-orsep"><span>{t.orManual}</span></div>
+              <div className="scroll-row-label">
+                <label htmlFor="hours">{t.slider}</label>
+                <div className="scroll-val mono"><span>{hours.toFixed(1)}</span> {t.hday}</div>
+              </div>
+              <input
+                ref={hoursSliderRef}
+                id="hours"
+                className="scroll-range"
+                type="range"
+                min="0.5"
+                max="12"
+                step="0.5"
+                value={hours}
+                aria-describedby={scanNotice ? "scroll-scan-notice" : undefined}
+                style={{ "--fill": `${rangeFill}%` } as CSSProperties}
+                onChange={(event) => {
+                  const nextHours = Number(event.target.value);
+                  const keepVerified = parsedHours !== null && Math.abs(nextHours - parsedHours) <= 0.5;
+                  setHours(nextHours);
+                  setVerified(keepVerified);
+                  setDropDone(keepVerified);
+                }}
+              />
+              <div className="scroll-scale">{t.scales.map((label) => <span key={label}>{label}</span>)}</div>
+            </div>
 
             <div className="scroll-regions" role="group" aria-label="Compare against">
               {regionOrder.map((key) => (
@@ -574,7 +603,6 @@ export function ScrollCalculator() {
               {t.getcard}
             </button>
             <p className="scroll-privnote">🔒 {t.priv}</p>
-            {scanNotice ? <p className={`scroll-scan-notice${verified ? " ok" : ""}`}>{scanNotice}</p> : null}
           </section>
         </div>
 

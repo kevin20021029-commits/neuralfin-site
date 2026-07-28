@@ -202,6 +202,10 @@
   animation: scrollBeam 1.1s linear infinite;
 }
 
+.scroll-hours-block {
+  scroll-margin-top: 18px;
+}
+
 .scroll-orsep {
   display: flex;
   align-items: center;
@@ -479,7 +483,7 @@
 }
 
 .scroll-scan-notice {
-  margin: 10px 0 0;
+  margin: 12px 0 0;
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 12px;
   background: rgba(255,255,255,0.045);
