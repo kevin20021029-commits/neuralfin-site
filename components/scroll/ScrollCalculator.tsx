@@ -4,6 +4,7 @@ import { ChangeEvent, KeyboardEvent, type CSSProperties, useEffect, useMemo, use
 import { appLinks } from "@/lib/site";
 import { parseScreenTimeText, type AppRoast } from "@/lib/scroll/ocrSanitizer";
 import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, normalPercentile, type ScrollRegion } from "@/lib/scroll/campaign";
+import { FLIP_MINUTES_PER_DAY, LADDER_TRACKS, getEducationOutput, getTrackName } from "@/lib/scroll/education";
 
 const HRS_YR = 365;
 const PUBLIC_HOME_URL = "https://www.neuralfin.ai";
@@ -42,12 +43,19 @@ const str = {
     learnpos: "Learning position",
     compounding: "Compounding",
     feedcould: "what your feed could have taught you",
+    lessonYield: (hours: string, lessons: number, phrase: string, track: string) =>
+      `Your ${hours}h/day = ${lessons} micro-lessons a day hiding in your scroll. You'd finish ${track} ${phrase}.`,
+    lessonZero: "Lesson zero, free:",
     hyr: "h/yr",
     ladder: [
       ["Week 1", "What an ETF actually is", "and why everyone will not stop talking about them"],
       ["Month 1", "Read a balance sheet without sweating", "where the bodies are buried"],
       ["Month 6", "Build your first watchlist thesis", "an actual opinion, not a group-chat tip"],
-      ["Year 1", "≈ a university intro-to-investing course", "funded entirely by your feed"],
+    ],
+    milestone: (date: string) => [
+      "By " + date,
+      "≈ a university intro-to-investing course",
+      "funded entirely by your feed",
     ],
     dropTitle: "Upload your screen-time screenshot",
     dropSub: "Read on your device · never uploaded",
@@ -73,8 +81,7 @@ const str = {
     f3: "This page is a marketing illustration for education and entertainment. It is not financial advice, a forecast, or a projection of returns.",
     vbadge: "VERIFIED SCROLL",
     cardtitle: "My Scroll P&L · 2026",
-    cardflip: "Flipping 10 min/day →",
-    cardflipb: "+61 hours of finance brain per year",
+    cardflip: `Flipping ${FLIP_MINUTES_PER_DAY} min/day →`,
     challenge: "Are you down more than me?",
     scan: "Scan yours ↓",
     savebtn: "Download picture 📸",
@@ -99,7 +106,7 @@ const str = {
     },
     tapeNotes: { cs: "certified scroller", algo: "the algorithm won", flip: "flipped", grass: "touch grass" },
     shareText: (loss: string, rank: string) => `I'm down ${loss} this year. ${rank} — are you down more? ${PUBLIC_SCROLL_LABEL} #ScrollAudit`,
-    nativeReview: "照這個節奏 and zh step strip copy require native review before launch.",
+    nativeReview: "照這個節奏, zh step strip, zh track names, and micro-takeaway copy require native + compliance review before launch.",
   },
   zh: {
     pill: "為滑屏世代而生",
@@ -118,12 +125,19 @@ const str = {
     learnpos: "學習持倉",
     compounding: "複利中",
     feedcould: "你的 feed 本來可以教你的",
+    lessonYield: (hours: string, lessons: number, phrase: string, track: string) =>
+      `你每天 ${hours} 小時 = ${lessons} 節微課藏在滑屏裡。你可在${phrase}完成${track}。`,
+    lessonZero: "第零課，免費：",
     hyr: "小時／年",
     ladder: [
       ["第1週", "ETF 到底是什麼", "以及為什麼人人都在講"],
       ["第1個月", "看懂資產負債表不再冒汗", "知道數字藏在哪裡"],
       ["第6個月", "建立你第一個自選股觀點", "自己的判斷，不是群組貼士"],
-      ["第1年", "≈ 一門大學投資入門課", "全由你的 feed 贊助"],
+    ],
+    milestone: (date: string) => [
+      date + "前",
+      "≈ 一門大學投資入門課",
+      "全由你的 feed 贊助",
     ],
     dropTitle: "上傳你的螢幕時間截圖",
     dropSub: "只在你的裝置上讀取 · 永不上傳",
@@ -149,8 +163,7 @@ const str = {
     f3: "本頁為市場推廣示意，僅供教育與娛樂。不構成投資建議、預測或回報推算。",
     vbadge: "已驗證滑屏",
     cardtitle: "我的滑屏損益 · 2026",
-    cardflip: "每天翻轉 10 分鐘 →",
-    cardflipb: "每年 +61 小時財商",
+    cardflip: `每天翻轉 ${FLIP_MINUTES_PER_DAY} 分鐘 →`,
     challenge: "你虧得比我多嗎？",
     scan: "掃你的 ↓",
     savebtn: "下載圖片 📸",
@@ -175,7 +188,7 @@ const str = {
     },
     tapeNotes: { cs: "認證滑屏員", algo: "演算法贏了", flip: "已翻轉", grass: "該摸摸草了" },
     shareText: (loss: string, rank: string) => `我今年已經虧了 ${loss}。${rank}——你虧得比我多嗎？${PUBLIC_SCROLL_LABEL} #ScrollAudit`,
-    nativeReview: "「照這個節奏」與步驟提示文字需 native review。",
+    nativeReview: "「照這個節奏」、步驟提示、課程名稱與第零課文案需 native + compliance review。",
   },
 } as const;
 
@@ -238,6 +251,8 @@ export function ScrollCalculator() {
   const hasAppRoasts = appRoasts.length > 0;
   const appRoastText = appRoasts.map((app) => `${app.name} -${app.minutes}m`).join(" · ");
   const parsedHoursLabel = parsedHours?.toFixed(1) ?? hours.toFixed(1);
+  const education = getEducationOutput(hours, lang);
+  const ladderRows = [...t.ladder, t.milestone(education.milestoneLabel)];
   const dropTitleText = scanning
     ? t.dropScanning
     : dropDone
@@ -373,9 +388,19 @@ export function ScrollCalculator() {
     canvas.height = 1740;
     const c = canvas.getContext("2d");
     if (!c) return canvas;
+    const ctx = c;
     const W = canvas.width;
     const H = canvas.height;
     const PAD = 84;
+    function fillFitText(text: string, x: number, y: number, maxWidth: number, size: number, weight = 800) {
+      let fontSize = size;
+      do {
+        ctx.font = `${weight} ${fontSize}px Inter, -apple-system, sans-serif`;
+        if (ctx.measureText(text).width <= maxWidth || fontSize <= 24) break;
+        fontSize -= 2;
+      } while (fontSize > 24);
+      ctx.fillText(text, x, y);
+    }
     const bg = c.createLinearGradient(0, 0, W, H);
     bg.addColorStop(0, "#06100d");
     bg.addColorStop(0.55, "#0a1713");
@@ -438,8 +463,7 @@ export function ScrollCalculator() {
     c.font = "400 38px Inter, -apple-system, sans-serif";
     c.fillText(t.cardflip, PAD, 1060);
     c.fillStyle = "#00e68a";
-    c.font = "800 48px Inter, -apple-system, sans-serif";
-    c.fillText(t.cardflipb, PAD, 1124);
+    fillFitText(education.cardLine, PAD, 1124, W - PAD * 2, 34);
     c.fillStyle = "#f7fbf7";
     c.font = "700 42px Inter, -apple-system, sans-serif";
     c.fillText(t.challenge, PAD, H - 260);
@@ -602,16 +626,26 @@ export function ScrollCalculator() {
 
             {flipped ? (
               <div className="scroll-flip-reveal">
+                <div className="scroll-lesson-yield">
+                  {t.lessonYield(hours.toFixed(1), education.lessonsPerDay, education.finishPhrase, getTrackName("foundations", lang))}
+                </div>
                 <div className="scroll-pos gain">
                   <div className="name"><b>{t.learnpos} <span className="tag g">{t.compounding}</span></b><span>{t.feedcould}</span></div>
                   <div className="num mono">+61 {t.hyr}</div>
                 </div>
-                {t.ladder.map(([when, title, sub], index) => (
+                {ladderRows.map(([when, title, sub], index) => (
                   <div className="scroll-rung" key={when} style={{ "--stagger": `${index * 90}ms` } as CSSProperties}>
                     <div className="when mono">{when}</div>
-                    <div><span>{title}</span><span>{sub}</span></div>
+                    <div>
+                      <span>{title}{index < LADDER_TRACKS.length ? <i>{getTrackName(LADDER_TRACKS[index], lang)}</i> : null}</span>
+                      <span>{sub}</span>
+                    </div>
                   </div>
                 ))}
+                <div className="scroll-lesson-zero">
+                  <b>{t.lessonZero}</b>
+                  <span>{education.microTakeaway}</span>
+                </div>
               </div>
             ) : null}
 
@@ -636,7 +670,7 @@ export function ScrollCalculator() {
                   <div className="track mkt"><i style={{ width: `${Math.round((marketAverage / maxBar) * 100)}%` }} /></div>
                 </div>
                 <div className="div" />
-                <div className="flipline"><span>{t.cardflip}</span><b>{t.cardflipb}</b></div>
+                <div className="flipline"><span>{t.cardflip}</span><b>{education.cardLine}</b></div>
                 <div className="challenge">{t.challenge}<br />{t.scan}</div>
                 <div className="brand"><b><img src="/icon.png" alt="" />{PUBLIC_SCROLL_LABEL}</b><span>#ScrollAudit</span></div>
               </div>

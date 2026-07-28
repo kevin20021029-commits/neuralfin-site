@@ -468,6 +468,22 @@
   margin-top: 8px;
 }
 
+.scroll-lesson-yield,
+.scroll-lesson-zero {
+  border: 1px solid rgba(22,240,194,0.18);
+  border-radius: 12px;
+  background: rgba(22,240,194,0.055);
+  color: var(--white);
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.scroll-lesson-yield {
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
 .scroll-flip-reveal .scroll-pos.gain,
 .scroll-rung {
   animation: riseIn 560ms var(--ease-premium) both;
@@ -504,6 +520,34 @@
 .scroll-rung span:first-child {
   color: var(--white);
   font-size: 14px;
+}
+
+.scroll-rung i {
+  display: inline-flex;
+  margin-left: 8px;
+  border: 1px solid rgba(22,240,194,0.18);
+  border-radius: 999px;
+  color: var(--mint);
+  padding: 2px 7px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+  vertical-align: 1px;
+}
+
+.scroll-lesson-zero {
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+.scroll-lesson-zero b {
+  display: block;
+  color: var(--white);
+  margin-bottom: 3px;
+}
+
+.scroll-lesson-zero span {
+  display: block;
 }
 
 .scroll-privnote {
@@ -853,6 +897,7 @@
   margin-top: 2px;
   color: var(--mint);
   font-size: 16px;
+  overflow-wrap: anywhere;
 }
 
 .scroll-card .challenge {

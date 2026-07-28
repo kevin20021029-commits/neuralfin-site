@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -p ${PORT:-4182}",
     "lint": "next lint",
-    "test": "tsx --test lib/scroll/ocrSanitizer.test.ts"
+    "test": "tsx --test lib/scroll/*.test.ts"
   },
   "dependencies": {
     "next": "^14.2.35",
