@@ -44,10 +44,15 @@ dedicated fixtures post-launch: a rising `unknown`/`failed` or
 ## Routes (reconstructed)
 
 - `/scroll` — the calculator page (`app/scroll/page.tsx` →
-  `components/scroll/ScrollCalculator.tsx`). Client component; language is
-  toggled in-page (EN / zh-Hant) via `?lang=en|zh` query param, persisted to
-  `localStorage` (`scroll-calc-lang`). Region (`ww|hk|sg|th`) auto-detects
-  from `navigator.language` and is user-switchable.
+  `components/scroll/ScrollCalculator.tsx`). Client component; three locales
+  (EN / 繁 zh-Hant / 简 zh-Hans) toggled in-page, `?lang=` query param
+  (`en|zh-Hant|zh-Hans`, legacy `zh` → zh-Hant), persisted to `localStorage`
+  (`scroll-calc-lang`). Locale defaults: URL param → stored manual choice →
+  browser detection (Chinese browser tags pick their script: zh-HK/zh-TW/
+  zh-MO → Hant, zh-CN/zh-SG → Hans; bare `zh` follows detected region —
+  HK → Hant, SG → Hans, elsewhere Hans; non-Chinese browsers → EN). Manual
+  toggle always wins and persists. Region (`ww|hk|sg|th`) auto-detects from
+  `navigator.language` and is user-switchable.
 - There is intentionally no separate `/zh/scroll` route (unlike the rest of
   the site, which mirrors pages under `/zh/`) — the in-page language toggle
   is the intended design.
@@ -111,7 +116,8 @@ Defined in `lib/scroll/campaign.ts`; appended to both store links
   `utm_campaign=scroll-audit`.
 - Deep-link params: `sc_hours` (slider value), `sc_region` (`ww|hk|sg|th`),
   `sc_verified` (`1|0` — whether hours came from a validated screenshot
-  parse), `sc_lang` (`en|zh`).
+  parse), `sc_lang` (`en|zh-Hant|zh-Hans`; the pre-three-locale value `zh`
+  is still accepted inbound and maps to `zh-Hant`).
 - The `sc_*` params are a stable, documented contract: the app team consumes
   them in the Phase 2 claim flow. Keep names and value formats stable;
   nothing to build web-side now.

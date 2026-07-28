@@ -15,6 +15,37 @@ export const SCROLL_REGIONS = ["ww", "hk", "sg", "th"] as const;
 
 export type ScrollRegion = (typeof SCROLL_REGIONS)[number];
 
+export const SCROLL_LOCALES = ["en", "zh-Hant", "zh-Hans"] as const;
+
+export type ScrollLocale = (typeof SCROLL_LOCALES)[number];
+
+// Accepts URL params and stored preferences; legacy "zh" (the pre-Hans
+// two-locale era) maps to zh-Hant, which is what it displayed.
+export function normalizeScrollLocale(value: unknown): ScrollLocale | null {
+  if (typeof value !== "string") return null;
+  const tag = value.toLowerCase();
+  if (tag === "en") return "en";
+  if (tag === "zh" || tag === "zh-hant" || tag === "zhhant") return "zh-Hant";
+  if (tag === "zh-hans" || tag === "zhhans") return "zh-Hans";
+  return null;
+}
+
+// Default locale from browser languages + detected region. Chinese browser
+// tags pick their script (zh-HK/zh-TW/zh-MO → Hant, zh-CN/zh-SG → Hans);
+// a bare "zh" falls back to the detected region (Hong Kong → Hant,
+// Singapore → Hans, elsewhere Hans). Non-Chinese browsers stay English —
+// the manual toggle always wins and persists.
+export function detectScrollLocale(languages: readonly string[], region: ScrollRegion): ScrollLocale {
+  for (const raw of languages) {
+    const tag = raw.toLowerCase();
+    if (!tag.startsWith("zh")) continue;
+    if (/hant|-tw|-hk|-mo/.test(tag)) return "zh-Hant";
+    if (/hans|-cn|-sg|-my/.test(tag)) return "zh-Hans";
+    return region === "hk" ? "zh-Hant" : "zh-Hans";
+  }
+  return "en";
+}
+
 export const SCROLL_COMMUNITY_THRESHOLD = 500;
 
 export const SCROLL_BENCHMARK = {

@@ -43,6 +43,24 @@ ScrollCalculator string tables):
 Strings marked `DRAFT — native review required` in
 `components/scroll/ScrollCalculator.tsx` are part of the same pass.
 
+### zh-Hans (Simplified)
+
+The entire zh-Hans string set is machine-converted from zh-Hant with
+vocabulary adjustments for mainland/SG usage, and every string is DRAFT —
+native review required. Reviewers should specifically check:
+
+- Vocabulary swaps made during conversion: 螢幕→屏幕, 影片→视频,
+  設定→设置, 裝置→设备, 數位健康→数字健康, 即時→实时, 社群→社区,
+  示範→演示, 儲存→存储, 時數→时长, 演算法→算法, 沽空→做空,
+  未平虧損→浮亏, 里數→里程, 鐵達尼號→泰坦尼克号, 「」→“”
+- De-Cantonesed phrasing: 你個名→你的名字, 小注怡情→小赌怡情,
+  群組貼士→群里的荐股贴, 有在守紀律→守住纪律了, 組合：感覺派→组合：全凭感觉
+- The full zh-Hans tables in `components/scroll/ScrollCalculator.tsx`,
+  `lib/scroll/personality.ts`, `lib/scroll/education.ts`, and
+  `lib/scroll/rank.ts`
+- Compliance strings (f1/f2/f3) additionally need compliance approval per
+  script — see the compliance rule in CLAUDE.md.
+
 ## Maintenance
 
 All personality strings live in config arrays with a `lastReviewed` date. Review and refresh them per campaign season, before launch, and whenever compliance or native-language review changes the register.

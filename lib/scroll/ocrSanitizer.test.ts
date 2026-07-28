@@ -301,6 +301,33 @@ test("parse outcome classification covers full, total_only, failed", () => {
   assert.equal(classifyParseOutcome(parseScreenTimeText("nothing useful here", 10)), "failed");
 });
 
+test("parser category labels match both Traditional and Simplified scripts", () => {
+  const hant = parseScreenTimeText(
+    ["今日螢幕使用時間", "6 小時 2 分鐘", "影片 3 小時 16 分鐘", "社交 2 小時 35 分鐘", "生產力 5 分鐘"].join("\n"),
+    85,
+  );
+  const hans = parseScreenTimeText(
+    ["今日屏幕使用时间", "6 小时 2 分钟", "视频 3 小时 16 分钟", "社交 2 小时 35 分钟", "生产力 5 分钟"].join("\n"),
+    85,
+  );
+
+  for (const parsed of [hant, hans]) {
+    assert.equal(parsed.source, "day-total");
+    assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 362);
+    assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 351); // Video + Social; Productivity excluded
+  }
+});
+
+test("entertainment and games categories count in both scripts", () => {
+  const hant = parseScreenTimeText("今天\n5 小時 0 分鐘\n娛樂 2 小時 0 分鐘\n遊戲 1 小時 0 分鐘\n創意 30 分鐘", 85);
+  const hans = parseScreenTimeText("今天\n5 小时 0 分钟\n娱乐 2 小时 0 分钟\n游戏 1 小时 0 分钟\n创意 30 分钟", 85);
+
+  for (const parsed of [hant, hans]) {
+    assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 180); // Entertainment + Games; Creativity excluded
+    assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 300);
+  }
+});
+
 test("app row only does not promote an app duration to headline", () => {
   const parsed = parseScreenTimeText("YouTube 3 h 16 m\nWhatsApp 1 h 21 m\nInstagram 45 m", 83);
 

@@ -3,7 +3,7 @@
 import { ChangeEvent, KeyboardEvent, type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { appLinks } from "@/lib/site";
 import { classifyParseOutcome, parseScreenTimeText, type AppRoast, type ParseOutcome, type ScreenTimeLayout } from "@/lib/scroll/ocrSanitizer";
-import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, normalPercentile, type ScrollRegion } from "@/lib/scroll/campaign";
+import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, detectScrollLocale, normalPercentile, normalizeScrollLocale, type ScrollLocale, type ScrollRegion } from "@/lib/scroll/campaign";
 import { FLIP_MINUTES_PER_DAY, LADDER_TRACKS, getEducationOutput, getTrackName } from "@/lib/scroll/education";
 import { getArchetypeCopy, getScanStageMessage, getShareCaptionVariant, getTapeNote, type ScanStage } from "@/lib/scroll/personality";
 import { getRankFrame } from "@/lib/scroll/rank";
@@ -13,7 +13,7 @@ const PUBLIC_HOME_URL = "https://www.neuralfin.ai";
 const PUBLIC_SCROLL_LABEL = "www.neuralfin.ai/scroll";
 const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
-type Lang = "en" | "zh";
+type Lang = ScrollLocale;
 type TapeRow = { region: ScrollRegion; hours: number; flipped?: boolean };
 type UploadStatus = "idle" | "received" | "read" | "failed";
 type ParsedScrollStat = { scrollHours: number; totalHours: number };
@@ -100,6 +100,9 @@ const str = {
     anon: "anon",
     bench: "vs. published screen-time benchmarks",
     mostShorted: "Most shorted:",
+    wkwks: "work wks",
+    vsmkt: "vs market avg",
+    youAt: (hours: string) => `You · ${hours}h`,
     scrollChip: (scroll: string, total: string) => `${scroll} of ${total} was scroll`,
     fun: (yr: number) => {
       if (yr < 500) return { title: "Every Star Wars film", sub: "...even the prequels.", num: `×${Math.round(yr / 25)}` };
@@ -107,7 +110,7 @@ const str = {
       return { title: "Flying HK → New York", sub: "Without the air miles.", num: `×${Math.round(yr / 16)}` };
     },
   },
-  zh: {
+  "zh-Hant": {
     pill: "為滑屏世代而生",
     h1a: "你的滑屏也有",
     sub: "拖到你的每日螢幕時間。看看虧了多少、排第幾名、發卡挑戰朋友，再到 App 把它翻綠。",
@@ -185,12 +188,97 @@ const str = {
     anon: "匿名",
     bench: "對比公開螢幕時間統計",
     mostShorted: "最重倉：",
+    wkwks: "個工作週",
+    vsmkt: "對比市場平均",
+    youAt: (hours: string) => `你 · ${hours}小時`,
     // DRAFT — native review required
     scrollChip: (scroll: string, total: string) => `${total}中有${scroll}是滑屏`,
     fun: (yr: number) => {
       if (yr < 500) return { title: "看完全部《星球大戰》", sub: "...連前傳都看了。", num: `×${Math.round(yr / 25)}` };
       if (yr < 1200) return { title: "完整看完《鐵達尼號》", sub: "船每次都沉。", num: `×${Math.round(yr / 3.23)}` };
       return { title: "香港飛紐約", sub: "里數一分都沒有。", num: `×${Math.round(yr / 16)}` };
+    },
+  },
+  // DRAFT — native review required (every zh-Hans string below, converted
+  // from zh-Hant with mainland/SG vocabulary adjustments)
+  "zh-Hans": {
+    pill: "为滑屏世代而生",
+    h1a: "你的滑屏也有",
+    sub: "拖到你的每日屏幕时间。看看亏了多少、排第几名、发卡挑战朋友，再到 App 把它翻绿。",
+    steps: ["上传", "看看亏损", "发出去"],
+    slider: "你的每日屏幕时间",
+    sliderSub: "计算你的滑屏：社交、视频、游戏",
+    hday: "小时／天",
+    scales: ["30分钟", "圣人", "6小时", "认证滑屏员", "12小时"],
+    regions: { ww: "全球", hk: "香港", sg: "新加坡", th: "泰国" },
+    scrollpos: "滑屏持仓",
+    openloss: "浮亏",
+    verified: "已验证",
+    hrsyr: "每年小时数",
+    pace: "照这个节奏",
+    learnpos: "学习持仓",
+    compounding: "复利中",
+    feedcould: "你的 feed 本来可以教你的",
+    lessonYield: (hours: string, lessons: number, phrase: string, track: string) =>
+      `你每天 ${hours} 小时 = ${lessons} 节微课藏在滑屏里。你可在${phrase}完成${track}。`,
+    lessonZero: "第零课，免费：",
+    hyr: "小时／年",
+    ladder: [
+      ["第1周", "ETF 到底是什么", "以及为什么人人都在聊"],
+      ["第1个月", "看懂资产负债表不再冒汗", "知道数字藏在哪里"],
+      ["第6个月", "建立你第一个自选股观点", "自己的判断，不是群里的荐股贴"],
+    ],
+    milestone: (date: string) => [
+      date + "前",
+      "≈ 一门大学投资入门课",
+      "全由你的 feed 赞助",
+    ],
+    dropTitle: "上传你的屏幕使用时间截图",
+    dropSub: "只在你的设备上读取 · 永不上传",
+    dropHint: "iPhone：设置 → 屏幕使用时间 · Android：数字健康",
+    dropReceived: "✓ 已收到截图",
+    dropRead: (duration: string) => `✓ 已读取：${duration}`,
+    dropReadScrollDay: (scroll: string, total: string) => `${scroll}滑屏 / ${total}今日总时长`,
+    dropReadScroll: (scroll: string) => `${scroll}滑屏时间`,
+    dropCouldnt: "读不到这张截图",
+    dropReplace: "换一张截图",
+    dropDone: "我们读到 {hours} 小时／天——看起来对吗？",
+    dropDay: (duration: string) => `这是今天的数字（${duration}）——已设置。要看真实平均值，请上传周视图。`,
+    dropApps: "读不到你的时长——请在下面手动设置。",
+    dropFail: "读不到你的时长——请在下面手动设置。",
+    orManual: "或者手动拖一下",
+    priv: "截图只在你的设备上读取，永不上传。App 名称除非你分享，否则保密。",
+    stand: "市场排行榜",
+    standsub: "按“翻转率”排名——哪个市场最会把滑屏变本事，谁就赢。",
+    standnote: "目前为演示数据。正式版：由同一组匿名统计（仅时长＋市场）计算。上线初期平均值引用公开统计，社区数据足够后切换。",
+    avgday: "平均／天",
+    flipped: "已翻转",
+    youare: "你的市场",
+    tape: "实时行情",
+    tapesub: "最新滑屏记录，逐笔入市。全部匿名。",
+    tapenote: "目前为演示数据。正式版：上线初期以公开的屏幕时间统计（附来源）为基准；社区数据积累后切换为真实行情。只存储时长＋市场，绝无任何识别信息。",
+    f1: "交易服务由德林证券（香港）有限公司提供，该公司为香港证监会持牌法团。",
+    f2: "截图分析只在你的浏览器本地进行；图片与 App 名称不会上传或存储。社区统计为匿名（仅时长与市场）。",
+    f3: "本页为市场推广示意，仅供教育与娱乐。不构成投资建议、预测或回报推算。",
+    vbadge: "已验证滑屏",
+    cardtitle: "我的滑屏损益 · 2026",
+    cardflip: `每天翻转 ${FLIP_MINUTES_PER_DAY} 分钟 →`,
+    challenge: "你亏得比我多吗？",
+    scan: "扫你的 ↓",
+    savebtn: "下载图片 📸",
+    sticky1: "真正翻转你的损益",
+    sticky2: "每天 10 分钟，就在 NeuralFin App",
+    anon: "匿名",
+    bench: "对比公开屏幕时间统计",
+    mostShorted: "最重仓：",
+    wkwks: "个工作周",
+    vsmkt: "对比市场平均",
+    youAt: (hours: string) => `你 · ${hours}小时`,
+    scrollChip: (scroll: string, total: string) => `${total}中有${scroll}是滑屏`,
+    fun: (yr: number) => {
+      if (yr < 500) return { title: "看完全部《星球大战》", sub: "...连前传都看了。", num: `×${Math.round(yr / 25)}` };
+      if (yr < 1200) return { title: "完整看完《泰坦尼克号》", sub: "船每次都沉。", num: `×${Math.round(yr / 3.23)}` };
+      return { title: "香港飞纽约", sub: "里程一分都没有。", num: `×${Math.round(yr / 16)}` };
     },
   },
 } as const;
@@ -204,10 +292,16 @@ function formatDurationFromHours(hours: number, lang: Lang) {
   const wholeHours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
-  if (lang === "zh") {
+  if (lang === "zh-Hant") {
     if (wholeHours === 0) return `${minutes}分鐘`;
     if (minutes === 0) return `${wholeHours}小時`;
     return `${wholeHours}小時 ${minutes}分鐘`;
+  }
+
+  if (lang === "zh-Hans") {
+    if (wholeHours === 0) return `${minutes}分钟`;
+    if (minutes === 0) return `${wholeHours}小时`;
+    return `${wholeHours}小时 ${minutes}分钟`;
   }
 
   if (wholeHours === 0) return `${minutes}m`;
@@ -317,22 +411,22 @@ export function ScrollCalculator() {
   );
 
   useEffect(() => {
-    const requestedLang = new URLSearchParams(window.location.search).get("lang");
-    if (requestedLang === "en" || requestedLang === "zh") {
-      setLang(requestedLang);
-    }
-    const storedLang = window.localStorage.getItem("scroll-calc-lang");
-    if (requestedLang !== "en" && requestedLang !== "zh" && (storedLang === "en" || storedLang === "zh")) {
-      setLang(storedLang);
-    }
     const locale = navigator.language.toLowerCase();
-    if (locale.includes("hk")) setRegion("hk");
-    else if (locale.includes("sg")) setRegion("sg");
-    else if (locale.includes("th")) setRegion("th");
+    let detectedRegion: ScrollRegion = "ww";
+    if (locale.includes("hk")) detectedRegion = "hk";
+    else if (locale.includes("sg")) detectedRegion = "sg";
+    else if (locale.includes("th")) detectedRegion = "th";
+    setRegion(detectedRegion);
+
+    // Precedence: URL param → stored manual choice → browser/region default.
+    const requestedLang = normalizeScrollLocale(new URLSearchParams(window.location.search).get("lang"));
+    const storedLang = normalizeScrollLocale(window.localStorage.getItem("scroll-calc-lang"));
+    const browserLanguages = navigator.languages?.length ? navigator.languages : [navigator.language];
+    setLang(requestedLang ?? storedLang ?? detectScrollLocale(browserLanguages, detectedRegion));
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = lang === "zh" ? "zh-Hant" : "en";
+    document.documentElement.lang = lang;
     window.localStorage.setItem("scroll-calc-lang", lang);
   }, [lang]);
 
@@ -556,8 +650,8 @@ export function ScrollCalculator() {
     }
     c.font = "600 32px Inter, -apple-system, sans-serif";
     c.fillStyle = "#f7fbf7";
-    c.fillText(`-${workWeeks} ${lang === "zh" ? "個工作週" : "work wks"}`, PAD, 850);
-    c.fillText(`${diff >= 0 ? "+" : ""}${diff}% ${lang === "zh" ? "對比市場平均" : "vs market avg"}`, PAD + 360, 850);
+    c.fillText(`-${workWeeks} ${t.wkwks}`, PAD, 850);
+    c.fillText(`${diff >= 0 ? "+" : ""}${diff}% ${t.vsmkt}`, PAD + 360, 850);
     if (scrollCardStat) {
       c.fillStyle = "rgba(247,251,247,.68)";
       fillFitText(scrollCardStat, PAD, 902, 720, 28);
@@ -621,7 +715,8 @@ export function ScrollCalculator() {
             <div className="scroll-pill">{t.pill}</div>
             <div className="scroll-lang" role="group" aria-label="Language">
               <button className={lang === "en" ? "on" : ""} onClick={() => setLang("en")} type="button">EN</button>
-              <button className={lang === "zh" ? "on" : ""} onClick={() => setLang("zh")} type="button">中文</button>
+              <button className={lang === "zh-Hant" ? "on" : ""} onClick={() => setLang("zh-Hant")} type="button" aria-label="繁體中文">繁</button>
+              <button className={lang === "zh-Hans" ? "on" : ""} onClick={() => setLang("zh-Hans")} type="button" aria-label="简体中文">简</button>
             </div>
           </div>
         </header>
@@ -781,12 +876,12 @@ export function ScrollCalculator() {
                 <div className="roast">{fun.title} {fun.num}. <i>{fun.sub}</i></div>
                 {hasAppRoasts ? <div className="roast">{t.mostShorted} <b>{appRoastText}</b></div> : null}
                 <div className="chips">
-                  <span className="chip"><b>-{workWeeks}</b> {lang === "zh" ? "個工作週" : "work wks"}</span>
-                  <span className="chip"><b>{diff >= 0 ? "+" : ""}{diff}%</b> {lang === "zh" ? "對比市場平均" : "vs market avg"}</span>
+                  <span className="chip"><b>-{workWeeks}</b> {t.wkwks}</span>
+                  <span className="chip"><b>{diff >= 0 ? "+" : ""}{diff}%</b> {t.vsmkt}</span>
                   {scrollCardStat ? <span className="chip"><b>{scrollCardStat}</b></span> : null}
                 </div>
                 <div className="vsbar">
-                  <div className="vlabel"><span>{lang === "zh" ? `你 · ${hours.toFixed(1)}小時` : `You · ${hours.toFixed(1)}h`}</span><span>{t.regions[region]} avg · {marketAverage.toFixed(1)}h</span></div>
+                  <div className="vlabel"><span>{t.youAt(hours.toFixed(1))}</span><span>{t.regions[region]} avg · {marketAverage.toFixed(1)}h</span></div>
                   <div className="track you"><i style={{ width: `${Math.round((hours / maxBar) * 100)}%` }} /></div>
                   <div className="track mkt"><i style={{ width: `${Math.round((marketAverage / maxBar) * 100)}%` }} /></div>
                 </div>

@@ -76,5 +76,10 @@ metaphor or not at all.
 - Results API: `POST /api/scroll-results`,
   `GET /api/scroll-results/summary` (in-memory store,
   `lib/scroll/resultsStore.ts`).
-- Bilingual EN / zh-Hant; Chinese strings marked `DRAFT — native review
-  required` must not ship without native + compliance review.
+- The scroll calculator is trilingual: EN / zh-Hant (繁) / zh-Hans (简).
+  Chinese strings in either script marked `DRAFT — native review required`
+  must not ship without native + compliance review; compliance strings
+  (the f1/f2/f3 footer lines) need compliance approval per script.
+- The parser's zh label matching accepts BOTH scripts regardless of UI
+  locale — a Simplified-UI phone can upload a Traditional screenshot and
+  vice versa. Never fork the parser catalogs by locale.

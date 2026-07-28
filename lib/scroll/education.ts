@@ -1,15 +1,18 @@
-export type ScrollEducationLang = "en" | "zh";
+import type { ScrollLocale } from "./campaign";
+
+export type ScrollEducationLang = ScrollLocale;
 
 // TODO(product): Replace track names/counts and confirm average lesson length before launch.
 export const LESSON_MINUTES = 5;
 export const FLIP_MINUTES_PER_DAY = 10;
 
+// zh strings: DRAFT — native review required (both scripts)
 export const TRACKS = [
-  { id: "foundations", en: "Investing Foundations", zh: "投資基礎", lessons: 40 },
-  { id: "markets", en: "How Markets Move", zh: "市場如何運作", lessons: 32 },
-  { id: "statements", en: "Reading the Numbers", zh: "看懂財務數字", lessons: 28 },
-  { id: "psychology", en: "The Investor's Mind", zh: "投資者心理學", lessons: 24 },
-  { id: "first-trade", en: "Your First Trade, Done Right", zh: "第一筆交易做對", lessons: 20 },
+  { id: "foundations", en: "Investing Foundations", "zh-Hant": "投資基礎", "zh-Hans": "投资基础", lessons: 40 },
+  { id: "markets", en: "How Markets Move", "zh-Hant": "市場如何運作", "zh-Hans": "市场如何运作", lessons: 32 },
+  { id: "statements", en: "Reading the Numbers", "zh-Hant": "看懂財務數字", "zh-Hans": "看懂财务数字", lessons: 28 },
+  { id: "psychology", en: "The Investor's Mind", "zh-Hant": "投資者心理學", "zh-Hans": "投资者心理学", lessons: 24 },
+  { id: "first-trade", en: "Your First Trade, Done Right", "zh-Hant": "第一筆交易做對", "zh-Hans": "第一笔交易做对", lessons: 20 },
 ] as const;
 
 export type TrackId = (typeof TRACKS)[number]["id"];
@@ -24,12 +27,21 @@ export const MICRO_TAKEAWAYS = {
     "Diversification means one bad bet can't sink you.",
     "Compounding means your gains start earning their own gains.",
   ],
-  zh: [
+  // DRAFT — native review required
+  "zh-Hant": [
     "ETF 是一籃子股票，讓你用一筆交易買入。",
     "股票代表你持有一家真實公司的一小部分。",
     "指數追蹤整個市場，讓你用一個數字看它的變化。",
     "分散配置的意思是，一個錯誤押注不會拖垮全部。",
     "複利的意思是，你的收益開始產生自己的收益。",
+  ],
+  // DRAFT — native review required
+  "zh-Hans": [
+    "ETF 是一篮子股票，让你用一笔交易买入。",
+    "股票代表你持有一家真实公司的一小部分。",
+    "指数追踪整个市场，让你用一个数字看它的变化。",
+    "分散配置的意思是，一个错误押注不会拖垮全部。",
+    "复利的意思是，你的收益开始产生自己的收益。",
   ],
 } as const;
 
@@ -55,8 +67,14 @@ export function getDaysToFinishTrack(hours: number, trackId: TrackId = "foundati
 
 export function formatDaysToFinish(days: number, lang: ScrollEducationLang) {
   const safeDays = Math.max(1, Math.ceil(Number.isFinite(days) ? days : 1));
-  if (safeDays <= 7) return lang === "zh" ? "一週內" : "in under a week";
-  return lang === "zh" ? `${safeDays} 天內` : `in ${safeDays} days`;
+  if (safeDays <= 7) {
+    if (lang === "zh-Hant") return "一週內";
+    if (lang === "zh-Hans") return "一周内";
+    return "in under a week";
+  }
+  if (lang === "zh-Hant") return `${safeDays} 天內`;
+  if (lang === "zh-Hans") return `${safeDays} 天内`;
+  return `in ${safeDays} days`;
 }
 
 export function getMilestoneDate(from = new Date()) {
@@ -66,7 +84,7 @@ export function getMilestoneDate(from = new Date()) {
 }
 
 export function formatMilestoneDate(date: Date, lang: ScrollEducationLang) {
-  if (lang === "zh") return `${date.getFullYear()}年${date.getMonth() + 1}月`;
+  if (lang !== "en") return `${date.getFullYear()}年${date.getMonth() + 1}月`;
   return new Intl.DateTimeFormat("en-US", {
     month: "long",
     year: "numeric",
@@ -98,8 +116,10 @@ export function getEducationOutput(hours: number, lang: ScrollEducationLang, dat
     milestoneLabel,
     microTakeaway: getDailyMicroTakeaway(lang, date),
     cardLine:
-      lang === "zh"
+      lang === "zh-Hant"
         ? `每天 ${lessonsPerDay} 課藏在我的滑屏裡 · 課程完成於 ${milestoneLabel}`
-        : `${lessonsPerDay} lessons/day hiding in my scroll · course done by ${milestoneLabel}`,
+        : lang === "zh-Hans"
+          ? `每天 ${lessonsPerDay} 课藏在我的滑屏里 · 课程完成于 ${milestoneLabel}`
+          : `${lessonsPerDay} lessons/day hiding in my scroll · course done by ${milestoneLabel}`,
   };
 }
