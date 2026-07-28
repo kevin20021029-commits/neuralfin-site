@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "npm@11.12.1",
+  "engines": {
+    "node": ">=22 <25"
+  },
   "scripts": {
     "dev": "next dev -p 4182",
     "build": "next build",
