@@ -16,6 +16,7 @@ const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 type Lang = "en" | "zh";
 type TapeRow = { region: ScrollRegion; hours: number; flipped?: boolean };
 type UploadStatus = "idle" | "received" | "read" | "failed";
+type ParsedScrollStat = { scrollHours: number; totalHours: number };
 
 const regionOrder: ScrollRegion[] = ["ww", "hk", "sg", "th"];
 
@@ -35,6 +36,7 @@ const str = {
     sub: "Drag to your daily screen time. See the damage, see where you rank, post the card, then flip it green in the app.",
     steps: ["Upload", "See the damage", "Post it"],
     slider: "Your daily screen time",
+    sliderSub: "count your scroll — social, video, games",
     hday: "h / day",
     scales: ["30 min", "saint", "6 h", "certified scroller", "12 h"],
     regions: { ww: "Worldwide", hk: "Hong Kong", sg: "Singapore", th: "Thailand" },
@@ -64,7 +66,9 @@ const str = {
     dropSub: "Read on your device · never uploaded",
     dropHint: "iPhone: Settings → Screen Time · Android: Digital Wellbeing",
     dropReceived: "✓ Screenshot received",
-    dropRead: (duration: string) => `✓ Read from your screenshot: ${duration}`,
+    dropRead: (duration: string) => `✓ Read: ${duration}`,
+    dropReadScrollDay: (scroll: string, total: string) => `${scroll} of scroll in your ${total} day`,
+    dropReadScroll: (scroll: string) => `${scroll} of scroll time`,
     dropCouldnt: "Couldn't read that",
     dropReplace: "Use a different screenshot",
     dropDone: "We read {hours} h/day — look right?",
@@ -96,6 +100,7 @@ const str = {
     anon: "anon",
     bench: "vs. published screen-time benchmarks",
     mostShorted: "Most shorted:",
+    scrollChip: (scroll: string, total: string) => `${scroll} of ${total} was scroll`,
     fun: (yr: number) => {
       if (yr < 500) return { title: "Every Star Wars film", sub: "...even the prequels.", num: `×${Math.round(yr / 25)}` };
       if (yr < 1200) return { title: "One full watch of Titanic", sub: "The boat sinks every time.", num: `×${Math.round(yr / 3.23)}` };
@@ -109,6 +114,8 @@ const str = {
     sub: "拖到你的每日螢幕時間。看看虧了多少、排第幾名、發卡挑戰朋友，再到 App 把它翻綠。",
     steps: ["上傳", "看看虧損", "發出去"],
     slider: "你的每日螢幕時間",
+    // DRAFT — native review required
+    sliderSub: "計算你的滑屏：社交、影片、遊戲",
     hday: "小時／天",
     scales: ["30分鐘", "聖人", "6小時", "認證滑屏員", "12小時"],
     regions: { ww: "全球", hk: "香港", sg: "新加坡", th: "泰國" },
@@ -140,7 +147,11 @@ const str = {
     // DRAFT — native review required
     dropReceived: "✓ 已收到截圖",
     // DRAFT — native review required
-    dropRead: (duration: string) => `✓ 已從截圖讀取：${duration}`,
+    dropRead: (duration: string) => `✓ 已讀取：${duration}`,
+    // DRAFT — native review required
+    dropReadScrollDay: (scroll: string, total: string) => `${scroll}滑屏 / ${total}今日總時數`,
+    // DRAFT — native review required
+    dropReadScroll: (scroll: string) => `${scroll}滑屏時間`,
     // DRAFT — native review required
     dropCouldnt: "讀不到這張截圖",
     // DRAFT — native review required
@@ -175,6 +186,8 @@ const str = {
     anon: "匿名",
     bench: "對比公開螢幕時間統計",
     mostShorted: "最重倉：",
+    // DRAFT — native review required
+    scrollChip: (scroll: string, total: string) => `${total}中有${scroll}是滑屏`,
     fun: (yr: number) => {
       if (yr < 500) return { title: "看完全部《星球大戰》", sub: "...連前傳都看了。", num: `×${Math.round(yr / 25)}` };
       if (yr < 1200) return { title: "完整看完《鐵達尼號》", sub: "船每次都沉。", num: `×${Math.round(yr / 3.23)}` };
@@ -202,6 +215,10 @@ function formatDurationFromHours(hours: number, lang: Lang) {
   if (wholeHours === 0) return `${minutes}m`;
   if (minutes === 0) return `${wholeHours}h`;
   return `${wholeHours}h ${minutes}m`;
+}
+
+function roundSliderHours(hours: number) {
+  return Math.round(hours * 10) / 10;
 }
 
 function appLink(base: string, hours: number, region: ScrollRegion, verified: boolean, lang: Lang) {
@@ -239,6 +256,7 @@ export function ScrollCalculator() {
   const [uploadReadDuration, setUploadReadDuration] = useState<string | null>(null);
   const [uploadPreviewUrl, setUploadPreviewUrl] = useState<string | null>(null);
   const [parsedHours, setParsedHours] = useState<number | null>(null);
+  const [parsedScrollStat, setParsedScrollStat] = useState<ParsedScrollStat | null>(null);
   const [scanNotice, setScanNotice] = useState<string | null>(null);
   const [appRoasts, setAppRoasts] = useState<AppRoast[]>([]);
   const [tapeRows, setTapeRows] = useState<TapeRow[]>(demoTape);
@@ -268,6 +286,9 @@ export function ScrollCalculator() {
   const rangeFill = ((hours - 0.5) / 11.5) * 100;
   const hasAppRoasts = appRoasts.length > 0;
   const appRoastText = appRoasts.map((app) => `${app.name} -${app.minutes}m`).join(" · ");
+  const scrollCardStat = parsedScrollStat
+    ? t.scrollChip(formatDurationFromHours(parsedScrollStat.scrollHours, lang), formatDurationFromHours(parsedScrollStat.totalHours, lang))
+    : null;
   const education = getEducationOutput(hours, lang);
   const ladderRows = [...t.ladder, t.milestone(education.milestoneLabel)];
   const dropTitleText = scanning
@@ -369,6 +390,7 @@ export function ScrollCalculator() {
     replaceUploadPreview(file);
     setUploadStatus("received");
     setUploadReadDuration(null);
+    setParsedScrollStat(null);
     setScanning(true);
     setScanStage("reading");
     setScanNotice(null);
@@ -380,31 +402,44 @@ export function ScrollCalculator() {
       if (parsed.hours && parsed.source !== "day-total") {
         setScanStage("success");
         await wait(350);
-        const rounded = Math.round(parsed.hours * 2) / 2;
+        const rounded = roundSliderHours(parsed.hours);
         const duration = formatDurationFromHours(parsed.hours, lang);
+        const scrollReadText = parsed.scrollHours && parsed.totalHours
+          ? t.dropReadScrollDay(formatDurationFromHours(parsed.scrollHours, lang), formatDurationFromHours(parsed.totalHours, lang))
+          : parsed.scrollHours
+            ? t.dropReadScroll(formatDurationFromHours(parsed.scrollHours, lang))
+            : duration;
         setHours(rounded);
         setParsedHours(rounded);
+        setParsedScrollStat(parsed.scrollHours && parsed.totalHours ? { scrollHours: parsed.scrollHours, totalHours: parsed.totalHours } : null);
         setVerified(true);
         setUploadStatus("read");
-        setUploadReadDuration(duration);
+        setUploadReadDuration(scrollReadText);
         setScanNotice(t.dropDone.replace("{hours}", rounded.toFixed(1)));
         scheduleAutoFlip();
       } else if (parsed.hours && parsed.source === "day-total") {
         setScanStage("fail");
         await wait(500);
-        const rounded = Math.round(parsed.hours * 2) / 2;
+        const rounded = roundSliderHours(parsed.hours);
         const duration = formatDurationFromHours(parsed.hours, lang);
+        const scrollReadText = parsed.scrollHours && parsed.totalHours
+          ? t.dropReadScrollDay(formatDurationFromHours(parsed.scrollHours, lang), formatDurationFromHours(parsed.totalHours, lang))
+          : parsed.scrollHours
+            ? t.dropReadScroll(formatDurationFromHours(parsed.scrollHours, lang))
+            : duration;
         setHours(rounded);
         setParsedHours(null);
+        setParsedScrollStat(parsed.scrollHours && parsed.totalHours ? { scrollHours: parsed.scrollHours, totalHours: parsed.totalHours } : null);
         setVerified(false);
         setUploadStatus("read");
-        setUploadReadDuration(duration);
+        setUploadReadDuration(scrollReadText);
         setScanNotice(t.dropDay(duration));
         scheduleAutoFlip();
       } else if (parsed.apps.length > 0) {
         setScanStage("fail");
         await wait(500);
         setParsedHours(null);
+        setParsedScrollStat(null);
         setVerified(false);
         setUploadStatus("failed");
         setScanNotice(t.dropApps);
@@ -412,6 +447,7 @@ export function ScrollCalculator() {
         setScanStage("fail");
         await wait(500);
         setParsedHours(null);
+        setParsedScrollStat(null);
         setVerified(false);
         setUploadStatus("failed");
         setScanNotice(t.dropFail);
@@ -421,6 +457,7 @@ export function ScrollCalculator() {
       setScanStage("fail");
       await wait(500);
       setParsedHours(null);
+      setParsedScrollStat(null);
       setVerified(false);
       setUploadStatus("failed");
       setScanNotice(t.dropFail);
@@ -510,6 +547,10 @@ export function ScrollCalculator() {
     c.fillStyle = "#f7fbf7";
     c.fillText(`-${workWeeks} ${lang === "zh" ? "個工作週" : "work wks"}`, PAD, 850);
     c.fillText(`${diff >= 0 ? "+" : ""}${diff}% ${lang === "zh" ? "對比市場平均" : "vs market avg"}`, PAD + 360, 850);
+    if (scrollCardStat) {
+      c.fillStyle = "rgba(247,251,247,.68)";
+      fillFitText(scrollCardStat, PAD, 902, 720, 28);
+    }
     c.strokeStyle = "rgba(255,255,255,.12)";
     c.setLineDash([12, 12]);
     c.beginPath();
@@ -639,7 +680,7 @@ export function ScrollCalculator() {
               ) : null}
               <div className="scroll-orsep"><span>{t.orManual}</span></div>
               <div className="scroll-row-label">
-                <label htmlFor="hours">{t.slider}</label>
+                <label htmlFor="hours">{t.slider}<span>{t.sliderSub}</span></label>
                 <div className="scroll-val mono"><span>{hours.toFixed(1)}</span> {t.hday}</div>
               </div>
               <input
@@ -649,7 +690,7 @@ export function ScrollCalculator() {
                 type="range"
                 min="0.5"
                 max="12"
-                step="0.5"
+                step="0.1"
                 value={hours}
                 aria-describedby={scanNotice ? "scroll-scan-notice" : undefined}
                 style={{ "--fill": `${rangeFill}%` } as CSSProperties}
@@ -658,6 +699,7 @@ export function ScrollCalculator() {
                   const nextHours = Number(event.target.value);
                   const keepVerified = parsedHours !== null && Math.abs(nextHours - parsedHours) <= 0.5;
                   setHours(nextHours);
+                  setParsedScrollStat(null);
                   setVerified(keepVerified);
                 }}
               />
@@ -730,6 +772,7 @@ export function ScrollCalculator() {
                 <div className="chips">
                   <span className="chip"><b>-{workWeeks}</b> {lang === "zh" ? "個工作週" : "work wks"}</span>
                   <span className="chip"><b>{diff >= 0 ? "+" : ""}{diff}%</b> {lang === "zh" ? "對比市場平均" : "vs market avg"}</span>
+                  {scrollCardStat ? <span className="chip"><b>{scrollCardStat}</b></span> : null}
                 </div>
                 <div className="vsbar">
                   <div className="vlabel"><span>{lang === "zh" ? `你 · ${hours.toFixed(1)}小時` : `You · ${hours.toFixed(1)}h`}</span><span>{t.regions[region]} avg · {marketAverage.toFixed(1)}h</span></div>

@@ -104,12 +104,15 @@ test("thai localized screenshot matches catalog", () => {
   ]);
 });
 
-test("Samsung Digital Wellbeing day dashboard parses total and app list without verification source", () => {
+test("Samsung Digital Wellbeing day dashboard parses total and category scroll time without verification source", () => {
   const parsed = parseScreenTimeText(
     [
       "Digital Wellbeing",
       "Screen time today",
       "6 h 2 m",
+      "Video 3 h 16 m",
+      "Social 2 h 35 m",
+      "Productivity 5 m",
       "Most used apps",
       "YouTube 3 h 16 m",
       "WhatsApp 1 h 21 m",
@@ -119,7 +122,48 @@ test("Samsung Digital Wellbeing day dashboard parses total and app list without 
   );
 
   assert.equal(parsed.source, "day-total");
+  assert.equal(Math.round((parsed.totalHours ?? 0) * 100) / 100, 6.03);
+  assert.equal(Math.round((parsed.scrollHours ?? 0) * 100) / 100, 5.85);
+  assert.equal(Math.round((parsed.hours ?? 0) * 100) / 100, 5.85);
+  assert.deepEqual(parsed.apps, [
+    { name: "YouTube", minutes: 196 },
+    { name: "WhatsApp", minutes: 81 },
+    { name: "Instagram", minutes: 45 },
+  ]);
+});
+
+test("Samsung headline stays anchored to total instead of app or category durations", () => {
+  const parsed = parseScreenTimeText(
+    [
+      "Digital Wellbeing",
+      "Screen time today",
+      "Video 3 h 16 m",
+      "Social 2 h 35 m",
+      "6 h 2 m",
+      "YouTube 3 h 16 m",
+    ].join("\n"),
+    83,
+  );
+
+  assert.equal(parsed.source, "day-total");
+  assert.equal(Math.round((parsed.totalHours ?? 0) * 100) / 100, 6.03);
+  assert.equal(Math.round((parsed.hours ?? 0) * 100) / 100, 5.85);
+});
+
+test("total without categories falls back to total and emits no scroll chip metadata", () => {
+  const parsed = parseScreenTimeText("Screen time today\n6 h 2 m\nYouTube 3 h 16 m", 83);
+
+  assert.equal(parsed.source, "day-total");
   assert.equal(Math.round((parsed.hours ?? 0) * 100) / 100, 6.03);
+  assert.equal(parsed.scrollHours, null);
+  assert.equal(Math.round((parsed.totalHours ?? 0) * 100) / 100, 6.03);
+});
+
+test("app row only does not promote an app duration to headline", () => {
+  const parsed = parseScreenTimeText("YouTube 3 h 16 m\nWhatsApp 1 h 21 m\nInstagram 45 m", 83);
+
+  assert.equal(parsed.hours, null);
+  assert.equal(parsed.source, null);
   assert.deepEqual(parsed.apps, [
     { name: "YouTube", minutes: 196 },
     { name: "WhatsApp", minutes: 81 },
