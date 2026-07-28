@@ -2,7 +2,7 @@
 
 import { ChangeEvent, KeyboardEvent, type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { appLinks } from "@/lib/site";
-import { parseScreenTimeText, type AppRoast } from "@/lib/scroll/ocrSanitizer";
+import { classifyParseOutcome, parseScreenTimeText, type AppRoast, type ParseOutcome, type ScreenTimeLayout } from "@/lib/scroll/ocrSanitizer";
 import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, normalPercentile, type ScrollRegion } from "@/lib/scroll/campaign";
 import { FLIP_MINUTES_PER_DAY, LADDER_TRACKS, getEducationOutput, getTrackName } from "@/lib/scroll/education";
 import { getArchetypeCopy, getScanStageMessage, getShareCaptionVariant, getTapeNote, type ScanStage } from "@/lib/scroll/personality";
@@ -233,6 +233,17 @@ function appLink(base: string, hours: number, region: ScrollRegion, verified: bo
   return url.toString();
 }
 
+// Aggregate-only: two enums, nothing else — no image data, no OCR text,
+// no app names. Tells us which OEM layouts need fixtures post-launch.
+function sendParseTelemetry(layout: ScreenTimeLayout, outcome: ParseOutcome) {
+  void fetch("/api/scroll-telemetry", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ layout, outcome }),
+    keepalive: true,
+  }).catch(() => undefined);
+}
+
 async function parseScreenshot(file: File) {
   const mod = await import("tesseract.js");
   const worker = await mod.createWorker("eng+chi_tra+tha");
@@ -398,6 +409,7 @@ export function ScrollCalculator() {
     try {
       const parsed = await parseScreenshot(file);
       window.clearTimeout(auditTimer);
+      sendParseTelemetry(parsed.layout, classifyParseOutcome(parsed));
       setAppRoasts(parsed.apps);
       if (parsed.hours && parsed.source !== "day-total") {
         setScanStage("success");
@@ -454,6 +466,7 @@ export function ScrollCalculator() {
       }
     } catch {
       window.clearTimeout(auditTimer);
+      sendParseTelemetry("unknown", "failed");
       setScanStage("fail");
       await wait(500);
       setParsedHours(null);

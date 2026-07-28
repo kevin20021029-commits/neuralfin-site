@@ -3,6 +3,9 @@ export type AppRoast = {
   minutes: number;
 };
 
+export type ScreenTimeLayout = (typeof SCREEN_TIME_LAYOUTS)[number];
+export type ParseOutcome = (typeof PARSE_OUTCOMES)[number];
+
 export type ParsedScreenTime = {
   hours: number | null;
   source: "average" | "weekly-total" | "day-total" | null;
@@ -10,6 +13,7 @@ export type ParsedScreenTime = {
   scrollHours: number | null;
   apps: AppRoast[];
   confidence: number;
+  layout: ScreenTimeLayout;
 };
 
 type RawAppLine = {
@@ -24,7 +28,11 @@ type RawParsedScreenTime = {
   scrollHours?: number | null;
   apps: RawAppLine[];
   confidence: number;
+  layout?: ScreenTimeLayout;
 };
+
+export const SCREEN_TIME_LAYOUTS = ["samsung", "pixel", "ios", "unknown"] as const;
+export const PARSE_OUTCOMES = ["full", "total_only", "failed"] as const;
 
 const APP_MATCH_THRESHOLD = 0.8;
 const SCROLL_CATEGORIES = ["social", "video", "entertainment", "games"] as const;
@@ -51,6 +59,9 @@ const appCatalog = [
   { display: "Spotify", variants: ["spotify", "สปอติฟาย"] },
 ] as const;
 
+// One config for both platforms: Samsung/Android tile labels and the iOS
+// taxonomy (Social / Entertainment / Games count as scroll) share these
+// variants, including zh-Hant/zh-Hans and Thai label sets.
 const scrollCategoryCatalog = [
   { id: "social", variants: ["social", "social networking", "social media", "社交", "โซเชียล", "สังคม"] },
   { id: "video", variants: ["video", "videos", "影片", "视频", "วิดีโอ"] },
@@ -68,9 +79,11 @@ const excludedCategoryCatalog = [
   "information",
   "reading",
   "information & reading",
+  "education",
   "utilities",
   "utility",
   "communication",
+  "other",
   "生產力",
   "生产力",
   "效率",
@@ -86,12 +99,14 @@ const excludedCategoryCatalog = [
   "信息",
   "閱讀",
   "阅读",
+  "教育",
   "工具",
   "實用工具",
   "实用工具",
   "通訊",
   "通讯",
   "通信",
+  "其他",
   "การทำงาน",
   "การเงิน",
   "เดินทาง",
@@ -99,10 +114,35 @@ const excludedCategoryCatalog = [
   "สร้างสรรค์",
   "ข้อมูล",
   "การอ่าน",
+  "การศึกษา",
   "เครื่องมือ",
   "ยูทิลิตี้",
   "การสื่อสาร",
+  "อื่นๆ",
 ] as const;
+
+type CategoryKind = (typeof SCROLL_CATEGORIES)[number] | "excluded";
+type TotalScope = "average" | "weekly" | "day";
+
+const TOTAL_LABELS: Record<TotalScope, RegExp[]> = {
+  average: [
+    /\b(?:daily\s+average|average|avg\.?|avg\s*\/\s*day|per\s+day)\b/i,
+    /(?:每日平均|日均|平均每天|平均每日|平均|เฉลี่ยต่อวัน|เฉลี่ย|ต่อวัน)/i,
+  ],
+  weekly: [
+    /\b(?:week|weekly|this\s+week)\b/i,
+    /(?:本週|本周|週總計|周总计|รายสัปดาห์|สัปดาห์)/i,
+  ],
+  day: [
+    /\b(?:screen\s*time\s*today|screen\s+time|today|daily\s+total|total\s+screen\s+time|total)\b/i,
+    /(?:今天螢幕使用時間|今日螢幕使用時間|今天屏幕使用时间|今日屏幕使用时间|螢幕使用時間今天|屏幕使用时间今天|今天|今日|單日|单日|เวลาหน้าจอวันนี้|เวลาใช้หน้าจอวันนี้|เวลาหน้าจอ|วันนี้|รายวัน)/i,
+  ],
+};
+
+const TOTAL_SCOPES: TotalScope[] = ["average", "weekly", "day"];
+
+const BLOCKED_APP_ROW =
+  /screen time|digital wellbeing|settings|average|avg|daily|total|all apps|pickups|notifications|螢幕|屏幕|平均|每日|總計|总计|ทั้งหมด|เฉลี่ย|หน้าจอ/i;
 
 function normalizeOcrText(text: string) {
   return text
@@ -166,49 +206,90 @@ function canonicalAppName(rawName: string) {
   return best && best.score >= APP_MATCH_THRESHOLD ? best.display : null;
 }
 
-function parseDurationToHours(input: string) {
-  return firstDurationMatch(input)?.hours ?? null;
+// Duration tokens accepted everywhere (headlines, app rows, category values):
+// "N h M m", "N hr M min", "N hr, M min", "Nh Mm", "N:MM",
+// "N 小時 M 分鐘", "N ชั่วโมง M นาที", and bare hour/minute forms.
+// Longest unit tokens first so "hr"/"hrs" never half-match as "h" + residue.
+const HOUR_UNITS = "hours|hour|hrs|hr|h|小時|小时|ชั่วโมง|ชม\\.?";
+const MINUTE_UNITS = "minutes|minute|mins|min|m|分鐘|分钟|นาที";
+
+type DurationMatch = {
+  hours: number;
+  index: number;
+  end: number;
+  composite: boolean;
+};
+
+function overlapsSpan(spans: Array<[number, number]>, start: number, end: number) {
+  return spans.some(([s, e]) => start < e && end > s);
 }
 
-function firstDurationMatch(input: string) {
+function findDurations(input: string): DurationMatch[] {
   const text = input.toLowerCase();
-  const candidates: Array<{ hours: number; index: number; match: string }> = [];
-  const colon = /\b(\d{1,2})\s*:\s*(\d{2})\b/.exec(text);
-  if (colon) {
-    const value = Number(colon[1]) + Number(colon[2]) / 60;
-    if (value >= 0.1 && value <= 24) candidates.push({ hours: value, index: colon.index, match: colon[0] });
+  const matches: DurationMatch[] = [];
+  const spans: Array<[number, number]> = [];
+
+  const colonRe = /\b(\d{1,2})\s*:\s*(\d{2})\b/g;
+  for (let m = colonRe.exec(text); m; m = colonRe.exec(text)) {
+    const value = Number(m[1]) + Number(m[2]) / 60;
+    if (value >= 1 / 60 && value <= 24) {
+      matches.push({ hours: value, index: m.index, end: m.index + m[0].length, composite: true });
+      spans.push([m.index, m.index + m[0].length]);
+    }
   }
 
-  const hoursMatch = /(\d{1,2}(?:[.,]\d+)?)\s*(?:h|hr|hrs|hour|hours|小時|小时|ชม\.?|ชั่วโมง)(?:\s*(\d{1,3})\s*(?:m|min|mins|minute|minutes|分鐘|分钟|นาที))?/i.exec(text);
-  if (hoursMatch) {
-    const hours = Number(hoursMatch[1].replace(",", "."));
-    const minutes = hoursMatch[2] ? Number(hoursMatch[2]) : 0;
-    const value = hours + minutes / 60;
-    if (value >= 0.1 && value <= 24) candidates.push({ hours: value, index: hoursMatch.index, match: hoursMatch[0] });
+  const hoursRe = new RegExp(
+    `(\\d{1,2}(?:[.,]\\d+)?)\\s*(?:${HOUR_UNITS})(?![a-z])(?:\\s*,?\\s*(\\d{1,3})\\s*(?:${MINUTE_UNITS})(?![a-z]))?`,
+    "gi",
+  );
+  for (let m = hoursRe.exec(text); m; m = hoursRe.exec(text)) {
+    const start = m.index;
+    const end = m.index + m[0].length;
+    if (overlapsSpan(spans, start, end)) continue;
+    const value = Number(m[1].replace(",", ".")) + (m[2] ? Number(m[2]) : 0) / 60;
+    if (value >= 1 / 60 && value <= 24) {
+      matches.push({ hours: value, index: start, end, composite: Boolean(m[2]) });
+      spans.push([start, end]);
+    }
   }
 
-  const minutesMatch = /(\d{1,3})\s*(?:m|min|mins|minute|minutes|分鐘|分钟|นาที)/i.exec(text);
-  if (minutesMatch) {
-    const value = Number(minutesMatch[1]) / 60;
-    if (value >= 0.1 && value <= 24) candidates.push({ hours: value, index: minutesMatch.index, match: minutesMatch[0] });
+  const minutesRe = new RegExp(`(\\d{1,3})\\s*(?:${MINUTE_UNITS})(?![a-z])`, "gi");
+  for (let m = minutesRe.exec(text); m; m = minutesRe.exec(text)) {
+    const start = m.index;
+    const end = m.index + m[0].length;
+    if (overlapsSpan(spans, start, end)) continue;
+    const value = Number(m[1]) / 60;
+    if (value >= 1 / 60 && value <= 24) {
+      matches.push({ hours: value, index: start, end, composite: false });
+      spans.push([start, end]);
+    }
   }
 
-  return candidates.sort((a, b) => a.index - b.index)[0] ?? null;
+  return matches.sort((a, b) => a.index - b.index);
 }
 
-function stripDuration(text: string) {
-  return text
-    .replace(/\b\d{1,2}\s*:\s*\d{2}\b/g, "")
-    .replace(/\d{1,2}(?:[.,]\d+)?\s*(?:h|hr|hrs|hour|hours|小時|小时|ชม\.?|ชั่วโมง)(?:\s*\d{1,3}\s*(?:m|min|mins|minute|minutes|分鐘|分钟|นาที))?/gi, "")
-    .replace(/\d{1,3}\s*(?:m|min|mins|minute|minutes|分鐘|分钟|นาที)/gi, "");
+function firstDurationHours(text: string) {
+  return findDurations(text)[0]?.hours ?? null;
 }
 
-function isDurationOnlyLine(line: string) {
-  return stripDuration(line).replace(/[()[\]{}:：·•|/\\.,+\-–—_]/g, "").trim().length === 0;
+function stripDurations(text: string) {
+  const durations = findDurations(text);
+  let out = "";
+  let cursor = 0;
+  for (const duration of durations) {
+    out += `${text.slice(cursor, duration.index)} `;
+    cursor = duration.end;
+  }
+  return out + text.slice(cursor);
 }
 
-function categoryKindFromText(text: string): (typeof SCROLL_CATEGORIES)[number] | "excluded" | null {
-  const normalized = normalizeAppName(stripDuration(text));
+function isDurationOnlyLine(line: string, durations: DurationMatch[]) {
+  if (durations.length === 0) return false;
+  return stripDurations(line).replace(/[^\p{L}\p{N}]/gu, "").length === 0;
+}
+
+function categoryKindFromText(text: string): CategoryKind | null {
+  const normalized = normalizeAppName(stripDurations(text));
   if (!normalized) return null;
 
   for (const category of scrollCategoryCatalog) {
@@ -231,101 +312,222 @@ function categoryKindFromText(text: string): (typeof SCROLL_CATEGORIES)[number] 
 }
 
 function isAppOrCategoryContext(text: string) {
-  const label = stripDuration(text).trim();
+  const label = stripDurations(text).trim();
   return Boolean(label && (canonicalAppName(label) || categoryKindFromText(label)));
 }
 
-function parseAnchoredDurationAfterLabel(line: string, label: RegExp) {
-  const match = label.exec(line);
-  if (!match) return null;
-  const afterLabel = line.slice(match.index + match[0].length);
-  const duration = firstDurationMatch(afterLabel);
-  if (!duration) return null;
-  if (isAppOrCategoryContext(afterLabel.slice(0, duration.index))) return null;
-  return duration.hours;
+function totalScopeFromText(text: string): TotalScope | null {
+  for (const scope of TOTAL_SCOPES) {
+    if (TOTAL_LABELS[scope].some((label) => label.test(text))) return scope;
+  }
+  return null;
 }
 
-function firstDurationAnchoredToLabels(rawText: string, labels: RegExp[]) {
+// Multi-category legend lines (iOS: "Creativity 44m · Social 32m · Travel 9m")
+// are split into segments so each duration pairs with its own label.
+function categoryPairsFromLine(text: string, durations: DurationMatch[]) {
+  const pairs: Array<{ kind: CategoryKind; minutes: number }> = [];
+  let cursor = 0;
+  for (const duration of durations) {
+    const segment = text.slice(cursor, duration.index);
+    const kind = categoryKindFromText(segment);
+    if (kind) pairs.push({ kind, minutes: Math.round(duration.hours * 60) });
+    cursor = duration.end;
+  }
+  return pairs;
+}
+
+type ScreenTimeLine = {
+  text: string;
+  durations: DurationMatch[];
+  durationOnly: boolean;
+  scope: TotalScope | null;
+  categoryPairs: Array<{ kind: CategoryKind; minutes: number }>;
+  appRow: RawAppLine | null;
+  nameKind: "label" | "category" | "app" | null;
+  categoryNameKind: CategoryKind | null;
+  appName: string | null;
+  pairedTotal: number | null;
+  claimed: boolean;
+};
+
+function appRowFromLine(text: string, durations: DurationMatch[], categoryPairs: ScreenTimeLine["categoryPairs"], scope: TotalScope | null): RawAppLine | null {
+  if (durations.length === 0 || categoryPairs.length > 0 || scope !== null) return null;
+  if (BLOCKED_APP_ROW.test(text)) return null;
+  const rawName = stripDurations(text)
+    .replace(/[·•|-]+\s*$/g, "")
+    .trim();
+  if (rawName.length < 1 || rawName.length > 40) return null;
+  return { rawName, minutes: Math.round(durations[0].hours * 60) };
+}
+
+function buildLine(text: string): ScreenTimeLine {
+  const durations = findDurations(text);
+  const scope = totalScopeFromText(text);
+  const categoryPairs = durations.length > 0 ? categoryPairsFromLine(text, durations) : [];
+  const appRow = appRowFromLine(text, durations, categoryPairs, scope);
+
+  let nameKind: ScreenTimeLine["nameKind"] = null;
+  let categoryNameKind: CategoryKind | null = null;
+  let appName: string | null = null;
+  if (durations.length === 0) {
+    if (scope) {
+      nameKind = "label";
+    } else {
+      categoryNameKind = categoryKindFromText(text);
+      if (categoryNameKind) {
+        nameKind = "category";
+      } else if (!BLOCKED_APP_ROW.test(text) && canonicalAppName(text)) {
+        nameKind = "app";
+        appName = text.trim();
+      }
+    }
+  }
+
+  return {
+    text,
+    durations,
+    durationOnly: isDurationOnlyLine(text, durations),
+    scope,
+    categoryPairs,
+    appRow,
+    nameKind,
+    categoryNameKind,
+    appName,
+    pairedTotal: null,
+    claimed: false,
+  };
+}
+
+// OCR often emits a screenshot's label column and value column as separate
+// blocks: a run of name lines followed by a run of duration-only lines.
+// Zip the runs tail-aligned — extra leading durations belong to content
+// above the list (typically the headline total), so the tails line up.
+function zipNameValueRuns(lines: ScreenTimeLine[], onPair: (name: ScreenTimeLine, hours: number) => void) {
+  let pending: ScreenTimeLine[] = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+    if (line.durationOnly) {
+      const values: ScreenTimeLine[] = [];
+      while (index < lines.length && lines[index].durationOnly) {
+        values.push(lines[index]);
+        index += 1;
+      }
+      const offset = values.length - pending.length;
+      pending.forEach((nameLine, position) => {
+        const value = values[position + offset];
+        if (!value) return;
+        onPair(nameLine, value.durations[0].hours);
+        value.claimed = true;
+      });
+      pending = [];
+      continue;
+    }
+
+    if (line.durations.length === 0 && line.nameKind) {
+      pending.push(line);
+    } else {
+      pending = [];
+    }
+    index += 1;
+  }
+}
+
+function analyzeScreenTime(rawText: string) {
   const lines = rawText
     .split(/\r?\n/)
     .map((line) => normalizeOcrText(line))
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((line) => buildLine(line));
 
+  const apps: RawAppLine[] = [];
+  const categoryMinutes = new Map<CategoryKind, number>();
+  const addCategory = (kind: CategoryKind, minutes: number) => {
+    if (kind === "excluded" || categoryMinutes.has(kind)) return;
+    categoryMinutes.set(kind, minutes);
+  };
+
+  for (const line of lines) {
+    if (line.appRow) apps.push(line.appRow);
+    for (const pair of line.categoryPairs) addCategory(pair.kind, pair.minutes);
+  }
+
+  zipNameValueRuns(lines, (nameLine, hours) => {
+    if (nameLine.nameKind === "label") {
+      nameLine.pairedTotal = hours;
+    } else if (nameLine.nameKind === "category" && nameLine.categoryNameKind) {
+      addCategory(nameLine.categoryNameKind, Math.round(hours * 60));
+    } else if (nameLine.nameKind === "app" && nameLine.appName) {
+      apps.push({ rawName: nameLine.appName, minutes: Math.round(hours * 60) });
+    }
+  });
+
+  let scrollMinutes = 0;
+  for (const minutes of categoryMinutes.values()) scrollMinutes += minutes;
+
+  return { lines, apps, scrollHours: scrollMinutes > 0 ? scrollMinutes / 60 : null };
+}
+
+function sameLineAnchoredHours(line: ScreenTimeLine, scope: TotalScope) {
+  for (const label of TOTAL_LABELS[scope]) {
+    const match = label.exec(line.text);
+    if (!match) continue;
+    const afterLabel = match.index + match[0].length;
+    const duration = line.durations.find((candidate) => candidate.index >= afterLabel);
+    if (!duration) continue;
+    if (isAppOrCategoryContext(line.text.slice(afterLabel, duration.index))) continue;
+    return duration.hours;
+  }
+  return null;
+}
+
+// Label-anchored total: same line first, then the value zip-paired to the
+// label, then the nearest unclaimed duration-only line below (composite
+// "Nh Mm" values outrank bare chart-axis style tokens like "6h").
+function resolveAnchoredTotal(lines: ScreenTimeLine[], scope: TotalScope) {
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
-    const matchingLabel = labels.find((label) => label.test(line));
-    if (!matchingLabel) continue;
+    if (line.scope !== scope) continue;
 
-    const sameLineDuration = parseAnchoredDurationAfterLabel(line, matchingLabel);
-    if (sameLineDuration !== null) return sameLineDuration;
-
-    for (let offset = 1; offset <= 5 && index + offset < lines.length; offset += 1) {
-      const candidateLine = lines[index + offset];
-      const candidateDuration = parseDurationToHours(candidateLine);
-      if (!candidateDuration) continue;
-      if (!isDurationOnlyLine(candidateLine)) continue;
-      const previousLine = lines[index + offset - 1];
-      if (!parseDurationToHours(previousLine) && isAppOrCategoryContext(previousLine)) continue;
-      return candidateDuration;
+    if (line.durations.length > 0 && line.appRow === null && line.categoryPairs.length === 0) {
+      const sameLine = sameLineAnchoredHours(line, scope);
+      if (sameLine !== null) return sameLine;
     }
+
+    if (line.pairedTotal !== null) return line.pairedTotal;
+
+    const candidates: DurationMatch[] = [];
+    for (let offset = 1; offset <= 8 && index + offset < lines.length; offset += 1) {
+      const candidate = lines[index + offset];
+      if (!candidate.durationOnly || candidate.claimed) continue;
+      candidates.push(candidate.durations[0]);
+    }
+    const preferred = candidates.find((candidate) => candidate.composite) ?? candidates[0];
+    if (preferred) return preferred.hours;
   }
 
   return null;
 }
 
-function extractCategoryHours(rawText: string) {
-  const lines = rawText
-    .split(/\r?\n/)
-    .map((line) => normalizeOcrText(line))
-    .filter(Boolean);
-  const seen = new Set<string>();
-  let minutes = 0;
-
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index];
-    const sameLineDuration = parseDurationToHours(line);
-    const sameLineCategory = categoryKindFromText(line);
-    if (sameLineDuration && sameLineCategory && sameLineCategory !== "excluded" && !seen.has(sameLineCategory)) {
-      seen.add(sameLineCategory);
-      minutes += Math.round(sameLineDuration * 60);
-      continue;
-    }
-
-    if (sameLineDuration || !sameLineCategory || sameLineCategory === "excluded" || seen.has(sameLineCategory)) continue;
-    const nextLine = lines[index + 1];
-    if (!nextLine || !isDurationOnlyLine(nextLine)) continue;
-    const nextDuration = parseDurationToHours(nextLine);
-    if (!nextDuration) continue;
-    seen.add(sameLineCategory);
-    minutes += Math.round(nextDuration * 60);
+export function guessScreenTimeLayout(rawText: string): ScreenTimeLayout {
+  const text = rawText.toLowerCase();
+  if (/digital\s*wellbeing/.test(text)) {
+    return /\d\s*(?:hr|min)\b/.test(text) ? "pixel" : "samsung";
   }
-
-  return minutes > 0 ? minutes / 60 : null;
+  if (text.split(/\r?\n/).some((line) => /screen\s*time\s*today/.test(line))) {
+    return "samsung";
+  }
+  if (/show\s*categories|daily\s*average|screen\s*time/.test(text)) {
+    return "ios";
+  }
+  return "unknown";
 }
 
-function extractRawAppLines(rawText: string): RawAppLine[] {
-  const lines = rawText
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  const blocked = /screen time|digital wellbeing|settings|average|avg|daily|total|all apps|pickups|notifications|螢幕|屏幕|平均|每日|總計|总计|ทั้งหมด|เฉลี่ย|หน้าจอ/i;
-
-  return lines
-    .map((line): RawAppLine | null => {
-      if (blocked.test(line)) return null;
-      const duration = parseDurationToHours(line);
-      if (!duration) return null;
-      const rawName = line
-        .replace(/\b\d{1,2}\s*:\s*\d{2}\b/g, "")
-        .replace(/\d{1,2}(?:[.,]\d+)?\s*(?:h|hr|hrs|hour|hours|小時|小时|ชม\.?|ชั่วโมง)/gi, "")
-        .replace(/\d{1,3}\s*(?:m|min|mins|minute|minutes|分鐘|分钟|นาที)/gi, "")
-        .replace(/[·•|-]+$/g, "")
-        .trim();
-      if (rawName.length < 1 || rawName.length > 40) return null;
-      return { rawName, minutes: Math.round(duration * 60) };
-    })
-    .filter((app): app is RawAppLine => app !== null);
+export function classifyParseOutcome(parsed: ParsedScreenTime): ParseOutcome {
+  if (parsed.hours === null) return "failed";
+  return parsed.scrollHours === null ? "total_only" : "full";
 }
 
 export function sanitizeParsedResult(parsed: RawParsedScreenTime): ParsedScreenTime {
@@ -361,41 +563,33 @@ export function sanitizeParsedResult(parsed: RawParsedScreenTime): ParsedScreenT
     scrollHours,
     apps,
     confidence: Math.max(0, Math.min(100, parsed.confidence)),
+    layout: parsed.layout ?? "unknown",
   };
 }
 
 export function parseScreenTimeText(rawText: string, ocrConfidence = 0): ParsedScreenTime {
-  const apps = extractRawAppLines(rawText);
-  const scrollHours = extractCategoryHours(rawText);
+  const layout = guessScreenTimeLayout(rawText);
+  const { lines, apps, scrollHours } = analyzeScreenTime(rawText);
   const confidence = Math.max(0, Math.min(100, ocrConfidence));
   const confidenceOk = confidence === 0 || confidence >= 45;
-  const averageLabels = [
-    /\b(?:daily\s+average|average|avg\.?|avg\s*\/\s*day|per\s+day)\b/i,
-    /(?:每日平均|日均|平均每天|平均每日|平均|เฉลี่ยต่อวัน|เฉลี่ย|ต่อวัน)/i,
-  ];
-  const weeklyLabels = [
-    /\b(?:week|weekly|this\s+week)\b/i,
-    /(?:本週|本周|週總計|周总计|รายสัปดาห์|สัปดาห์)/i,
-  ];
-  const dayLabels = [
-    /\b(?:screen\s*time\s*today|screen\s+time|today|daily\s+total|total\s+screen\s+time|total)\b/i,
-    /(?:今天螢幕使用時間|今日螢幕使用時間|今天屏幕使用时间|今日屏幕使用时间|螢幕使用時間今天|屏幕使用时间今天|今天|今日|單日|单日|เวลาหน้าจอวันนี้|เวลาใช้หน้าจอวันนี้|เวลาหน้าจอ|วันนี้|รายวัน)/i,
-  ];
 
-  const average = firstDurationAnchoredToLabels(rawText, averageLabels);
+  // Average/weekly headlines describe a different time scope than whatever
+  // category values are visible, so the scroll ratio is suppressed for them
+  // (total-only) rather than mixing scopes. Day-scoped totals keep it.
+  const average = resolveAnchoredTotal(lines, "average");
   if (average && average >= 0.5 && average <= 12 && confidenceOk) {
-    return sanitizeParsedResult({ hours: average, totalHours: average, scrollHours, source: "average", apps, confidence });
+    return sanitizeParsedResult({ hours: average, totalHours: average, scrollHours: null, source: "average", apps, confidence, layout });
   }
 
-  const weeklyTotal = firstDurationAnchoredToLabels(rawText, weeklyLabels);
+  const weeklyTotal = resolveAnchoredTotal(lines, "weekly");
   if (weeklyTotal && weeklyTotal >= 3.5 && weeklyTotal <= 84 && confidenceOk) {
-    return sanitizeParsedResult({ hours: weeklyTotal / 7, totalHours: weeklyTotal / 7, scrollHours, source: "weekly-total", apps, confidence });
+    return sanitizeParsedResult({ hours: weeklyTotal / 7, totalHours: weeklyTotal / 7, scrollHours: null, source: "weekly-total", apps, confidence, layout });
   }
 
-  const dayTotal = firstDurationAnchoredToLabels(rawText, dayLabels);
+  const dayTotal = resolveAnchoredTotal(lines, "day");
   if (dayTotal && dayTotal >= 0.5 && dayTotal <= 12) {
-    return sanitizeParsedResult({ hours: dayTotal, totalHours: dayTotal, scrollHours, source: "day-total", apps, confidence });
+    return sanitizeParsedResult({ hours: dayTotal, totalHours: dayTotal, scrollHours, source: "day-total", apps, confidence, layout });
   }
 
-  return sanitizeParsedResult({ hours: null, totalHours: null, scrollHours, source: scrollHours ? "day-total" : null, apps, confidence });
+  return sanitizeParsedResult({ hours: null, totalHours: null, scrollHours, source: scrollHours ? "day-total" : null, apps, confidence, layout });
 }
