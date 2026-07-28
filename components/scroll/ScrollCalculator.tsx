@@ -6,12 +6,18 @@ import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, normalP
 
 const HRS_YR = 365;
 const PUBLIC_HOME_URL = "https://www.neuralfin.ai";
-const PUBLIC_SCROLL_URL = `${PUBLIC_HOME_URL}/scroll`;
 const PUBLIC_SCROLL_LABEL = "www.neuralfin.ai/scroll";
 const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
 type Lang = "en" | "zh";
 type TapeRow = { region: ScrollRegion; hours: number; note?: "cs" | "algo" | "flip" | "grass"; flipped?: boolean };
+type AppRoast = { name: string; minutes: number };
+type ParsedScreenTime = {
+  hours: number | null;
+  source: "average" | "weekly-total" | "day-total" | null;
+  apps: AppRoast[];
+  confidence: number;
+};
 
 const regionOrder: ScrollRegion[] = ["ww", "hk", "sg", "th"];
 
@@ -37,6 +43,7 @@ const str = {
     openloss: "Open loss",
     verified: "Verified",
     hrsyr: "hours per year",
+    pace: "at your current pace",
     flip: "Flip 10 minutes a day",
     flipHide: "Hide the flip",
     learnpos: "Learning position",
@@ -54,7 +61,10 @@ const str = {
     dropSub: "Read on your device · never uploaded",
     dropHint: "iPhone: Settings → Screen Time · Android: Digital Wellbeing",
     dropScanning: "Reading on your device...",
-    dropDone: "Verified — your number is in",
+    dropDone: "We read {hours} h/day — look right?",
+    dropDay: "That's a single day — use it manually below, or upload Week view for your average.",
+    dropApps: "We read your app list, but not your daily average — set it manually below.",
+    dropFail: "Couldn't read that screenshot — set it manually below.",
     orManual: "or drag it manually",
     priv: "Screenshots are read on your device and never uploaded. App names stay private unless you share them.",
     stand: "Market standings",
@@ -99,6 +109,7 @@ const str = {
     },
     tapeNotes: { cs: "certified scroller", algo: "the algorithm won", flip: "flipped", grass: "touch grass" },
     shareText: (loss: string, rank: string) => `I'm down ${loss} this year. ${rank} — are you down more? ${PUBLIC_SCROLL_LABEL} #ScrollAudit`,
+    nativeReview: "照這個節奏 copy requires native review before launch.",
   },
   zh: {
     pill: "為滑屏世代而生",
@@ -112,6 +123,7 @@ const str = {
     openloss: "未平虧損",
     verified: "已驗證",
     hrsyr: "每年時數",
+    pace: "照這個節奏",
     flip: "每天翻轉 10 分鐘",
     flipHide: "收起",
     learnpos: "學習持倉",
@@ -129,7 +141,10 @@ const str = {
     dropSub: "只在你的裝置上讀取 · 永不上傳",
     dropHint: "iPhone：設定 → 螢幕使用時間 · Android：數位健康",
     dropScanning: "裝置本機讀取中...",
-    dropDone: "已驗證——你的數字已入市",
+    dropDone: "我們讀到 {hours} 小時／天——看起來對嗎？",
+    dropDay: "這是單日數字——可手動使用，或上傳週視圖取得平均。",
+    dropApps: "我們讀到 App 清單，但未讀到每日平均——請在下方手動設定。",
+    dropFail: "讀不到這張截圖——請在下方手動設定。",
     orManual: "或者手動拖一下",
     priv: "截圖只在你的裝置上讀取，永不上傳。App 名稱除非你分享，否則保密。",
     stand: "市場排行榜",
@@ -174,6 +189,7 @@ const str = {
     },
     tapeNotes: { cs: "認證滑屏員", algo: "演算法贏了", flip: "已翻轉", grass: "該摸摸草了" },
     shareText: (loss: string, rank: string) => `我今年已經虧了 ${loss}。${rank}——你虧得比我多嗎？${PUBLIC_SCROLL_LABEL} #ScrollAudit`,
+    nativeReview: "「照這個節奏」需 native review。",
   },
 } as const;
 
@@ -189,18 +205,93 @@ function appLink(base: string, hours: number, region: ScrollRegion, verified: bo
   return url.toString();
 }
 
-function extractHours(text: string) {
-  const normalized = text.replace(/\s+/g, " ");
-  const matches = Array.from(normalized.matchAll(/(\d{1,2})(?:\s*h(?:ours?)?|\s*小時|\s*小时|:)(?:\s*(\d{1,2})(?:\s*m(?:in(?:utes?)?)?|\s*分鐘|\s*分钟)?)?/gi));
-  const scored = matches
-    .map((match) => {
-      const hours = Number(match[1]);
-      const minutes = match[2] ? Number(match[2]) : 0;
-      const value = hours + minutes / 60;
-      return value >= 0.5 && value <= 12 ? value : null;
+function normalizeOcrText(text: string) {
+  return text
+    .replace(/[：﹕]/g, ":")
+    .replace(/[–—]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseDurationToHours(input: string) {
+  const text = input.toLowerCase();
+  const colon = text.match(/\b(\d{1,2})\s*:\s*(\d{2})\b/);
+  if (colon) {
+    const value = Number(colon[1]) + Number(colon[2]) / 60;
+    return value >= 0.1 && value <= 24 ? value : null;
+  }
+
+  const hoursMatch = text.match(/(\d{1,2}(?:[.,]\d+)?)\s*(?:h|hr|hrs|hour|hours|小時|小时|ชม\.?|ชั่วโมง)/i);
+  const minutesMatch = text.match(/(\d{1,3})\s*(?:m|min|mins|minute|minutes|分鐘|分钟|นาที)/i);
+  const hours = hoursMatch ? Number(hoursMatch[1].replace(",", ".")) : 0;
+  const minutes = minutesMatch ? Number(minutesMatch[1]) : 0;
+  const value = hours + minutes / 60;
+  return value >= 0.1 && value <= 24 ? value : null;
+}
+
+function firstDurationNearLabel(text: string, label: RegExp, windowChars = 140) {
+  const match = label.exec(text);
+  if (!match) return null;
+  const start = Math.max(0, match.index - 30);
+  const end = Math.min(text.length, match.index + windowChars);
+  return parseDurationToHours(text.slice(match.index + match[0].length, end)) ?? parseDurationToHours(text.slice(start, match.index));
+}
+
+function extractAppRoasts(rawText: string) {
+  const lines = rawText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const blocked = /screen time|digital wellbeing|settings|average|avg|daily|total|all apps|pickups|notifications|螢幕|屏幕|平均|每日|總計|总计|ทั้งหมด|เฉลี่ย|หน้าจอ/i;
+
+  return lines
+    .map((line): AppRoast | null => {
+      if (blocked.test(line)) return null;
+      const duration = parseDurationToHours(line);
+      if (!duration) return null;
+      const name = line
+        .replace(/\b\d{1,2}\s*:\s*\d{2}\b/g, "")
+        .replace(/\d{1,2}(?:[.,]\d+)?\s*(?:h|hr|hrs|hour|hours|小時|小时|ชม\.?|ชั่วโมง)/gi, "")
+        .replace(/\d{1,3}\s*(?:m|min|mins|minute|minutes|分鐘|分钟|นาที)/gi, "")
+        .replace(/[·•|-]+$/g, "")
+        .trim();
+      if (name.length < 2 || name.length > 32) return null;
+      return { name, minutes: Math.round(duration * 60) };
     })
-    .filter((value): value is number => value !== null);
-  return scored[0] ?? null;
+    .filter((app): app is AppRoast => app !== null)
+    .sort((a, b) => b.minutes - a.minutes)
+    .slice(0, 3);
+}
+
+export function parseScreenTimeText(rawText: string, ocrConfidence = 0): ParsedScreenTime {
+  const text = normalizeOcrText(rawText);
+  const apps = extractAppRoasts(rawText);
+  const confidence = Math.max(0, Math.min(100, ocrConfidence));
+  const confidenceOk = confidence === 0 || confidence >= 45;
+
+  const average =
+    firstDurationNearLabel(text, /\b(?:daily\s+average|average|avg\.?|avg\s*\/\s*day|per\s+day)\b/i) ??
+    firstDurationNearLabel(text, /(?:每日平均|日均|平均每天|平均每日|平均|เฉลี่ยต่อวัน|เฉลี่ย|ต่อวัน)/i);
+  if (average && average >= 0.5 && average <= 12 && confidenceOk) {
+    return { hours: average, source: "average", apps, confidence };
+  }
+
+  const weeklyTotal =
+    firstDurationNearLabel(text, /\b(?:week|weekly|this\s+week)\b/i) ??
+    firstDurationNearLabel(text, /(?:本週|本周|週總計|周总计|รายสัปดาห์|สัปดาห์)/i);
+  if (weeklyTotal && weeklyTotal >= 3.5 && weeklyTotal <= 84 && confidenceOk) {
+    return { hours: weeklyTotal / 7, source: "weekly-total", apps, confidence };
+  }
+
+  const dayTotal =
+    firstDurationNearLabel(text, /\b(?:today|day|daily|screen\s+time|total)\b/i) ??
+    firstDurationNearLabel(text, /(?:今天|今日|單日|单日|螢幕使用時間|屏幕使用时间|วันนี้|รายวัน|เวลาหน้าจอ)/i);
+  if (dayTotal && dayTotal >= 0.5 && dayTotal <= 12) {
+    return { hours: dayTotal, source: "day-total", apps, confidence };
+  }
+
+  return { hours: null, source: null, apps, confidence };
 }
 
 async function parseScreenshot(file: File) {
@@ -208,7 +299,7 @@ async function parseScreenshot(file: File) {
   const worker = await mod.createWorker("eng+chi_tra+tha");
   try {
     const result = await worker.recognize(file);
-    return extractHours(result.data.text);
+    return parseScreenTimeText(result.data.text, result.data.confidence);
   } finally {
     await worker.terminate();
   }
@@ -223,6 +314,9 @@ export function ScrollCalculator() {
   const [modalOpen, setModalOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [dropDone, setDropDone] = useState(false);
+  const [parsedHours, setParsedHours] = useState<number | null>(null);
+  const [scanNotice, setScanNotice] = useState<string | null>(null);
+  const [appRoasts, setAppRoasts] = useState<AppRoast[]>([]);
   const [tapeRows, setTapeRows] = useState<TapeRow[]>(demoTape);
   const fileRef = useRef<HTMLInputElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -243,6 +337,14 @@ export function ScrollCalculator() {
   const playStoreHref = appLink(appLinks.googlePlay, hours, region, verified, lang);
   const webAppHref = appLink(appLinks.webApp, hours, region, verified, lang);
   const rangeFill = ((hours - 0.5) / 11.5) * 100;
+  const hasAppRoasts = appRoasts.length > 0;
+  const appRoastText = appRoasts.map((app) => `${app.name} -${app.minutes}m`).join(" · ");
+  const parsedHoursLabel = parsedHours?.toFixed(1) ?? hours.toFixed(1);
+  const dropTitleText = scanning
+    ? t.dropScanning
+    : dropDone
+      ? t.dropDone.replace("{hours}", parsedHoursLabel)
+      : t.dropTitle;
 
   const sortedStandings = useMemo(
     () => [...SCROLL_STANDINGS].sort((a, b) => b.flippedPercent - a.flippedPercent),
@@ -290,15 +392,41 @@ export function ScrollCalculator() {
   async function handleScan(file?: File) {
     if (!file || scanning) return;
     setScanning(true);
+    setScanNotice(null);
+    setDropDone(false);
     try {
       const parsed = await parseScreenshot(file);
-      if (parsed) {
-        setHours(Math.round(parsed * 2) / 2);
+      setAppRoasts(parsed.apps);
+      if (parsed.hours && parsed.source !== "day-total") {
+        const rounded = Math.round(parsed.hours * 2) / 2;
+        setHours(rounded);
+        setParsedHours(rounded);
         setVerified(true);
         setDropDone(true);
+        setScanNotice(t.dropDone.replace("{hours}", rounded.toFixed(1)));
+      } else if (parsed.hours && parsed.source === "day-total") {
+        const rounded = Math.round(parsed.hours * 2) / 2;
+        setHours(rounded);
+        setParsedHours(null);
+        setVerified(false);
+        setDropDone(false);
+        setScanNotice(t.dropDay);
+      } else if (parsed.apps.length > 0) {
+        setParsedHours(null);
+        setVerified(false);
+        setDropDone(false);
+        setScanNotice(t.dropApps);
+      } else {
+        setParsedHours(null);
+        setVerified(false);
+        setDropDone(false);
+        setScanNotice(t.dropFail);
       }
     } catch {
+      setParsedHours(null);
+      setVerified(false);
       setDropDone(false);
+      setScanNotice(t.dropFail);
     } finally {
       setScanning(false);
     }
@@ -345,24 +473,27 @@ export function ScrollCalculator() {
     c.fillStyle = "#FF5C6C";
     c.font = "800 170px Consolas, monospace";
     c.fillText(`-${fmt.format(yearly)}h`, PAD - 6, 350);
+    c.fillStyle = "rgba(247,251,247,.68)";
+    c.font = "600 34px Inter, -apple-system, sans-serif";
+    c.fillText(t.pace, PAD, 400);
     c.fillStyle = "#EDDBA8";
     c.font = "700 46px Inter, -apple-system, sans-serif";
-    c.fillText(rankLine, PAD, 438);
+    c.fillText(rankLine, PAD, 470);
     c.strokeStyle = "#FF5C6C";
     c.lineWidth = 3;
-    c.strokeRect(PAD, 482, Math.min(720, arch.length * 24 + 64), 62);
+    c.strokeRect(PAD, 514, Math.min(720, arch.length * 24 + 64), 62);
     c.fillStyle = "#FF5C6C";
     c.font = "900 34px Inter, -apple-system, sans-serif";
-    c.fillText(arch.toUpperCase(), PAD + 22, 524);
+    c.fillText(arch.toUpperCase(), PAD + 22, 556);
     c.fillStyle = "#f7fbf7";
     c.font = "600 40px Inter, -apple-system, sans-serif";
-    c.fillText(`${fun.title} ${fun.num}.`, PAD, 640);
+    c.fillText(`${fun.title} ${fun.num}.`, PAD, 668);
     c.fillStyle = "rgba(247,251,247,.68)";
     c.font = "italic 36px Inter, -apple-system, sans-serif";
-    c.fillText(fun.sub, PAD, 696);
-    if (verified) {
+    c.fillText(fun.sub, PAD, 724);
+    if (hasAppRoasts) {
       c.font = "600 34px Inter, -apple-system, sans-serif";
-      c.fillText(`${t.mostShorted} TikTok -37m · WeChat -31m`, PAD, 760);
+      c.fillText(`${t.mostShorted} ${appRoastText}`, PAD, 788);
     }
     c.font = "600 32px Inter, -apple-system, sans-serif";
     c.fillStyle = "#f7fbf7";
@@ -452,7 +583,7 @@ export function ScrollCalculator() {
               }}
             >
               <span className="di">📱</span>
-              <b>{scanning ? t.dropScanning : dropDone ? t.dropDone : t.dropTitle}</b>
+              <b>{dropTitleText}</b>
               <span className="dsub">{t.dropSub}</span>
               {!dropDone ? <span className="dhint">{t.dropHint}</span> : null}
               <span className="beam" />
@@ -480,9 +611,11 @@ export function ScrollCalculator() {
               value={hours}
               style={{ "--fill": `${rangeFill}%` } as CSSProperties}
               onChange={(event) => {
-                setHours(Number(event.target.value));
-                setVerified(false);
-                setDropDone(false);
+                const nextHours = Number(event.target.value);
+                const keepVerified = parsedHours !== null && Math.abs(nextHours - parsedHours) <= 0.5;
+                setHours(nextHours);
+                setVerified(keepVerified);
+                setDropDone(keepVerified);
               }}
             />
             <div className="scroll-scale">{t.scales.map((label) => <span key={label}>{label}</span>)}</div>
@@ -496,7 +629,7 @@ export function ScrollCalculator() {
             </div>
 
             <div className="scroll-pos loss">
-              <div className="name"><b>{t.scrollpos} <span className="tag l">{t.openloss}</span>{verified ? <span className="tag v">✓ {t.verified}</span> : null}</b><span>{t.hrsyr}</span></div>
+              <div className="name"><b>{t.scrollpos} <span className="tag l">{t.openloss}</span>{verified ? <span className="tag v">✓ {t.verified}</span> : null}</b><span>{t.hrsyr} · {t.pace}</span></div>
               <div className="num mono">-{fmt.format(yearly)} h</div>
             </div>
             <div className="scroll-pos rank">
@@ -507,6 +640,11 @@ export function ScrollCalculator() {
               <div className="name"><b>{fun.title}</b><span>{fun.sub}</span></div>
               <div className="num mono">{fun.num}</div>
             </div>
+            {hasAppRoasts ? (
+              <div className="scroll-pos app-roast">
+                <div className="name"><b>{t.mostShorted}</b><span>{appRoastText}</span></div>
+              </div>
+            ) : null}
 
             <button className="scroll-flip" type="button" aria-pressed={flipped} onClick={() => setFlipped((value) => !value)}>
               {flipped ? t.flipHide : `${t.flip} ↺`}
@@ -531,6 +669,7 @@ export function ScrollCalculator() {
               {t.getcard}
             </button>
             <p className="scroll-privnote">🔒 {t.priv}</p>
+            {scanNotice ? <p className={`scroll-scan-notice${verified ? " ok" : ""}`}>{scanNotice}</p> : null}
           </section>
         </div>
 
@@ -580,10 +719,11 @@ export function ScrollCalculator() {
               {verified ? <div className="vbadge">✓ {t.vbadge}</div> : null}
               <div className="cb">{t.cardtitle}</div>
               <div className="big mono">-{fmt.format(yearly)}h</div>
+              <div className="pace">{t.pace}</div>
               <div className="rankline">{rankLine} {top <= 25 ? "💀" : "📉"}</div>
               <div><span className="arch">{arch}</span></div>
               <div className="roast">{fun.title} {fun.num}. <i>{fun.sub}</i></div>
-              {verified ? <div className="roast">{t.mostShorted} <b>TikTok -37m</b> · <b>WeChat -31m</b></div> : null}
+              {hasAppRoasts ? <div className="roast">{t.mostShorted} <b>{appRoastText}</b></div> : null}
               <div className="chips">
                 <span className="chip"><b>-{workWeeks}</b> {lang === "zh" ? "個工作週" : "work wks"}</span>
                 <span className="chip"><b>{diff >= 0 ? "+" : ""}{diff}%</b> {lang === "zh" ? "對比市場平均" : "vs market avg"}</span>

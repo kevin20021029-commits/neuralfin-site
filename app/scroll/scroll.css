@@ -373,6 +373,14 @@
   color: var(--gold);
 }
 
+.scroll-pos.app-roast {
+  background: rgba(145,201,255,0.07);
+}
+
+.scroll-pos.app-roast .name span {
+  color: rgba(247,251,247,0.76);
+}
+
 .tag {
   display: inline-flex;
   margin-left: 8px;
@@ -468,6 +476,24 @@
   color: var(--muted);
   font-size: 12px;
   text-align: center;
+}
+
+.scroll-scan-notice {
+  margin: 10px 0 0;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.045);
+  color: var(--muted);
+  padding: 11px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.scroll-scan-notice.ok {
+  border-color: rgba(22,240,194,0.28);
+  background: rgba(22,240,194,0.08);
+  color: var(--mint);
+  font-weight: 800;
 }
 
 .scroll-botgrid {
@@ -672,6 +698,7 @@
 .scroll-card .cb,
 .scroll-card .big,
 .scroll-card .rankline,
+.scroll-card .pace,
 .scroll-card .arch,
 .scroll-card .roast,
 .scroll-card .chips,
@@ -705,6 +732,13 @@
   margin-top: 4px;
   color: #edDBa8;
   font-size: 14px;
+  font-weight: 700;
+}
+
+.scroll-card .pace {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
   font-weight: 700;
 }
 
