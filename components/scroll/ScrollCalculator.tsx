@@ -7,6 +7,7 @@ import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, detectS
 import { FLIP_MINUTES_PER_DAY, LADDER_TRACKS, getEducationOutput, getTrackName } from "@/lib/scroll/education";
 import { getArchetypeCopy, getScanStageMessage, getShareCaptionVariant, getTapeNote, type ScanStage } from "@/lib/scroll/personality";
 import { getRankFrame } from "@/lib/scroll/rank";
+import { CARD_FONT_FAMILIES, CARD_MONO_FAMILIES } from "@/lib/scroll/cardFont";
 
 const HRS_YR = 365;
 const PUBLIC_HOME_URL = "https://www.neuralfin.ai";
@@ -281,6 +282,88 @@ const str = {
       return { title: "香港飞纽约", sub: "里程一分都没有。", num: `×${Math.round(yr / 16)}` };
     },
   },
+  // DRAFT — native review required (every th string below; Thai-native
+  // internet register, not literal EN translation — see VOICE.md)
+  th: {
+    pill: "สร้างมาเพื่อเจนไถฟีด",
+    h1a: "การไถฟีดของคุณก็มี",
+    sub: "ลากไปที่เวลาหน้าจอต่อวันของคุณ ดูความเสียหาย ดูอันดับ แชร์การ์ด แล้วไปพลิกให้เขียวในแอป",
+    steps: ["อัปโหลด", "ดูความเสียหาย", "โพสต์เลย"],
+    slider: "เวลาหน้าจอต่อวันของคุณ",
+    sliderSub: "นับเฉพาะการไถ — โซเชียล วิดีโอ เกม",
+    hday: "ชม. / วัน",
+    scales: ["30 นาที", "นักบุญ", "6 ชม.", "นักเลื่อนตัวจริง", "12 ชม."],
+    regions: { ww: "ทั่วโลก", hk: "ฮ่องกง", sg: "สิงคโปร์", th: "ไทย" },
+    scrollpos: "สถานะไถฟีด",
+    openloss: "ขาดทุนลอยตัว",
+    verified: "ยืนยันแล้ว",
+    hrsyr: "ชั่วโมงต่อปี",
+    pace: "ตามจังหวะนี้",
+    learnpos: "สถานะการเรียน",
+    compounding: "กำลังทบต้น",
+    feedcould: "สิ่งที่ฟีดของคุณสอนคุณได้",
+    lessonYield: (hours: string, lessons: number, phrase: string, track: string) =>
+      `วันละ ${hours} ชม. = ${lessons} บทเรียนสั้นซ่อนอยู่ในการไถของคุณ เรียนจบ${track}ได้${phrase}`,
+    lessonZero: "บทเรียนที่ศูนย์ ฟรี:",
+    hyr: "ชม./ปี",
+    ladder: [
+      ["สัปดาห์ 1", "ETF จริง ๆ แล้วคืออะไร", "และทำไมใคร ๆ ก็พูดถึงมันไม่หยุด"],
+      ["เดือน 1", "อ่านงบดุลได้แบบไม่เหงื่อตก", "รู้ว่าตัวเลขซ่อนอยู่ตรงไหน"],
+      ["เดือน 6", "สร้างมุมมองหุ้นเฝ้าดูตัวแรกของคุณ", "ความเห็นของตัวเอง ไม่ใช่ทิปจากกลุ่มแชท"],
+    ],
+    milestone: (date: string) => [
+      "ภายใน " + date,
+      "≈ คอร์สปูพื้นการลงทุนระดับมหาวิทยาลัย",
+      "สนับสนุนโดยฟีดของคุณล้วน ๆ",
+    ],
+    dropTitle: "อัปโหลดสกรีนช็อตเวลาหน้าจอของคุณ",
+    dropSub: "อ่านบนเครื่องของคุณ · ไม่อัปโหลดเด็ดขาด",
+    dropHint: "iPhone: การตั้งค่า → เวลาหน้าจอ · Android: Digital Wellbeing",
+    dropReceived: "✓ ได้รับสกรีนช็อตแล้ว",
+    dropRead: (duration: string) => `✓ อ่านได้: ${duration}`,
+    dropReadScrollDay: (scroll: string, total: string) => `ไถไป ${scroll} จากทั้งวัน ${total}`,
+    dropReadScroll: (scroll: string) => `เวลาไถ ${scroll}`,
+    dropCouldnt: "อ่านสกรีนช็อตนี้ไม่ได้",
+    dropReplace: "ลองสกรีนช็อตอื่น",
+    dropDone: "เราอ่านได้ {hours} ชม./วัน — ถูกไหม?",
+    dropDay: (duration: string) => `นี่คือตัวเลขของวันนี้ (${duration}) — ตั้งให้แล้ว อยากได้ค่าเฉลี่ยจริง อัปโหลดมุมมองรายสัปดาห์`,
+    dropApps: "อ่านชั่วโมงของคุณไม่ได้ — ตั้งเองด้านล่างได้เลย",
+    dropFail: "อ่านชั่วโมงของคุณไม่ได้ — ตั้งเองด้านล่างได้เลย",
+    orManual: "หรือลากเองก็ได้",
+    priv: "สกรีนช็อตถูกอ่านบนเครื่องของคุณและไม่มีการอัปโหลด ชื่อแอปเป็นความลับ เว้นแต่คุณจะแชร์เอง",
+    stand: "อันดับตลาด",
+    standsub: "จัดอันดับด้วย % ที่พลิกได้ — ตลาดที่เปลี่ยนการไถเป็นสกิลได้ชนะ",
+    standnote: "ข้อมูลตัวอย่าง เวอร์ชันเปิดตัว: คำนวณจากสถิตินิรนามชุดเดียวกัน (ชั่วโมง + ตลาดเท่านั้น) ช่วงก่อนเปิดตัวใช้ค่าเฉลี่ยจากสถิติสาธารณะจนกว่าข้อมูลชุมชนจะมากพอ",
+    avgday: "เฉลี่ย / วัน",
+    flipped: "พลิกแล้ว",
+    youare: "ตลาดของคุณ",
+    tape: "กระดานเทป",
+    tapesub: "การไถล่าสุด ตีราคาตลาดสด ๆ นิรนามเสมอ",
+    tapenote: "แสดงข้อมูลตัวอย่าง เวอร์ชันเปิดตัว: ก่อนเปิดตัวเทียบกับสถิติเวลาหน้าจอสาธารณะ (มีแหล่งอ้างอิง) เมื่อผลจริงสะสมพอจะสลับเป็นกระดานชุมชน เก็บเฉพาะชั่วโมง + ตลาด — ไม่มีข้อมูลระบุตัวตน",
+    f1: "บริการซื้อขายให้บริการโดย DL Securities (Hong Kong) Limited ซึ่งเป็นบริษัทที่ได้รับใบอนุญาตและอยู่ภายใต้การกำกับดูแลของสำนักงาน ก.ล.ต. ฮ่องกง (SFC)",
+    f2: "การวิเคราะห์สกรีนช็อตเกิดขึ้นในเบราว์เซอร์ของคุณเท่านั้น รูปภาพและชื่อแอปไม่ถูกอัปโหลดหรือจัดเก็บ สถิติชุมชนเป็นแบบนิรนาม (เฉพาะชั่วโมงและตลาด)",
+    f3: "หน้านี้เป็นภาพประกอบทางการตลาดเพื่อการศึกษาและความบันเทิง ไม่ใช่คำแนะนำการลงทุน การคาดการณ์ หรือการประมาณผลตอบแทน",
+    vbadge: "ไถฟีดยืนยันแล้ว",
+    cardtitle: "P&L การไถของฉัน · 2026",
+    cardflip: `พลิกวันละ ${FLIP_MINUTES_PER_DAY} นาที →`,
+    challenge: "คุณลบหนักกว่าฉันไหม?",
+    scan: "สแกนของคุณ ↓",
+    savebtn: "ดาวน์โหลดรูป 📸",
+    sticky1: "พลิก P&L ของคุณจริง ๆ",
+    sticky2: "วันละ 10 นาทีในแอป NeuralFin",
+    anon: "นิรนาม",
+    bench: "เทียบสถิติเวลาหน้าจอสาธารณะ",
+    mostShorted: "ช็อตหนักสุด:",
+    wkwks: "สัปดาห์ทำงาน",
+    vsmkt: "เทียบค่าเฉลี่ยตลาด",
+    youAt: (hours: string) => `คุณ · ${hours} ชม.`,
+    scrollChip: (scroll: string, total: string) => `${scroll} จาก ${total} คือการไถ`,
+    fun: (yr: number) => {
+      if (yr < 500) return { title: "ดูสตาร์ วอร์ส ครบทุกภาค", sub: "...รวมไตรภาคพรีเควลด้วย", num: `×${Math.round(yr / 25)}` };
+      if (yr < 1200) return { title: "ดูไททานิคจบเต็ม ๆ หนึ่งรอบ", sub: "เรือจมทุกครั้ง", num: `×${Math.round(yr / 3.23)}` };
+      return { title: "บินฮ่องกง → นิวยอร์ก", sub: "ไมล์สะสมไม่ได้สักแต้ม", num: `×${Math.round(yr / 16)}` };
+    },
+  },
 } as const;
 
 function wait(ms: number) {
@@ -302,6 +385,12 @@ function formatDurationFromHours(hours: number, lang: Lang) {
     if (wholeHours === 0) return `${minutes}分钟`;
     if (minutes === 0) return `${wholeHours}小时`;
     return `${wholeHours}小时 ${minutes}分钟`;
+  }
+
+  if (lang === "th") {
+    if (wholeHours === 0) return `${minutes} นาที`;
+    if (minutes === 0) return `${wholeHours} ชม.`;
+    return `${wholeHours} ชม. ${minutes} นาที`;
   }
 
   if (wholeHours === 0) return `${minutes}m`;
@@ -592,7 +681,7 @@ export function ScrollCalculator() {
     function fillFitText(text: string, x: number, y: number, maxWidth: number, size: number, weight = 800) {
       let fontSize = size;
       do {
-        ctx.font = `${weight} ${fontSize}px Inter, -apple-system, sans-serif`;
+        ctx.font = `${weight} ${fontSize}px ${CARD_FONT_FAMILIES}`;
         if (ctx.measureText(text).width <= maxWidth || fontSize <= 24) break;
         fontSize -= 2;
       } while (fontSize > 24);
@@ -613,42 +702,42 @@ export function ScrollCalculator() {
     c.arc(80, H - 100, 390, 0, Math.PI * 2);
     c.fill();
     c.fillStyle = "#f7fbf7";
-    c.font = "800 34px Inter, -apple-system, sans-serif";
+    c.font = `800 34px ${CARD_FONT_FAMILIES}`;
     c.fillText(t.cardtitle.toUpperCase(), PAD, 200);
     if (verified) {
       c.fillStyle = "#EDDBA8";
-      c.font = "700 28px Inter, -apple-system, sans-serif";
+      c.font = `700 28px ${CARD_FONT_FAMILIES}`;
       c.fillText(`✓ ${t.vbadge}`, W - 390, 200);
     }
     c.fillStyle = "#FF5C6C";
-    c.font = "800 170px Consolas, monospace";
+    c.font = `800 170px ${CARD_MONO_FAMILIES}`;
     c.fillText(`-${fmt.format(yearly)}h`, PAD - 6, 350);
     c.fillStyle = "rgba(247,251,247,.68)";
-    c.font = "600 34px Inter, -apple-system, sans-serif";
+    c.font = `600 34px ${CARD_FONT_FAMILIES}`;
     c.fillText(t.pace, PAD, 400);
     c.fillStyle = "#EDDBA8";
-    c.font = "700 46px Inter, -apple-system, sans-serif";
+    c.font = `700 46px ${CARD_FONT_FAMILIES}`;
     c.fillText(rankLine, PAD, 470);
     c.strokeStyle = "#FF5C6C";
     c.lineWidth = 3;
     c.strokeRect(PAD, 514, Math.min(720, arch.length * 24 + 64), 62);
     c.fillStyle = "#FF5C6C";
-    c.font = "900 34px Inter, -apple-system, sans-serif";
+    c.font = `900 34px ${CARD_FONT_FAMILIES}`;
     c.fillText(arch.toUpperCase(), PAD + 22, 556);
     c.fillStyle = "rgba(247,251,247,.58)";
-    c.font = "600 28px Inter, -apple-system, sans-serif";
+    c.font = `600 28px ${CARD_FONT_FAMILIES}`;
     c.fillText(archSubtitle, PAD, 614);
     c.fillStyle = "#f7fbf7";
-    c.font = "600 40px Inter, -apple-system, sans-serif";
+    c.font = `600 40px ${CARD_FONT_FAMILIES}`;
     c.fillText(`${fun.title} ${fun.num}.`, PAD, 668);
     c.fillStyle = "rgba(247,251,247,.68)";
-    c.font = "italic 36px Inter, -apple-system, sans-serif";
+    c.font = `italic 36px ${CARD_FONT_FAMILIES}`;
     c.fillText(fun.sub, PAD, 724);
     if (hasAppRoasts) {
-      c.font = "600 34px Inter, -apple-system, sans-serif";
+      c.font = `600 34px ${CARD_FONT_FAMILIES}`;
       c.fillText(`${t.mostShorted} ${appRoastText}`, PAD, 788);
     }
-    c.font = "600 32px Inter, -apple-system, sans-serif";
+    c.font = `600 32px ${CARD_FONT_FAMILIES}`;
     c.fillStyle = "#f7fbf7";
     c.fillText(`-${workWeeks} ${t.wkwks}`, PAD, 850);
     c.fillText(`${diff >= 0 ? "+" : ""}${diff}% ${t.vsmkt}`, PAD + 360, 850);
@@ -664,15 +753,15 @@ export function ScrollCalculator() {
     c.stroke();
     c.setLineDash([]);
     c.fillStyle = "rgba(247,251,247,.68)";
-    c.font = "400 38px Inter, -apple-system, sans-serif";
+    c.font = `400 38px ${CARD_FONT_FAMILIES}`;
     c.fillText(t.cardflip, PAD, 1060);
     c.fillStyle = "#00e68a";
     fillFitText(education.cardLine, PAD, 1124, W - PAD * 2, 34);
     c.fillStyle = "#f7fbf7";
-    c.font = "700 42px Inter, -apple-system, sans-serif";
+    c.font = `700 42px ${CARD_FONT_FAMILIES}`;
     c.fillText(t.challenge, PAD, H - 260);
     c.fillText(t.scan, PAD, H - 202);
-    c.font = "700 36px Inter, -apple-system, sans-serif";
+    c.font = `700 36px ${CARD_FONT_FAMILIES}`;
     c.fillText(PUBLIC_SCROLL_LABEL, PAD, H - 92);
     c.fillStyle = "rgba(247,251,247,.68)";
     c.fillText("#ScrollAudit", W - 310, H - 92);
@@ -717,6 +806,7 @@ export function ScrollCalculator() {
               <button className={lang === "en" ? "on" : ""} onClick={() => setLang("en")} type="button">EN</button>
               <button className={lang === "zh-Hant" ? "on" : ""} onClick={() => setLang("zh-Hant")} type="button" aria-label="繁體中文">繁</button>
               <button className={lang === "zh-Hans" ? "on" : ""} onClick={() => setLang("zh-Hans")} type="button" aria-label="简体中文">简</button>
+              <button className={lang === "th" ? "on" : ""} onClick={() => setLang("th")} type="button" aria-label="ภาษาไทย">ไทย</button>
             </div>
           </div>
         </header>

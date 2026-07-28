@@ -22,6 +22,11 @@ export function getRankFrame(percentile: number, regionName: string, lang: RankL
         title: `比 ${100 - p}% 的人更轻仓 🌱`,
         subtitle: "不错——feed 还没收购你",
       },
+      // DRAFT — native review required
+      th: {
+        title: `เบากว่า ${100 - p}% ของคนทั้งหมด 🌱`,
+        subtitle: "ดีมาก — ฟีดยังไม่ได้เป็นเจ้าของคุณ",
+      },
     } as const;
     return { ...light[lang], displayPercent: `P${p}` };
   }
@@ -40,6 +45,11 @@ export function getRankFrame(percentile: number, regionName: string, lang: RankL
     "zh-Hans": {
       title: `${regionName}前 ${inverse}% 滑屏员`,
       subtitle: `你滑得比 ${p}% 的人多`,
+    },
+    // DRAFT — native review required
+    th: {
+      title: `Top ${inverse}% นักเลื่อน · ${regionName}`,
+      subtitle: `คุณเลื่อนมากกว่า ${p}% ของคนทั้งหมด`,
     },
   } as const;
   return { ...top[lang], displayPercent: `P${p}` };

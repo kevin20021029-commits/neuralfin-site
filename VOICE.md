@@ -61,6 +61,30 @@ native review required. Reviewers should specifically check:
 - Compliance strings (f1/f2/f3) additionally need compliance approval per
   script — see the compliance rule in CLAUDE.md.
 
+### th (Thai)
+
+The entire th string set is drafted in a Thai-native internet register (not
+literal translation of the EN slang) and every string is DRAFT — native
+review required. Judgment calls for the reviewer:
+
+- Trading-slang substitutions: "down bad" → ดอยแล้ว (bagholder slang),
+  "open loss" → ขาดทุนลอยตัว, "most shorted" → ช็อตหนักสุด, "portfolio:
+  vibes" → พอร์ต: ใช้ความรู้สึกล้วน ๆ
+- "Touch grass" kept as the borrowed meme (ไปสัมผัสหญ้า), which circulates
+  in Thai internet culture as-is
+- Scrolling rendered as การไถฟีด/การไถ/นักเลื่อน — confirm register
+- First person is เรา (gender-neutral internet register); no ผม/ดิฉัน.
+  The card title uses ของฉัน — confirm or align with เรา
+- "Top X%" kept in English inside Thai rank lines (internet-native mixing)
+- Company name stays in English in f1 (no official Thai name); SFC rendered
+  as สำนักงาน ก.ล.ต. ฮ่องกง (SFC) — needs compliance confirmation
+- Milestone dates use th-TH formatting with Buddhist-era years
+  (2027 CE → 2570) — confirm this is desired on the share card
+- Thai spacing and ๆ usage throughout
+- The full th tables live in `components/scroll/ScrollCalculator.tsx`,
+  `lib/scroll/personality.ts`, `lib/scroll/education.ts`, and
+  `lib/scroll/rank.ts`
+
 ## Maintenance
 
 All personality strings live in config arrays with a `lastReviewed` date. Review and refresh them per campaign season, before launch, and whenever compliance or native-language review changes the register.

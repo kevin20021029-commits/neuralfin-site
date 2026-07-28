@@ -328,6 +328,28 @@ test("entertainment and games categories count in both scripts", () => {
   }
 });
 
+test("Thai headline and category labels parse with full-word duration units", () => {
+  const parsed = parseScreenTimeText(
+    ["เวลาหน้าจอวันนี้", "6 ชั่วโมง 2 นาที", "วิดีโอ 3 ชั่วโมง 16 นาที", "โซเชียล 2 ชั่วโมง 35 นาที", "การเงิน 5 นาที"].join("\n"),
+    85,
+  );
+
+  assert.equal(parsed.source, "day-total");
+  assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 362);
+  assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 351); // Video + Social; Finance excluded
+});
+
+test("Thai abbreviated duration units (ชม.) parse for headline and categories", () => {
+  const parsed = parseScreenTimeText(
+    ["เวลาหน้าจอวันนี้", "6 ชม. 2 นาที", "ความบันเทิง 2 ชม. 0 นาที", "เกม 1 ชม. 0 นาที", "สร้างสรรค์ 30 นาที"].join("\n"),
+    85,
+  );
+
+  assert.equal(parsed.source, "day-total");
+  assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 362);
+  assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 180); // Entertainment + Games; Creativity excluded
+});
+
 test("app row only does not promote an app duration to headline", () => {
   const parsed = parseScreenTimeText("YouTube 3 h 16 m\nWhatsApp 1 h 21 m\nInstagram 45 m", 83);
 

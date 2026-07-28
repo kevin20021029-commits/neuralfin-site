@@ -15,7 +15,7 @@ export const SCROLL_REGIONS = ["ww", "hk", "sg", "th"] as const;
 
 export type ScrollRegion = (typeof SCROLL_REGIONS)[number];
 
-export const SCROLL_LOCALES = ["en", "zh-Hant", "zh-Hans"] as const;
+export const SCROLL_LOCALES = ["en", "zh-Hant", "zh-Hans", "th"] as const;
 
 export type ScrollLocale = (typeof SCROLL_LOCALES)[number];
 
@@ -27,22 +27,32 @@ export function normalizeScrollLocale(value: unknown): ScrollLocale | null {
   if (tag === "en") return "en";
   if (tag === "zh" || tag === "zh-hant" || tag === "zhhant") return "zh-Hant";
   if (tag === "zh-hans" || tag === "zhhans") return "zh-Hans";
+  if (tag === "th" || tag.startsWith("th-")) return "th";
   return null;
 }
 
-// Default locale from browser languages + detected region. Chinese browser
-// tags pick their script (zh-HK/zh-TW/zh-MO → Hant, zh-CN/zh-SG → Hans);
-// a bare "zh" falls back to the detected region (Hong Kong → Hant,
-// Singapore → Hans, elsewhere Hans). Non-Chinese browsers stay English —
-// the manual toggle always wins and persists.
+// Default locale from browser languages + detected region.
+// RULE (confirmed): language beats region. Region only ever selects WHICH
+// variant wins for a language the browser actually expresses (bare "zh" →
+// HK Hant / SG Hans) or fills in when the browser expresses no recognized
+// preference at all (Thailand → th). It never overrides an explicit
+// browser language — an en-HK or en-TH browser stays English. The manual
+// toggle always wins and persists.
 export function detectScrollLocale(languages: readonly string[], region: ScrollRegion): ScrollLocale {
+  let sawEnglish = false;
   for (const raw of languages) {
     const tag = raw.toLowerCase();
+    if (tag === "th" || tag.startsWith("th-")) return "th";
+    if (tag.startsWith("en")) {
+      sawEnglish = true;
+      continue;
+    }
     if (!tag.startsWith("zh")) continue;
     if (/hant|-tw|-hk|-mo/.test(tag)) return "zh-Hant";
     if (/hans|-cn|-sg|-my/.test(tag)) return "zh-Hans";
     return region === "hk" ? "zh-Hant" : "zh-Hans";
   }
+  if (!sawEnglish && region === "th") return "th";
   return "en";
 }
 

@@ -16,6 +16,8 @@ export const ARCHETYPES = [
     "zh-Hant": { title: "聖人", subtitle: "太乾淨，像還沒開倉" },
     // DRAFT — native review required
     "zh-Hans": { title: "圣人", subtitle: "太干净，像还没开仓" },
+    // DRAFT — native review required
+    th: { title: "นักบุญ", subtitle: "สะอาดเกินไป น่าสงสัยว่ายังไม่เปิดพอร์ต" },
   },
   {
     id: "casual",
@@ -26,6 +28,8 @@ export const ARCHETYPES = [
     "zh-Hant": { title: "輕度滑友", subtitle: "小注怡情，尚算體面" },
     // DRAFT — native review required
     "zh-Hans": { title: "轻度滑友", subtitle: "小赌怡情，还算体面" },
+    // DRAFT — native review required
+    th: { title: "สายเลื่อนชิลล์ ๆ", subtitle: "เล่นพอเพลิน ยังดูดีอยู่" },
   },
   {
     id: "certified",
@@ -36,6 +40,8 @@ export const ARCHETYPES = [
     "zh-Hant": { title: "認證滑屏員", subtitle: "中段持倉，不算失控" },
     // DRAFT — native review required
     "zh-Hans": { title: "认证滑屏员", subtitle: "中段持仓，不算失控" },
+    // DRAFT — native review required
+    th: { title: "นักเลื่อนตัวจริง", subtitle: "ถือสถานะกลาง ๆ ยังไม่หลุดมือ" },
   },
   {
     id: "favorite",
@@ -46,6 +52,8 @@ export const ARCHETYPES = [
     "zh-Hant": { title: "演算法的最愛", subtitle: "feed 已經認得你個名" },
     // DRAFT — native review required
     "zh-Hans": { title: "算法的最爱", subtitle: "feed 已经认得你的名字" },
+    // DRAFT — native review required
+    th: { title: "ลูกรักอัลกอริทึม", subtitle: "ฟีดจำชื่อคุณได้แล้ว" },
   },
   {
     id: "grass",
@@ -56,6 +64,8 @@ export const ARCHETYPES = [
     "zh-Hant": { title: "摸草候選人", subtitle: "演算法代你問好" },
     // DRAFT — native review required
     "zh-Hans": { title: "摸草候选人", subtitle: "算法代你问好" },
+    // DRAFT — native review required
+    th: { title: "ผู้สมัครไปสัมผัสหญ้า", subtitle: "อัลกอริทึมฝากความคิดถึง" },
   },
 ] as const;
 
@@ -83,6 +93,11 @@ export const TAPE_NOTE_CONFIG = {
     red: ["认证滑屏员", "算法赢了", "该摸摸草了", "已老实", "躺平持仓", "脑袋清仓，只剩 feed", "组合：全凭感觉"],
     green: ["已翻绿 ✓", "守住纪律了 ✓"],
   },
+  // DRAFT — native review required
+  th: {
+    red: ["นักเลื่อนตัวจริง", "อัลกอริทึมชนะ", "ไปสัมผัสหญ้าบ้างนะ", "ดอยแล้ว", "ถือยาวแบบไม่ได้ตั้งใจ", "สมองว่าง เหลือแต่ฟีด", "พอร์ต: ใช้ความรู้สึกล้วน ๆ"],
+    green: ["พลิกเขียวแล้ว ✓", "คุมวินัยอยู่ ✓"],
+  },
 } as const;
 
 export const SCAN_STAGE_CONFIG = {
@@ -107,6 +122,13 @@ export const SCAN_STAGE_CONFIG = {
     success: "正在逐日入账...",
     fail: "这个盘面不太妙...",
   },
+  // DRAFT — native review required
+  th: {
+    reading: "กำลังอ่านบนเครื่องของคุณ...",
+    auditing: "กำลังตรวจความเสียหาย...",
+    success: "กำลังตีราคาตลาด...",
+    fail: "กระดานนี้ดูไม่ค่อยดีแฮะ...",
+  },
 } as const;
 
 export const SHARE_TEXT_VARIANTS = {
@@ -127,6 +149,12 @@ export const SHARE_TEXT_VARIANTS = {
     (loss: string, rank: string, url: string) => `我今年已经亏了 ${loss}。${rank}——你亏得比我多吗？${url} #ScrollAudit`,
     (loss: string, rank: string, url: string) => `我今年注意力账面亏损 ${loss}，市场就是我本人。${rank}。${url} #ScrollAudit`,
     (loss: string, rank: string, url: string) => `我做空最重的仓位是注意力。${loss}。${rank}。${url} #ScrollAudit`,
+  ],
+  // DRAFT — native review required
+  th: [
+    (loss: string, rank: string, url: string) => `ปีนี้เราติดลบไป ${loss} แล้ว ${rank} — คุณลบหนักกว่านี้ไหม? ${url} #ScrollAudit`,
+    (loss: string, rank: string, url: string) => `ปีนี้ขาดทุนสมาธิไป ${loss} ตลาดก็คือเราเอง ${rank} ${url} #ScrollAudit`,
+    (loss: string, rank: string, url: string) => `หุ้นที่เราช็อตหนักสุดคือสมาธิของตัวเอง ${loss} ${rank} ${url} #ScrollAudit`,
   ],
 } as const;
 

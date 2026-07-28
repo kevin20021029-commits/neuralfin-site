@@ -8,11 +8,11 @@ export const FLIP_MINUTES_PER_DAY = 10;
 
 // zh strings: DRAFT — native review required (both scripts)
 export const TRACKS = [
-  { id: "foundations", en: "Investing Foundations", "zh-Hant": "投資基礎", "zh-Hans": "投资基础", lessons: 40 },
-  { id: "markets", en: "How Markets Move", "zh-Hant": "市場如何運作", "zh-Hans": "市场如何运作", lessons: 32 },
-  { id: "statements", en: "Reading the Numbers", "zh-Hant": "看懂財務數字", "zh-Hans": "看懂财务数字", lessons: 28 },
-  { id: "psychology", en: "The Investor's Mind", "zh-Hant": "投資者心理學", "zh-Hans": "投资者心理学", lessons: 24 },
-  { id: "first-trade", en: "Your First Trade, Done Right", "zh-Hant": "第一筆交易做對", "zh-Hans": "第一笔交易做对", lessons: 20 },
+  { id: "foundations", en: "Investing Foundations", "zh-Hant": "投資基礎", "zh-Hans": "投资基础", th: "พื้นฐานการลงทุน", lessons: 40 },
+  { id: "markets", en: "How Markets Move", "zh-Hant": "市場如何運作", "zh-Hans": "市场如何运作", th: "ตลาดขยับยังไง", lessons: 32 },
+  { id: "statements", en: "Reading the Numbers", "zh-Hant": "看懂財務數字", "zh-Hans": "看懂财务数字", th: "อ่านตัวเลขให้เป็น", lessons: 28 },
+  { id: "psychology", en: "The Investor's Mind", "zh-Hant": "投資者心理學", "zh-Hans": "投资者心理学", th: "จิตวิทยานักลงทุน", lessons: 24 },
+  { id: "first-trade", en: "Your First Trade, Done Right", "zh-Hant": "第一筆交易做對", "zh-Hans": "第一笔交易做对", th: "เทรดแรกให้ถูกทาง", lessons: 20 },
 ] as const;
 
 export type TrackId = (typeof TRACKS)[number]["id"];
@@ -43,6 +43,14 @@ export const MICRO_TAKEAWAYS = {
     "分散配置的意思是，一个错误押注不会拖垮全部。",
     "复利的意思是，你的收益开始产生自己的收益。",
   ],
+  // DRAFT — native review required
+  th: [
+    "ETF คือตะกร้าหุ้นที่ซื้อได้ในเทรดเดียว",
+    "หุ้นคือความเป็นเจ้าของชิ้นเล็ก ๆ ของบริษัทจริง",
+    "ดัชนีติดตามทั้งตลาด ให้คุณดูการขยับเป็นตัวเลขเดียว",
+    "การกระจายพอร์ตแปลว่าพลาดตัวเดียวไม่ทำให้จมทั้งลำ",
+    "ดอกเบี้ยทบต้นแปลว่ากำไรของคุณเริ่มสร้างกำไรของมันเอง",
+  ],
 } as const;
 
 export function getTrack(id: TrackId) {
@@ -70,10 +78,12 @@ export function formatDaysToFinish(days: number, lang: ScrollEducationLang) {
   if (safeDays <= 7) {
     if (lang === "zh-Hant") return "一週內";
     if (lang === "zh-Hans") return "一周内";
+    if (lang === "th") return "ภายในหนึ่งสัปดาห์";
     return "in under a week";
   }
   if (lang === "zh-Hant") return `${safeDays} 天內`;
   if (lang === "zh-Hans") return `${safeDays} 天内`;
+  if (lang === "th") return `ภายใน ${safeDays} วัน`;
   return `in ${safeDays} days`;
 }
 
@@ -84,7 +94,9 @@ export function getMilestoneDate(from = new Date()) {
 }
 
 export function formatMilestoneDate(date: Date, lang: ScrollEducationLang) {
-  if (lang !== "en") return `${date.getFullYear()}年${date.getMonth() + 1}月`;
+  if (lang === "zh-Hant" || lang === "zh-Hans") return `${date.getFullYear()}年${date.getMonth() + 1}月`;
+  // th-TH renders Buddhist-era years (2027 CE → 2570) — the native convention.
+  if (lang === "th") return new Intl.DateTimeFormat("th-TH", { month: "long", year: "numeric" }).format(date);
   return new Intl.DateTimeFormat("en-US", {
     month: "long",
     year: "numeric",
@@ -120,6 +132,8 @@ export function getEducationOutput(hours: number, lang: ScrollEducationLang, dat
         ? `每天 ${lessonsPerDay} 課藏在我的滑屏裡 · 課程完成於 ${milestoneLabel}`
         : lang === "zh-Hans"
           ? `每天 ${lessonsPerDay} 课藏在我的滑屏里 · 课程完成于 ${milestoneLabel}`
-          : `${lessonsPerDay} lessons/day hiding in my scroll · course done by ${milestoneLabel}`,
+          : lang === "th"
+            ? `วันละ ${lessonsPerDay} บทเรียนซ่อนอยู่ในการไถของเรา · เรียนจบราว ${milestoneLabel}`
+            : `${lessonsPerDay} lessons/day hiding in my scroll · course done by ${milestoneLabel}`,
   };
 }
