@@ -10,16 +10,16 @@
     "test": "tsx --test lib/scroll/*.test.ts"
   },
   "dependencies": {
-    "next": "^14.2.35",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "tesseract.js": "^7.0.0"
+    "next": "14.2.35",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "tesseract.js": "7.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "tsx": "^4.23.1",
-    "typescript": "^5"
+    "@types/node": "20.19.41",
+    "@types/react": "18.3.28",
+    "@types/react-dom": "18.3.7",
+    "tsx": "4.23.1",
+    "typescript": "5.9.3"
   }
 }
