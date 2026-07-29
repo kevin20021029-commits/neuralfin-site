@@ -34,3 +34,16 @@ test("samsung tile screenshot parses end-to-end through the two-pass pipeline", 
     { name: "Instagram", minutes: 45 },
   ]);
 });
+
+test("samsung goal screen recovers the chart-adjacent headline numeral", async () => {
+  const recognized = await recognizeScreenTime(resolve(__dirname, "__fixtures__/samsung-goal.png"));
+  const parsed = parseScreenTimeText(recognized.text, recognized.confidence);
+
+  assert.equal(parsed.source, "day-total");
+  assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 206); // 3h26m via anchor-region pass
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 186); // Social 3h6m drives the slider
+  assert.deepEqual(parsed.apps, [
+    { name: "Instagram", minutes: 98 },
+    { name: "WhatsApp", minutes: 31 },
+  ]);
+});

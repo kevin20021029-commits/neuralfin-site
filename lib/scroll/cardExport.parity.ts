@@ -178,8 +178,18 @@ test("exported PNG matches the DOM card across locales", async () => {
           if (r.width < 2 || r.height < 2) continue;
           out[selector] = { x0: r.left - base.left, y0: r.top - base.top, x1: r.right - base.left, y1: r.bottom - base.top };
         }
+        out.__card = { x0: 0, y0: 0, x1: base.width, y1: base.height };
         return out;
       }, REGION_SELECTORS);
+
+      // The card must GROW with content, never clip its own footer: the
+      // brand row's layout box has to sit inside the card box.
+      assert.ok(regions[".brand"], `${locale}: brand row missing`);
+      assert.ok(
+        regions[".brand"].y1 <= regions.__card.y1 + 1,
+        `${locale}: brand row clipped — card content overflows its box (brand bottom ${regions[".brand"].y1} vs card ${regions.__card.y1})`,
+      );
+      delete regions.__card;
 
       const domShot = PNG.sync.read(await card.screenshot());
       const [download] = await Promise.all([

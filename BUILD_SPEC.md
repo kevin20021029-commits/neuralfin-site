@@ -88,6 +88,21 @@
   tests in CI; `lib/scroll/__fixtures__/samsung-tiles.png` +
   `npm run test:e2e` run the real workers end-to-end (nightly lane — the
   only test class that catches OCR-model behavior).
+- Anchor-region recovery: chart-adjacent headline numerals are sometimes
+  missed by the full OCR pass entirely (a donut ring reads as "O"). When a
+  total/average label line carries no value and none leads the next line,
+  the restricted worker re-scans the numeral zone directly below the label
+  (label-words bbox, not the chart-inflated line bbox) and splices the
+  result after the label. Bare recoveries can't be promoted (composite
+  rules still apply).
+- Tile grids wrap joined names across rows ("Productivity and" …
+  "finance"): excluded fragments that recombine into a known joined
+  variant merge into one unit, keeping name↔value counts honest.
+- "Set timer"/"App timers" rows are blocked from app-row parsing (timer
+  limits are not usage; the keep-max dedupe would otherwise prefer them).
+- The share card grows with content (min-height: fit-content over the 9:14.5
+  preferred ratio) — the footer can never clip; parity asserts the brand
+  row sits inside the card box.
 - Unknown-layout degrade order (never a hard fail when data is extractable):
   (a) label-anchored total → total-only mode; (b) no anchored total → the
   "couldn't read" path with the manual slider. `sanitizeParsedResult` gates

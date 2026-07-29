@@ -233,7 +233,7 @@ function resolveLabels(isWeekView: boolean): ScopeLabels {
 }
 
 const BLOCKED_APP_ROW =
-  /screen time|digital wellbeing|settings|average|avg|daily|total|all apps|pickups|notifications|螢幕|屏幕|平均|每日|總計|总计|ทั้งหมด|เฉลี่ย|หน้าจอ/i;
+  /screen time|digital wellbeing|settings|average|avg|daily|total|all apps|pickups|notifications|set\s*timer|app\s*timers|螢幕|屏幕|平均|每日|總計|总计|定時|定时|ทั้งหมด|เฉลี่ย|หน้าจอ/i;
 
 function normalizeOcrText(text: string) {
   return text
@@ -488,6 +488,15 @@ function isAppOrCategoryContext(text: string) {
   return Boolean(label && (canonicalAppName(label) || categoryKindFromText(label)));
 }
 
+// Pipeline hook: does this line look like a total/average label (any view),
+// excluding metadata and comparison furniture? Used to re-scan the numeral
+// zone below a label whose value the full OCR pass missed entirely.
+export function looksLikeTotalLabelLine(text: string): boolean {
+  if (METADATA_LINE.test(text) || /\d\s*%/.test(text)) return false;
+  const labels = resolveLabels(true);
+  return TOTAL_SCOPES.some((scope) => labels[scope].some((label) => label.test(text)));
+}
+
 function totalScopeFromText(text: string, labels: ScopeLabels): TotalScope | null {
   for (const scope of TOTAL_SCOPES) {
     if (labels[scope].some((label) => label.test(text))) return scope;
@@ -499,14 +508,15 @@ function totalScopeFromText(text: string, labels: ScopeLabels): TotalScope | nul
 // "productivity and finance" is one unit, not two. Used for Samsung tile
 // rows where OCR emits several tile names on one line.
 function categoryUnitsFromText(text: string): CategoryKind[] {
-  const lower = foldHanScript(text).toLowerCase().replace(/\s+/g, "");
-  const found: Array<{ index: number; kind: CategoryKind }> = [];
+  const compact = (value: string) => foldHanScript(value).toLowerCase().replace(/\s+/g, "");
+  const lower = compact(text);
+  const found: Array<{ index: number; kind: CategoryKind; variant: string }> = [];
   const consumed: Array<[number, number]> = [];
   const catalog: Array<{ kind: CategoryKind; variant: string }> = [];
   for (const category of scrollCategoryCatalog) {
-    for (const variant of category.variants) catalog.push({ kind: category.id, variant: foldHanScript(variant).toLowerCase().replace(/\s+/g, "") });
+    for (const variant of category.variants) catalog.push({ kind: category.id, variant: compact(variant) });
   }
-  for (const variant of excludedCategoryCatalog) catalog.push({ kind: "excluded", variant: foldHanScript(variant).toLowerCase().replace(/\s+/g, "") });
+  for (const variant of excludedCategoryCatalog) catalog.push({ kind: "excluded", variant: compact(variant) });
   catalog.sort((a, b) => b.variant.length - a.variant.length);
 
   for (const { kind, variant } of catalog) {
@@ -517,13 +527,35 @@ function categoryUnitsFromText(text: string): CategoryKind[] {
       const end = index + variant.length;
       if (!overlapsSpan(consumed, index, end)) {
         consumed.push([index, end]);
-        found.push({ index, kind });
+        found.push({ index, kind, variant });
       }
       from = end;
     }
   }
 
-  return found.sort((a, b) => a.index - b.index).map((entry) => entry.kind);
+  const ordered = found.sort((a, b) => a.index - b.index);
+
+  // Tile grids wrap joined names across rows ("Social | Productivity and |
+  // Maps and travel" then "finance"), scattering one tile name into two
+  // matched fragments and inflating the unit count until the mismatch
+  // guard bails. If two excluded fragments recombine (with a joiner) into
+  // a known joined variant, they are ONE tile — drop the later fragment.
+  const joinedVariants = new Set(excludedCategoryCatalog.map((variant) => compact(variant)).filter((variant) => /and|&|与|與|และ/.test(variant) || variant.length > 6));
+  const dropped = new Set<number>();
+  for (let i = 0; i < ordered.length; i += 1) {
+    for (let j = i + 1; j < ordered.length; j += 1) {
+      if (dropped.has(i) || dropped.has(j)) continue;
+      if (ordered[i].kind !== "excluded" || ordered[j].kind !== "excluded") continue;
+      for (const joiner of ["and", "&", "与", "與", "และ"]) {
+        if (joinedVariants.has(compact(`${ordered[i].variant}${joiner}${ordered[j].variant}`))) {
+          dropped.add(j);
+          break;
+        }
+      }
+    }
+  }
+
+  return ordered.filter((_, index) => !dropped.has(index)).map((entry) => entry.kind);
 }
 
 // Multi-category legend lines (iOS: "Creativity 44m · Social 32m · Travel 9m")
