@@ -515,3 +515,30 @@ test("joined zh category names count as single units", () => {
   assert.equal(ambiguous.scrollHours, null);
   assert.ok(ambiguous.flags.includes("tile_count_mismatch"));
 });
+
+// Fixture #6 — real-device WeChat-webview upload: an app-list-only Screen
+// Time screenshot (scrolled past the headline). App rows must never be
+// promoted to a headline; catalog-gated roasts still populate so the UI can
+// show the partial-parse guidance state.
+test("app-list-only zh screenshot: roasts populate, headline stays null", () => {
+  const parsed = parseScreenTimeText(
+    [
+      "微信 2小时8分钟",
+      "Kingshot 1小时42分钟",
+      "和平精英 1小时2分钟",
+      "携程旅行 44分钟",
+      "Instagram 38分钟",
+      "微信读书 21分钟",
+    ].join("\n"),
+    85,
+  );
+
+  assert.equal(parsed.hours, null);
+  assert.equal(parsed.source, null);
+  assert.equal(parsed.scrollHours, null);
+  assert.deepEqual(parsed.apps, [
+    { name: "WeChat", minutes: 128 },
+    { name: "Instagram", minutes: 38 },
+  ]); // Kingshot/和平精英/携程旅行/微信读书 uncatalogued — dropped, not fuzzy-matched
+  assert.equal(classifyParseOutcome(parsed), "failed");
+});

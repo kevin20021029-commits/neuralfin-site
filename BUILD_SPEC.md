@@ -75,6 +75,32 @@
   "couldn't read" path with the manual slider. `sanitizeParsedResult` gates
   every value that reaches the UI or the share card.
 
+## In-App Browser (Webview) Support Matrix
+
+Detection is UA-based (`lib/scroll/webview.ts`): `wechat` (MicroMessenger),
+`line`, `instagram`, `facebook` (FBAN/FBAV/FB_IAB), else `none`. Critical
+paths and their behavior per environment:
+
+| Path | Regular browser | WeChat | LINE / IG / FB in-app |
+|---|---|---|---|
+| File input / upload | native picker | works (photo library) | works |
+| tesseract WASM OCR | works | works (WKWebView/X5 support WASM); on failure → manual slider + notice, telemetry `outcome=failed` with env tag — never a crash | same |
+| Card PNG export (html-to-image) | works | works (same-renderer SVG foreignObject) | works |
+| `navigator.share` with files | used when available | unavailable — skipped | unreliable — skipped |
+| Blob `<a download>` | fallback path | **not reliably supported** | unreliable |
+| Save flow | share → download + caption to clipboard | **full-screen `<img>` overlay + "长按保存图片" (long-press to save — the standard WeChat pattern), localized ×4** | same overlay fallback |
+
+No "open in browser" hint is shown: every path works in-place (the overlay
+makes saving work without leaving the webview), which is the preference —
+WeChat users don't leave WeChat. Revisit only if telemetry shows a webview
+where OCR consistently fails.
+
+Partial-parse guidance: when app rows parse but no headline/average anchors,
+the UI shows a specific state ("Found your app list — but not your total.
+Scroll to the top of Screen Time and screenshot the daily average", ×4
+locales) with catalog-gated roasts populated, manual slider, no badge —
+headline promotion rules unchanged.
+
 ## Layout Telemetry — OEM Expansion Mechanism
 
 One anonymous, aggregate-only report per parse attempt:
@@ -85,7 +111,9 @@ fixed enum of degradation flags: `ambiguous_duration_dropped`,
 `category_total_exceeds_headline`, `restricted_pass_failed`. The endpoint
 accepts these enum fields and nothing else — no image data, no OCR text, no
 app names — and the store keeps only counters (no rows, timestamps, or
-IPs). Counters go through `ScrollTelemetryStorage`
+IPs). An optional `env` field (webview enum: wechat|line|instagram|
+facebook|none) tags which in-app browser a parse ran in — counters only,
+no new data categories. Counters go through `ScrollTelemetryStorage`
 (`lib/scroll/resultsStore.ts`), a swappable interface whose in-memory
 backend resets on serverless recycling; the durable-store migration swaps
 in the KV backend at `setScrollTelemetryStorage` without touching call
