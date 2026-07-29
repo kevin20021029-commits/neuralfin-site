@@ -295,8 +295,11 @@ test("real Samsung tile OCR with Thai-glyph confusion parses scroll time and app
 
 test("Thai-glyph OCR confusion duration forms resolve", () => {
   assert.equal(Math.round((parseScreenTimeText("Daily Average 3 ท 20 ท", 90).hours ?? 0) * 60), 200);
-  // 45 > 24 can only be minutes (hours cap at 24)
-  assert.equal(Math.round((parseScreenTimeText("Daily Average 45 ท", 90).hours ?? 0) * 60), 45);
+  // Day view: 45 > 24 can only be minutes (hours cap at 24)
+  assert.equal(Math.round((parseScreenTimeText("Screen time today 45 ท", 90).hours ?? 0) * 60), 45);
+  // Under an average label the context is a week view — bare tokens are
+  // unresolvable there and must drop, not guess
+  assert.equal(parseScreenTimeText("Daily Average 45 ท", 90).hours, null);
   // genuine Thai words must not match as durations
   const thaiWords = parseScreenTimeText("มีแอปทั้งหมด 12 ทุกวัน", 90);
   assert.equal(thaiWords.hours, null);
@@ -312,14 +315,14 @@ test("magnitude guard: two ordered units mean h then m", () => {
 });
 
 test("lone ambiguous unit never guesses: 1-24 drops and flags unverified", () => {
-  const midRange = parseScreenTimeText("Daily Average 30 ท", 90);
-  assert.equal(Math.round((midRange.hours ?? 0) * 60), 30); // 25-59: minutes-only
+  const midRange = parseScreenTimeText("Screen time today 30 ท", 90);
+  assert.equal(Math.round((midRange.hours ?? 0) * 60), 30); // day view 25-59: minutes-only
 
-  const ambiguous = parseScreenTimeText("Daily Average 12 ท", 90);
+  const ambiguous = parseScreenTimeText("Screen time today 12 ท", 90);
   assert.equal(ambiguous.hours, null); // could be 12h or 12m — never guess
   assert.ok(ambiguous.flags.includes("ambiguous_duration_dropped"));
 
-  const overflow = parseScreenTimeText("Daily Average 99 ท", 90);
+  const overflow = parseScreenTimeText("Screen time today 999 ท", 90);
   assert.equal(overflow.hours, null); // no plausible display value
 });
 
@@ -425,4 +428,90 @@ test("app-row hour component survives misread hour-unit letters", () => {
   // compose into a fake hour+minute reading
   const bareMinutes = parseScreenTimeText("Daily Average 5 m 30 m", 90);
   assert.notEqual(Math.round((bareMinutes.hours ?? 0) * 60), 330);
+});
+
+// Fixture #5 — zh-Hans iOS WEEK view (real-device layout): 每周/每天 tabs,
+// 日均 headline, chart with a 12小时 axis token and 平均 dashed-line label,
+// weekly category legend, weekly grand total, and an update timestamp.
+const IOS_ZH_WEEK_FIXTURE = [
+  "每周 每天",
+  "屏幕时间",
+  "日均",
+  "6 小时 49 分钟",
+  "12 小时",
+  "平均",
+  "0",
+  "日 一 二 三 四 五 六",
+  "创意 社交 购物与美食",
+  "11小时36分钟 9小时27分钟 1小时7分钟",
+  "总屏幕时间 27小时18分钟",
+  "更新于：今天 09:51",
+  "最常使用 显示类别",
+  "抖音 11小时26分钟",
+  "微信 6小时8分钟",
+  "小红书 2小时18分钟",
+  "Chrome 59分钟",
+  "Instagram 53分钟",
+  "Keeta 36分钟",
+  "Uber 27分钟",
+].join("\n");
+
+test("zh iOS week view: 日均 anchors the slider, week-scope ratio, verified path", () => {
+  const parsed = parseScreenTimeText(IOS_ZH_WEEK_FIXTURE, 90);
+
+  assert.equal(parsed.source, "average");
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 409); // 6h49m daily average
+  assert.notEqual(Math.round((parsed.hours ?? 0) * 60), 591); // never the 09:51 timestamp
+  assert.deepEqual(parsed.flags, []); // verified-eligible
+  assert.equal(parsed.ratioScope, "week");
+  assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 567); // 社交 9h27m
+  assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 1638); // 总屏幕时间 27h18m
+  assert.deepEqual(parsed.apps, [
+    { name: "TikTok", minutes: 686 }, // 抖音
+    { name: "WeChat", minutes: 368 }, // 微信
+    { name: "Xiaohongshu", minutes: 138 }, // 小红书 (Keeta/Uber uncatalogued: dropped)
+  ]);
+});
+
+test("update timestamps never become headlines", () => {
+  // The real device read "9小时51分钟" from 更新于：今天 09:51 — 今天 anchored a
+  // day scope and the clock time parsed as a colon duration.
+  assert.equal(parseScreenTimeText("更新于：今天 09:51", 90).hours, null);
+  assert.equal(parseScreenTimeText("Updated today at 9:41", 90).hours, null);
+  assert.equal(parseScreenTimeText("更新於：今天 09:51", 90).hours, null);
+});
+
+test("chart axis tokens never pair with the average label", () => {
+  // 12小时 is the chart's y-axis cap; the composite 6h49m is the value.
+  const parsed = parseScreenTimeText("日均\n6 小时 49 分钟\n12 小时", 90);
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 409);
+  assert.equal(parsed.source, "average");
+});
+
+test("unreadable 日均 degrades to the weekly grand total, never the timestamp", () => {
+  const corrupted = IOS_ZH_WEEK_FIXTURE.replace("日均", "E8");
+  const parsed = parseScreenTimeText(corrupted, 90);
+  assert.equal(parsed.source, "weekly-total");
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 234); // 27h18m / 7
+  assert.notEqual(Math.round((parsed.hours ?? 0) * 60), 591);
+});
+
+test("joined zh category names count as single units", () => {
+  // 购物与美食 / 信息与阅读 must be one excluded unit each, not two — a split
+  // would shift the name-value pairing.
+  const parsed = parseScreenTimeText(
+    ["今日屏幕使用时间", "5 小时 0 分钟", "信息与阅读 社交 购物与美食", "1小时0分钟 2小时0分钟 30分钟"].join("\n"),
+    90,
+  );
+  assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 120); // 社交 only
+  assert.ok(!parsed.flags.includes("tile_count_mismatch"));
+
+  // Space-separated zh values ("2小时 30分钟") merge ambiguously into one
+  // composite token — the count guard must bail unverified, never mispair.
+  const ambiguous = parseScreenTimeText(
+    ["今日屏幕使用时间", "5 小时 0 分钟", "信息与阅读 社交 购物与美食", "1小时 2小时 30分钟"].join("\n"),
+    90,
+  );
+  assert.equal(ambiguous.scrollHours, null);
+  assert.ok(ambiguous.flags.includes("tile_count_mismatch"));
 });

@@ -69,6 +69,7 @@ const str = {
     dropReceived: "✓ Screenshot received",
     dropRead: (duration: string) => `✓ Read: ${duration}`,
     dropReadScrollDay: (scroll: string, total: string) => `${scroll} of scroll in your ${total} day`,
+    dropReadScrollWeek: (scroll: string, total: string) => `${scroll} of scroll in your ${total} week`,
     dropReadScroll: (scroll: string) => `${scroll} of scroll time`,
     dropCouldnt: "Couldn't read that",
     dropReplace: "Use a different screenshot",
@@ -153,6 +154,8 @@ const str = {
     dropRead: (duration: string) => `✓ 已讀取：${duration}`,
     // DRAFT — native review required
     dropReadScrollDay: (scroll: string, total: string) => `${scroll}滑屏 / ${total}今日總時數`,
+    // DRAFT — native review required
+    dropReadScrollWeek: (scroll: string, total: string) => `${scroll}滑屏 / ${total}本週總時長`,
     // DRAFT — native review required
     dropReadScroll: (scroll: string) => `${scroll}滑屏時間`,
     // DRAFT — native review required
@@ -240,6 +243,7 @@ const str = {
     dropReceived: "✓ 已收到截图",
     dropRead: (duration: string) => `✓ 已读取：${duration}`,
     dropReadScrollDay: (scroll: string, total: string) => `${scroll}滑屏 / ${total}今日总时长`,
+    dropReadScrollWeek: (scroll: string, total: string) => `${scroll}滑屏 / ${total}本周总时长`,
     dropReadScroll: (scroll: string) => `${scroll}滑屏时间`,
     dropCouldnt: "读不到这张截图",
     dropReplace: "换一张截图",
@@ -322,6 +326,7 @@ const str = {
     dropReceived: "✓ ได้รับสกรีนช็อตแล้ว",
     dropRead: (duration: string) => `✓ อ่านได้: ${duration}`,
     dropReadScrollDay: (scroll: string, total: string) => `ไถไป ${scroll} จากทั้งวัน ${total}`,
+    dropReadScrollWeek: (scroll: string, total: string) => `ไถไป ${scroll} จากทั้งสัปดาห์ ${total}`,
     dropReadScroll: (scroll: string) => `เวลาไถ ${scroll}`,
     dropCouldnt: "อ่านสกรีนช็อตนี้ไม่ได้",
     dropReplace: "ลองสกรีนช็อตอื่น",
@@ -601,8 +606,9 @@ export function ScrollCalculator() {
         await wait(350);
         const rounded = roundSliderHours(parsed.hours);
         const duration = formatDurationFromHours(parsed.hours, lang);
+        const ratioText = parsed.ratioScope === "week" ? t.dropReadScrollWeek : t.dropReadScrollDay;
         const scrollReadText = parsed.scrollHours && parsed.totalHours
-          ? t.dropReadScrollDay(formatDurationFromHours(parsed.scrollHours, lang), formatDurationFromHours(parsed.totalHours, lang))
+          ? ratioText(formatDurationFromHours(parsed.scrollHours, lang), formatDurationFromHours(parsed.totalHours, lang))
           : parsed.scrollHours
             ? t.dropReadScroll(formatDurationFromHours(parsed.scrollHours, lang))
             : duration;
@@ -621,8 +627,9 @@ export function ScrollCalculator() {
         await wait(500);
         const rounded = roundSliderHours(parsed.hours);
         const duration = formatDurationFromHours(parsed.hours, lang);
+        const ratioText = parsed.ratioScope === "week" ? t.dropReadScrollWeek : t.dropReadScrollDay;
         const scrollReadText = parsed.scrollHours && parsed.totalHours
-          ? t.dropReadScrollDay(formatDurationFromHours(parsed.scrollHours, lang), formatDurationFromHours(parsed.totalHours, lang))
+          ? ratioText(formatDurationFromHours(parsed.scrollHours, lang), formatDurationFromHours(parsed.totalHours, lang))
           : parsed.scrollHours
             ? t.dropReadScroll(formatDurationFromHours(parsed.scrollHours, lang))
             : duration;

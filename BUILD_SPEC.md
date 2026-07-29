@@ -18,10 +18,29 @@
   zh (社交/娛樂/遊戲) and Thai equivalents.
 - Day vs week scoping: an average or weekly headline drives the slider and
   badge, but the scroll-of-total ratio is computed only from same-scoped
-  values. When category values can't be confidently matched to the
-  headline's scope (average/weekly sources), the parser falls back to
-  total-only rather than showing a mismatched ratio; day-scoped totals keep
-  the ratio.
+  values. On a WEEK view (detected from weekly labels, 每周/每週 tab text,
+  or an average headline — iOS only shows "daily average"/日均 on week
+  views), categories and the grand total (总屏幕时间/Total Screen Time —
+  scope-dependent: weekly on week views, day total on day views) share the
+  week scope: the ratio pairs weekly scroll with the weekly grand total
+  (`ratioScope: "week"`) while the slider keeps the daily average. Without
+  a confidently anchored grand total the ratio is suppressed (total-only);
+  day-scoped totals keep the day ratio.
+- Update-timestamp metadata lines (更新于/更新於/Updated…) are inert: their
+  day words must not anchor scopes and their clock times ("09:51") must
+  never parse as durations — a real device promoted 更新于：今天 09:51 to a
+  9h51m day headline before this guard.
+- Chart-axis tokens ("12 小时"/"12h" y-axis caps) are bare; label pairing
+  prefers composite values so an axis token can never displace the
+  average/total value.
+- Category taxonomy (audited across Apple + Android in en/zh-Hant/zh-Hans/
+  th): scroll = Social, Video, Entertainment, Games. Excluded, with joined
+  names as single units: Productivity & Finance (效率与财务/生產力與財務/
+  ประสิทธิภาพและการเงิน), Information & Reading (信息与阅读/資訊與閱讀/
+  ข้อมูลและการอ่าน), Shopping & Food (购物与美食/購物與美食/
+  ช็อปปิ้งและอาหาร), Health & Fitness (健康与健身/健康與健身/
+  สุขภาพและฟิตเนส), Creativity, Education, Travel (旅行/旅遊), Utilities,
+  Communication, Other.
 - Duration token tolerance (headlines, app rows, and category values alike):
   "N h M m", "N hr M min", "N hr, M min", "Nh Mm", "N:MM",
   "N 小時 M 分鐘", and Thai equivalents.
