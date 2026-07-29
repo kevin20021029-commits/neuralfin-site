@@ -65,6 +65,7 @@ test("the degradation event vocabulary is the parser flag set", () => {
       "ambiguous_duration_dropped",
       "category_total_exceeds_headline",
       "headline_crop_unrecoverable",
+      "ocr_exception",
       "restricted_pass_failed",
       "tile_count_mismatch",
     ].sort(),

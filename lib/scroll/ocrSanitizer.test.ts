@@ -596,3 +596,35 @@ test("rednote resolves to the Xiaohongshu entry; Limits rows never shadow usage"
   ]);
   assert.equal(parsed.hours, null); // app-list-only: still no headline promotion
 });
+
+// Fixture #8 — verbatim chi_tra-only tesseract output for a zh-Hans iOS
+// category list (the production condition before chi_sim shipped): unit
+// tokens split by spaces ("4 小 時 57 分 鐘") and Simplified glyphs coerced
+// to Traditional look-alikes (游戏→游戲, 娱乐→娛樂, 阅读→閱 訪).
+const IOS_ZH_CATLIST_TRA_OCR_FIXTURE =
+  "最 常 使用 顯示 App 與 网站\n社交\n4 小 時 57 分 鐘\n游戲\n1 小 時 10 分 鐘\n旅游\n32 分 鐘\n信息 與 閱 訪\n25 分 鐘\n購物 與 美 食\n18 分 鐘\n效率 與 財務\n12 分 鐘\n娛樂\n8 分 鐘\n";
+
+test("spaced zh units and coerced glyphs still parse the category list", () => {
+  const parsed = parseScreenTimeText(IOS_ZH_CATLIST_TRA_OCR_FIXTURE, 84);
+
+  // 社交 4h57m + 游戲(fold→游戏) 1h10m + 娛樂(fold→娱乐) 8m = 6h15m scroll;
+  // 旅游/信息/購物與美食/效率與財務 excluded
+  assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 375);
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 375); // scroll-only fallback
+  assert.equal(parsed.source, "day-total");
+  assert.ok(parsed.flags.includes("headline_crop_unrecoverable")); // unverified
+  assert.equal(parsed.sawCategories, true);
+  assert.equal(guessScreenTimeLayout(IOS_ZH_CATLIST_TRA_OCR_FIXTURE), "ios");
+});
+
+test("category rows without any parseable durations still surface sawCategories", () => {
+  // Guidance state depends on this even when values were unreadable.
+  const parsed = parseScreenTimeText("最常使用 显示App与网站\n社交\n游戏\n娱乐", 60);
+  assert.equal(parsed.hours, null);
+  assert.equal(parsed.sawCategories, true);
+});
+
+test("spaced zh unit tokens resolve as durations", () => {
+  assert.equal(Math.round((parseScreenTimeText("每日平均 4 小 時 57 分 鐘", 90).hours ?? 0) * 60), 297);
+  assert.equal(Math.round((parseScreenTimeText("每日平均 4 小 时 57 分 钟", 90).hours ?? 0) * 60), 297);
+});
