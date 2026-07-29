@@ -79,6 +79,7 @@ const str = {
     dropApps: "Couldn't read your hours — set them below.",
     dropPartialChip: "\u2713 Found your app list",
     dropAppsOnly: "Found your app list — but not your total. Scroll to the top of Screen Time and screenshot the daily average.",
+    dropCategoriesOnly: "Found your categories — but not your total. Scroll to the top of Screen Time and screenshot the daily average.",
     longPressSave: "Long-press the image to save it",
     overlayClose: "Close",
     dropFail: "Couldn't read your hours — set them below.",
@@ -176,6 +177,8 @@ const str = {
     // DRAFT — native review required
     dropAppsOnly: "找到你的 App 清單——但沒有總時數。捲到螢幕使用時間最上方，截圖每日平均。",
     // DRAFT — native review required
+    dropCategoriesOnly: "找到你的類別清單——但沒有總時數。捲到螢幕使用時間最上方，截圖每日平均。",
+    // DRAFT — native review required
     longPressSave: "長按圖片即可儲存",
     // DRAFT — native review required
     overlayClose: "關閉",
@@ -267,6 +270,8 @@ const str = {
     dropPartialChip: "\u2713 已找到你的 App 列表",
     // DRAFT — native review required
     dropAppsOnly: "找到你的 App 列表——但没有总时长。滑到屏幕使用时间最上方，截图日均。",
+    // DRAFT — native review required
+    dropCategoriesOnly: "找到你的类别列表——但没有总时长。滑到屏幕使用时间最上方，截图日均。",
     // DRAFT — native review required (standard WeChat save pattern)
     longPressSave: "长按保存图片",
     // DRAFT — native review required
@@ -358,6 +363,8 @@ const str = {
     dropPartialChip: "\u2713 เจอรายชื่อแอปแล้ว",
     // DRAFT — native review required
     dropAppsOnly: "เจอรายชื่อแอปแล้ว — แต่ไม่เจอเวลารวม เลื่อนขึ้นบนสุดของเวลาหน้าจอ แล้วแคปตรงค่าเฉลี่ยต่อวัน",
+    // DRAFT — native review required
+    dropCategoriesOnly: "เจอหมวดหมู่แล้ว — แต่ไม่เจอเวลารวม เลื่อนขึ้นบนสุดของเวลาหน้าจอ แล้วแคปตรงค่าเฉลี่ยต่อวัน",
     // DRAFT — native review required
     longPressSave: "กดค้างที่รูปเพื่อบันทึก",
     // DRAFT — native review required
@@ -678,16 +685,17 @@ export function ScrollCalculator() {
         setUploadReadDuration(scrollReadText);
         setScanNotice(t.dropDay(duration));
         scheduleAutoFlip();
-      } else if (parsed.apps.length > 0) {
+      } else if (parsed.apps.length > 0 || parsed.sawCategories) {
         // Partial parse: catalog-gated roasts may show (setAppRoasts above),
-        // the slider stays manual, no badge — but the guidance is specific.
+        // the slider stays manual, no badge — but the guidance is specific
+        // to what WAS found (app list vs category list).
         setScanStage("fail");
         await wait(500);
         setParsedHours(null);
         setParsedScrollStat(null);
         setVerified(false);
         setUploadStatus("partial");
-        setScanNotice(t.dropAppsOnly);
+        setScanNotice(parsed.apps.length > 0 ? t.dropAppsOnly : t.dropCategoriesOnly);
       } else {
         setScanStage("fail");
         await wait(500);
@@ -699,7 +707,7 @@ export function ScrollCalculator() {
       }
     } catch {
       window.clearTimeout(auditTimer);
-      sendParseTelemetry("unknown", "failed");
+      sendParseTelemetry("unknown", "failed", ["ocr_exception"]);
       setScanStage("fail");
       await wait(500);
       setParsedHours(null);

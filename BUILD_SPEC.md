@@ -56,8 +56,11 @@
 - Duration token tolerance (headlines, app rows, and category values alike):
   "N h M m", "N hr M min", "N hr, M min", "Nh Mm", "N:MM",
   "N 小時 M 分鐘", and Thai equivalents.
-- Two-pass OCR (`lib/scroll/ocrPipeline.ts`): the full eng+chi_tra+tha
-  worker reads names/labels; duration regions (whole values lines, and the
+- Two-pass OCR (`lib/scroll/ocrPipeline.ts`): the full
+  eng+chi_sim+chi_tra+tha worker reads names/labels (chi_sim is
+  load-bearing for the WeChat/mainland audience — without it the chi_tra
+  model coerces Simplified glyphs and shreds unit tokens; measured
+  confidence 84 → 92 on a rendered zh category list); duration regions (whole values lines, and the
   trailing duration words of app rows via word-level bboxes) are
   re-recognized by an eng-only worker with a 0-9/h/m whitelist in
   single-line mode. Resolution order per region: restricted-pass result →
@@ -67,7 +70,10 @@
   workers on Samsung uploads — the fallback layer under the restricted
   pass): latin h/m misread as Thai ท is accepted in composite "N ท M ท"
   tokens; a single stray character on a value line is OCR noise; tile
-  names/values rows pair positionally as units.
+  names/values rows pair positionally as units; zh unit tokens tolerate
+  OCR-inserted internal spaces ("4 小 時 57 分 鐘"); Traditional↔Simplified
+  glyph coercions fold to Simplified before catalog matching (游戲→游戏),
+  and category-name matching is space-insensitive.
 - Never guess a plausible wrong number: magnitude caps are view-gated
   (day 24h / week 168h, from the weekly labels); composite tokens reject
   minutes > 59; a lone ambiguous bare token (1-24 in day view, anything in
@@ -107,11 +113,14 @@ makes saving work without leaving the webview), which is the preference —
 WeChat users don't leave WeChat. Revisit only if telemetry shows a webview
 where OCR consistently fails.
 
-Partial-parse guidance: when app rows parse but no headline/average anchors,
-the UI shows a specific state ("Found your app list — but not your total.
-Scroll to the top of Screen Time and screenshot the daily average", ×4
-locales) with catalog-gated roasts populated, manual slider, no badge —
-headline promotion rules unchanged.
+Partial-parse guidance: when app rows OR category rows parse but no
+headline/average anchors, the UI shows a specific state ("Found your app
+list / your categories — but not your total. Scroll to the top of Screen
+Time and screenshot the daily average", ×4 locales) with catalog-gated
+roasts populated, manual slider, no badge — headline promotion rules
+unchanged. The parser surfaces `sawCategories` for this. OCR engine
+exceptions (vs parse failures) are distinguishable in telemetry via the
+`ocr_exception` event.
 
 ## Layout Telemetry — OEM Expansion Mechanism
 

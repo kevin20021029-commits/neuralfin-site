@@ -9,6 +9,7 @@ export type ParseOutcome = (typeof PARSE_OUTCOMES)[number];
 // Non-fatal degradations surfaced to the UI (flags other than
 // restricted_pass_failed make the read unverified) and to telemetry.
 export const PARSE_FLAGS = [
+  "ocr_exception",
   "ambiguous_duration_dropped",
   "tile_count_mismatch",
   "headline_crop_unrecoverable",
@@ -26,6 +27,9 @@ export type ParsedScreenTime = {
   confidence: number;
   layout: ScreenTimeLayout;
   flags: ParseFlag[];
+  // Category rows were recognized (even if no ratio survived) — drives the
+  // partial-parse guidance state.
+  sawCategories: boolean;
   // Scope of the scrollHours/totalHours ratio pair (null when no ratio).
   // Week ratios pair weekly categories with the weekly grand total; the
   // slider (hours) still carries the daily average.
@@ -47,6 +51,7 @@ type RawParsedScreenTime = {
   layout?: ScreenTimeLayout;
   flags?: ParseFlag[];
   ratioScope?: "day" | "week" | null;
+  sawCategories?: boolean;
   // day paths drive the slider from scroll time ("count your scroll");
   // average/weekly paths keep the headline on the slider.
   sliderFromScroll?: boolean;
@@ -238,8 +243,24 @@ function normalizeOcrText(text: string) {
     .trim();
 }
 
+// tesseract's chi_tra model coerces Simplified glyphs to Traditional
+// look-alikes (游戏 -> 游戲). Fold the Han characters our catalogs use to
+// their Simplified forms before matching — display strings are unaffected.
+const HAN_FOLD: Record<string, string> = {
+  "時": "时", "鐘": "钟", "遊": "游", "戲": "戏", "樂": "乐", "娛": "娱",
+  "閱": "阅", "讀": "读", "購": "购", "財": "财", "務": "务", "與": "与",
+  "訊": "讯", "資": "资", "創": "创", "導": "导", "實": "实", "總": "总",
+  "計": "计", "週": "周", "書": "书", "紅": "红",
+};
+
+export function foldHanScript(text: string) {
+  let out = "";
+  for (const ch of text) out += HAN_FOLD[ch] ?? ch;
+  return out;
+}
+
 function normalizeAppName(text: string) {
-  return text
+  return foldHanScript(text)
     .toLowerCase()
     .normalize("NFKC")
     .replace(/[\u200B-\u200D\uFEFF]/g, "")
@@ -296,8 +317,10 @@ function canonicalAppName(rawName: string) {
 // "N h M m", "N hr M min", "N hr, M min", "Nh Mm", "N:MM",
 // "N 小時 M 分鐘", "N ชั่วโมง M นาที", and bare hour/minute forms.
 // Longest unit tokens first so "hr"/"hrs" never half-match as "h" + residue.
-const HOUR_UNITS = "hours|hour|hrs|hr|h|小時|小时|ชั่วโมง|ชม\\.?";
-const MINUTE_UNITS = "minutes|minute|mins|min|m|分鐘|分钟|นาที";
+// zh units tolerate an OCR-inserted internal space ("4 小 時 57 分 鐘" is
+// what tesseract actually emits for zh screenshots).
+const HOUR_UNITS = "hours|hour|hrs|hr|h|小\\s?時|小\\s?时|ชั่วโมง|ชม\\.?";
+const MINUTE_UNITS = "minutes|minute|mins|min|m|分\\s?鐘|分\\s?钟|นาที";
 
 // hours === null means the span was RECOGNIZED as a duration-shaped token
 // but its value was rejected (out-of-range magnitude, or a genuinely
@@ -476,14 +499,14 @@ function totalScopeFromText(text: string, labels: ScopeLabels): TotalScope | nul
 // "productivity and finance" is one unit, not two. Used for Samsung tile
 // rows where OCR emits several tile names on one line.
 function categoryUnitsFromText(text: string): CategoryKind[] {
-  const lower = text.toLowerCase();
+  const lower = foldHanScript(text).toLowerCase().replace(/\s+/g, "");
   const found: Array<{ index: number; kind: CategoryKind }> = [];
   const consumed: Array<[number, number]> = [];
   const catalog: Array<{ kind: CategoryKind; variant: string }> = [];
   for (const category of scrollCategoryCatalog) {
-    for (const variant of category.variants) catalog.push({ kind: category.id, variant: variant.toLowerCase() });
+    for (const variant of category.variants) catalog.push({ kind: category.id, variant: foldHanScript(variant).toLowerCase().replace(/\s+/g, "") });
   }
-  for (const variant of excludedCategoryCatalog) catalog.push({ kind: "excluded", variant: variant.toLowerCase() });
+  for (const variant of excludedCategoryCatalog) catalog.push({ kind: "excluded", variant: foldHanScript(variant).toLowerCase().replace(/\s+/g, "") });
   catalog.sort((a, b) => b.variant.length - a.variant.length);
 
   for (const { kind, variant } of catalog) {
@@ -736,7 +759,9 @@ function analyzeScreenTime(rawText: string, maxHours: number, labels: ScopeLabel
     flags.push("ambiguous_duration_dropped");
   }
 
-  return { lines, apps, scrollHours: scrollMinutes > 0 ? scrollMinutes / 60 : null, flags };
+  const sawCategories = lines.some((line) => line.categoryPairs.length > 0 || line.nameKind === "category");
+
+  return { lines, apps, scrollHours: scrollMinutes > 0 ? scrollMinutes / 60 : null, flags, sawCategories };
 }
 
 function sameLineAnchoredHours(line: ScreenTimeLine, scope: TotalScope, labels: ScopeLabels) {
@@ -799,7 +824,7 @@ function resolveAnchoredTotal(lines: ScreenTimeLine[], scope: TotalScope, labels
 
 export function guessScreenTimeLayout(rawText: string): ScreenTimeLayout {
   const text = rawText.toLowerCase();
-  if (/digital\s*wellbeing/.test(text)) {
+  if (/digital\s*wellbeing|數位健康|数字健康|数字福祉/.test(text)) {
     return /\d\s*(?:hr|min)\b/.test(text) ? "pixel" : "samsung";
   }
   if (/most\s*used\s*app\s*categories|app\s*timers/.test(text)) {
@@ -808,7 +833,7 @@ export function guessScreenTimeLayout(rawText: string): ScreenTimeLayout {
   if (text.split(/\r?\n/).some((line) => /screen\s*time\s*today/.test(line))) {
     return "samsung";
   }
-  if (/show\s*categories|daily\s*average|screen\s*time/.test(text)) {
+  if (/show\s*categories|daily\s*average|screen\s*time|最\s*常\s*使\s*用|显示类别|顯示類別|显示\s*app|顯示\s*app|屏幕使用时间|螢幕使用時間|日均|每日平均/.test(text)) {
     return "ios";
   }
   return "unknown";
@@ -860,6 +885,7 @@ export function sanitizeParsedResult(parsed: RawParsedScreenTime): ParsedScreenT
     layout: parsed.layout ?? "unknown",
     flags: [...new Set([...(parsed.flags ?? []), ...(exceedsHeadline ? (["category_total_exceeds_headline"] as const) : [])])],
     ratioScope: scrollHours ? ratioScope : null,
+    sawCategories: parsed.sawCategories ?? false,
   };
 }
 
@@ -867,7 +893,7 @@ export function parseScreenTimeText(rawText: string, ocrConfidence = 0): ParsedS
   const layout = guessScreenTimeLayout(rawText);
   const isWeekView = WEEK_VIEW_HINT.test(rawText);
   const labels = resolveLabels(isWeekView);
-  const { lines, apps, scrollHours, flags } = analyzeScreenTime(rawText, isWeekView ? 168 : 24, labels);
+  const { lines, apps, scrollHours, flags, sawCategories } = analyzeScreenTime(rawText, isWeekView ? 168 : 24, labels);
   const confidence = Math.max(0, Math.min(100, ocrConfidence));
   const confidenceOk = confidence === 0 || confidence >= 45;
 
@@ -895,21 +921,22 @@ export function parseScreenTimeText(rawText: string, ocrConfidence = 0): ParsedS
       confidence,
       layout,
       flags,
+      sawCategories,
     });
   }
 
   const weeklyTotal = resolveAnchoredTotal(lines, "weekly", labels);
   if (weeklyTotal && weeklyTotal >= 3.5 && weeklyTotal <= 84 && confidenceOk) {
-    return sanitizeParsedResult({ hours: weeklyTotal / 7, totalHours: weeklyTotal / 7, scrollHours: null, ratioScope: null, sliderFromScroll: false, source: "weekly-total", apps, confidence, layout, flags });
+    return sanitizeParsedResult({ hours: weeklyTotal / 7, totalHours: weeklyTotal / 7, scrollHours: null, ratioScope: null, sliderFromScroll: false, source: "weekly-total", apps, confidence, layout, flags, sawCategories });
   }
 
   const dayTotal = resolveAnchoredTotal(lines, "day", labels);
   if (dayTotal && dayTotal >= 0.5 && dayTotal <= 12) {
-    return sanitizeParsedResult({ hours: dayTotal, totalHours: dayTotal, scrollHours, ratioScope: "day", source: "day-total", apps, confidence, layout, flags });
+    return sanitizeParsedResult({ hours: dayTotal, totalHours: dayTotal, scrollHours, ratioScope: "day", source: "day-total", apps, confidence, layout, flags, sawCategories });
   }
 
   // Category-derived scroll time with no surviving headline: the headline
   // was cropped or unreadable. Usable, but never verified.
   const fallbackFlags: ParseFlag[] = scrollHours ? [...flags, "headline_crop_unrecoverable"] : flags;
-  return sanitizeParsedResult({ hours: null, totalHours: null, scrollHours, source: scrollHours ? "day-total" : null, apps, confidence, layout, flags: fallbackFlags });
+  return sanitizeParsedResult({ hours: null, totalHours: null, scrollHours, source: scrollHours ? "day-total" : null, apps, confidence, layout, flags: fallbackFlags, sawCategories });
 }

@@ -118,7 +118,10 @@ type TesseractLike = File | Blob | string;
 
 export async function recognizeScreenTime(image: TesseractLike): Promise<RecognizedScreenTime> {
   const mod = await import("tesseract.js");
-  const fullWorker = await mod.createWorker("eng+chi_tra+tha");
+  // chi_sim matters most for the WeChat/mainland audience: without it the
+  // chi_tra model coerces Simplified glyphs and shreds unit tokens
+  // (confidence 84 -> 92 with it, measured on a rendered zh category list).
+  const fullWorker = await mod.createWorker("eng+chi_sim+chi_tra+tha");
   try {
     const full = await fullWorker.recognize(image, {}, { text: true, blocks: true });
     const confidence = full.data.confidence;
