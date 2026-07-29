@@ -125,7 +125,14 @@ accepts these enum fields and nothing else — no image data, no OCR text, no
 app names — and the store keeps only counters (no rows, timestamps, or
 IPs). An optional `env` field (webview enum: wechat|line|instagram|
 facebook|none) tags which in-app browser a parse ran in — counters only,
-no new data categories. Counters go through `ScrollTelemetryStorage`
+no new data categories.
+
+Watch item (accepted tradeoff): bare unlabeled durations are never
+promotable to a headline. If post-launch telemetry shows meaningful
+`failed` counts on a layout where a bare fragment IS the headline (some
+OEM skin printing totals as "45m" with no label), the response is a
+layout-specific rule for that `layout_guess` — never a weakening of the
+general never-promote-fragments rule. Counters go through `ScrollTelemetryStorage`
 (`lib/scroll/resultsStore.ts`), a swappable interface whose in-memory
 backend resets on serverless recycling; the durable-store migration swaps
 in the KV backend at `setScrollTelemetryStorage` without touching call
