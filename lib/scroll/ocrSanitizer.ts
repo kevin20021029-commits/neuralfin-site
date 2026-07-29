@@ -73,6 +73,8 @@ const excludedCategoryCatalog = [
   "productivity",
   "finance",
   "productivity & finance",
+  "productivity and finance",
+  "information and reading",
   "travel",
   "navigation",
   "creativity",
@@ -253,8 +255,38 @@ function findDurations(input: string): DurationMatch[] {
     }
   }
 
+  // tesseract's mixed eng+chi_tra+tha model misreads the latin unit letters
+  // h/m as Thai ท (observed on real Samsung uploads: "3 ท 16 ท"). Accept the
+  // composite "N [hท] M [mท]" shape; the lookaheads keep genuine Thai words
+  // (ทั้งหมด, ทุก...) from matching.
+  const confusedRe = /(\d{1,2})\s*[hท]\s*(\d{1,3})\s*[mท](?![a-z0-9\u0E00-\u0E7F])/gi;
+  for (let m = confusedRe.exec(text); m; m = confusedRe.exec(text)) {
+    const start = m.index;
+    const end = m.index + m[0].length;
+    if (overlapsSpan(spans, start, end)) continue;
+    const value = Number(m[1]) + Number(m[2]) / 60;
+    if (value >= 1 / 60 && value <= 24) {
+      matches.push({ hours: value, index: start, end, composite: true });
+      spans.push([start, end]);
+    }
+  }
+
   const minutesRe = new RegExp(`(\\d{1,3})\\s*(?:${MINUTE_UNITS})(?![a-z])`, "gi");
   for (let m = minutesRe.exec(text); m; m = minutesRe.exec(text)) {
+    const start = m.index;
+    const end = m.index + m[0].length;
+    if (overlapsSpan(spans, start, end)) continue;
+    const value = Number(m[1]) / 60;
+    if (value >= 1 / 60 && value <= 24) {
+      matches.push({ hours: value, index: start, end, composite: false });
+      spans.push([start, end]);
+    }
+  }
+
+  // Bare "N ท" (a misread "N m") — Samsung prints sub-hour values as bare
+  // minutes, so minutes is the safe reading; range gates catch the rest.
+  const confusedMinRe = /(\d{1,3})\s*ท(?![a-z0-9\u0E00-\u0E7F])/gi;
+  for (let m = confusedMinRe.exec(text); m; m = confusedMinRe.exec(text)) {
     const start = m.index;
     const end = m.index + m[0].length;
     if (overlapsSpan(spans, start, end)) continue;
@@ -285,7 +317,9 @@ function stripDurations(text: string) {
 
 function isDurationOnlyLine(line: string, durations: DurationMatch[]) {
   if (durations.length === 0) return false;
-  return stripDurations(line).replace(/[^\p{L}\p{N}]/gu, "").length === 0;
+  // A single stray character of residue is OCR noise (orphaned Thai vowel
+  // marks, icon glyphs), not content — observed as "า" on real uploads.
+  return stripDurations(line).replace(/[^\p{L}\p{N}]/gu, "").length <= 1;
 }
 
 function categoryKindFromText(text: string): CategoryKind | null {
@@ -321,6 +355,37 @@ function totalScopeFromText(text: string): TotalScope | null {
     if (TOTAL_LABELS[scope].some((label) => label.test(text))) return scope;
   }
   return null;
+}
+
+// Ordered category labels in a run of text, longest variant first so
+// "productivity and finance" is one unit, not two. Used for Samsung tile
+// rows where OCR emits several tile names on one line.
+function categoryUnitsFromText(text: string): CategoryKind[] {
+  const lower = text.toLowerCase();
+  const found: Array<{ index: number; kind: CategoryKind }> = [];
+  const consumed: Array<[number, number]> = [];
+  const catalog: Array<{ kind: CategoryKind; variant: string }> = [];
+  for (const category of scrollCategoryCatalog) {
+    for (const variant of category.variants) catalog.push({ kind: category.id, variant: variant.toLowerCase() });
+  }
+  for (const variant of excludedCategoryCatalog) catalog.push({ kind: "excluded", variant: variant.toLowerCase() });
+  catalog.sort((a, b) => b.variant.length - a.variant.length);
+
+  for (const { kind, variant } of catalog) {
+    let from = 0;
+    while (from < lower.length) {
+      const index = lower.indexOf(variant, from);
+      if (index === -1) break;
+      const end = index + variant.length;
+      if (!overlapsSpan(consumed, index, end)) {
+        consumed.push([index, end]);
+        found.push({ index, kind });
+      }
+      from = end;
+    }
+  }
+
+  return found.sort((a, b) => a.index - b.index).map((entry) => entry.kind);
 }
 
 // Multi-category legend lines (iOS: "Creativity 44m · Social 32m · Travel 9m")
@@ -401,9 +466,39 @@ function buildLine(text: string): ScreenTimeLine {
 
 // OCR often emits a screenshot's label column and value column as separate
 // blocks: a run of name lines followed by a run of duration-only lines.
-// Zip the runs tail-aligned — extra leading durations belong to content
-// above the list (typically the headline total), so the tails line up.
-function zipNameValueRuns(lines: ScreenTimeLine[], onPair: (name: ScreenTimeLine, hours: number) => void) {
+// Both sides are decomposed into UNITS before pairing — a tile row can put
+// several category names on one line (with wraps) and several durations on
+// the next — then zipped tail-aligned: extra leading durations belong to
+// content above the list (typically the headline total).
+type NameUnit =
+  | { type: "label"; line: ScreenTimeLine }
+  | { type: "category"; kind: CategoryKind }
+  | { type: "app"; rawName: string };
+
+function nameUnitsFromPending(pending: ScreenTimeLine[]): NameUnit[] {
+  const units: NameUnit[] = [];
+  let index = 0;
+  while (index < pending.length) {
+    const line = pending[index];
+    if (line.nameKind === "category") {
+      // Join consecutive category lines so wrapped tile names
+      // ("Productivity and" / "finance") resolve as one unit.
+      let joined = "";
+      while (index < pending.length && pending[index].nameKind === "category") {
+        joined += ` ${pending[index].text}`;
+        index += 1;
+      }
+      for (const kind of categoryUnitsFromText(joined)) units.push({ type: "category", kind });
+      continue;
+    }
+    if (line.nameKind === "label") units.push({ type: "label", line });
+    else if (line.nameKind === "app" && line.appName) units.push({ type: "app", rawName: line.appName });
+    index += 1;
+  }
+  return units;
+}
+
+function zipNameValueRuns(lines: ScreenTimeLine[], onPair: (unit: NameUnit, hours: number) => void) {
   let pending: ScreenTimeLine[] = [];
   let index = 0;
 
@@ -415,12 +510,14 @@ function zipNameValueRuns(lines: ScreenTimeLine[], onPair: (name: ScreenTimeLine
         values.push(lines[index]);
         index += 1;
       }
-      const offset = values.length - pending.length;
-      pending.forEach((nameLine, position) => {
-        const value = values[position + offset];
+      const units = nameUnitsFromPending(pending);
+      const durations = values.flatMap((value) => value.durations.map((d) => ({ line: value, hours: d.hours })));
+      const offset = durations.length - units.length;
+      units.forEach((unit, position) => {
+        const value = durations[position + offset];
         if (!value) return;
-        onPair(nameLine, value.durations[0].hours);
-        value.claimed = true;
+        onPair(unit, value.hours);
+        value.line.claimed = true;
       });
       pending = [];
       continue;
@@ -454,13 +551,13 @@ function analyzeScreenTime(rawText: string) {
     for (const pair of line.categoryPairs) addCategory(pair.kind, pair.minutes);
   }
 
-  zipNameValueRuns(lines, (nameLine, hours) => {
-    if (nameLine.nameKind === "label") {
-      nameLine.pairedTotal = hours;
-    } else if (nameLine.nameKind === "category" && nameLine.categoryNameKind) {
-      addCategory(nameLine.categoryNameKind, Math.round(hours * 60));
-    } else if (nameLine.nameKind === "app" && nameLine.appName) {
-      apps.push({ rawName: nameLine.appName, minutes: Math.round(hours * 60) });
+  zipNameValueRuns(lines, (unit, hours) => {
+    if (unit.type === "label") {
+      unit.line.pairedTotal = hours;
+    } else if (unit.type === "category") {
+      addCategory(unit.kind, Math.round(hours * 60));
+    } else {
+      apps.push({ rawName: unit.rawName, minutes: Math.round(hours * 60) });
     }
   });
 
@@ -515,6 +612,9 @@ export function guessScreenTimeLayout(rawText: string): ScreenTimeLayout {
   const text = rawText.toLowerCase();
   if (/digital\s*wellbeing/.test(text)) {
     return /\d\s*(?:hr|min)\b/.test(text) ? "pixel" : "samsung";
+  }
+  if (/most\s*used\s*app\s*categories|app\s*timers/.test(text)) {
+    return "samsung";
   }
   if (text.split(/\r?\n/).some((line) => /screen\s*time\s*today/.test(line))) {
     return "samsung";

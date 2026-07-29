@@ -295,6 +295,10 @@ test("layout guess separates samsung, pixel, and ios", () => {
   assert.equal(guessScreenTimeLayout(IOS_DAY_FIXTURE), "ios");
 });
 
+test("cropped Samsung category dashboard still guesses samsung", () => {
+  assert.equal(guessScreenTimeLayout(SAMSUNG_REAL_OCR_FIXTURE), "samsung");
+});
+
 test("parse outcome classification covers full, total_only, failed", () => {
   assert.equal(classifyParseOutcome(parseScreenTimeText(SAMSUNG_BLOCK_FIXTURE, 83)), "full");
   assert.equal(classifyParseOutcome(parseScreenTimeText(PIXEL_FIXTURE, 85)), "total_only");
@@ -348,6 +352,53 @@ test("Thai abbreviated duration units (ชม.) parse for headline and categorie
   assert.equal(parsed.source, "day-total");
   assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 362);
   assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 180); // Entertainment + Games; Creativity excluded
+});
+
+// Verbatim tesseract output (eng+chi_tra+tha worker, the app's exact
+// pipeline) for a real Samsung "Most used app categories" screenshot with
+// the headline cropped: latin h/m misread as Thai ท, tile names emitted as
+// one line with a wrap, tile values as one line with stray "า" noise.
+const SAMSUNG_REAL_OCR_FIXTURE =
+  "onZm\n@ YouTube 3 ท 16 ท\n圖 WhatsApp 1h21m\n圖 Instagram 45 m\nMost used app categories\nVideo Social Productivity and\nfinance\n3h16m 2 ท 35 ท 5 ท า\nApp timers\nIf you're using certain apps more than you'd like, set a timer to help\nmanage your usage.\n";
+
+test("real Samsung tile OCR with Thai-glyph confusion parses scroll time and apps", () => {
+  const parsed = parseScreenTimeText(SAMSUNG_REAL_OCR_FIXTURE, 91);
+
+  assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 351); // Video 3h16m + Social 2h35m
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 351);
+  assert.equal(parsed.totalHours, null); // headline cropped to "onZm" — unrecoverable
+  assert.equal(parsed.source, "day-total");
+  assert.deepEqual(parsed.apps, [
+    { name: "YouTube", minutes: 196 }, // "3 ท 16 ท"
+    { name: "WhatsApp", minutes: 81 },
+    { name: "Instagram", minutes: 45 },
+  ]);
+  assert.equal(classifyParseOutcome(parsed), "full");
+});
+
+test("Thai-glyph OCR confusion duration forms resolve", () => {
+  assert.equal(Math.round((parseScreenTimeText("Daily Average 3 ท 20 ท", 90).hours ?? 0) * 60), 200);
+  assert.equal(Math.round((parseScreenTimeText("Daily Average 45 ท", 90).hours ?? 0) * 60), 45);
+  // genuine Thai words must not match as durations
+  const thaiWords = parseScreenTimeText("มีแอปทั้งหมด 12 ทุกวัน", 90);
+  assert.equal(thaiWords.hours, null);
+});
+
+test("Samsung side-by-side category tiles pair names row with values row", () => {
+  const parsed = parseScreenTimeText(
+    [
+      "Screen time today",
+      "6 h 2 m",
+      "Most used app categories",
+      "Video Social Productivity and finance",
+      "3 h 16 m 2 h 35 m 5 m",
+    ].join("\n"),
+    85,
+  );
+
+  assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 362);
+  assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 351); // Productivity and finance excluded as ONE unit
+  assert.equal(parsed.source, "day-total");
 });
 
 test("app row only does not promote an app duration to headline", () => {

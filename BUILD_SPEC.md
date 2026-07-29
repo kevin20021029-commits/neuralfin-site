@@ -25,6 +25,13 @@
 - Duration token tolerance (headlines, app rows, and category values alike):
   "N h M m", "N hr M min", "N hr, M min", "Nh Mm", "N:MM",
   "N 小時 M 分鐘", and Thai equivalents.
+- Real-OCR tolerance (validated against tesseract output from the app's own
+  eng+chi_tra+tha worker on Samsung uploads): latin h/m unit letters misread
+  as Thai ท are accepted in duration tokens; a single stray character on a
+  value line is treated as OCR noise; side-by-side category tiles whose
+  names arrive as one line (with wraps) and values as another are paired
+  positionally. A cropped headline degrades to category-derived scroll time
+  (unverified) instead of failing.
 - Unknown-layout degrade order (never a hard fail when data is extractable):
   (a) label-anchored total → total-only mode; (b) no anchored total → the
   "couldn't read" path with the manual slider. `sanitizeParsedResult` gates
