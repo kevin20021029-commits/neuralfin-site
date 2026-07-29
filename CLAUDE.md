@@ -13,9 +13,10 @@ priority and override anything else, including user-facing convenience.
 2. **Anonymous results only.** The results API stores ONLY
    `{hours, region, timestamp}`. No IPs persisted, no identifiers, no cookies
    for this purpose. The site publicly promises anonymity. The only other
-   data-receiving endpoint is `/api/scroll-telemetry`, which accepts exactly
-   two enums (`layout`, `outcome`) and stores aggregate counters only —
-   never extend it to carry image data, OCR text, or app names.
+   data-receiving endpoint is `/api/scroll-telemetry`, which accepts
+   enum-valued fields only (`layout`, `outcome`, and event names from the
+   fixed `PARSE_FLAGS` list) and stores aggregate counters only — never
+   extend it to carry image data, OCR text, or app names.
 3. **Compliance copy is frozen.** Compliance and disclaimer copy — the
    DL Securities (Hong Kong) Limited / SFC line, the "marketing illustration,
    not financial advice/forecast/projection" line, and the privacy notes —

@@ -6,6 +6,17 @@ export type AppRoast = {
 export type ScreenTimeLayout = (typeof SCREEN_TIME_LAYOUTS)[number];
 export type ParseOutcome = (typeof PARSE_OUTCOMES)[number];
 
+// Non-fatal degradations surfaced to the UI (flags other than
+// restricted_pass_failed make the read unverified) and to telemetry.
+export const PARSE_FLAGS = [
+  "ambiguous_duration_dropped",
+  "tile_count_mismatch",
+  "headline_crop_unrecoverable",
+  "category_total_exceeds_headline",
+  "restricted_pass_failed",
+] as const;
+export type ParseFlag = (typeof PARSE_FLAGS)[number];
+
 export type ParsedScreenTime = {
   hours: number | null;
   source: "average" | "weekly-total" | "day-total" | null;
@@ -14,6 +25,7 @@ export type ParsedScreenTime = {
   apps: AppRoast[];
   confidence: number;
   layout: ScreenTimeLayout;
+  flags: ParseFlag[];
 };
 
 type RawAppLine = {
@@ -29,6 +41,7 @@ type RawParsedScreenTime = {
   apps: RawAppLine[];
   confidence: number;
   layout?: ScreenTimeLayout;
+  flags?: ParseFlag[];
 };
 
 export const SCREEN_TIME_LAYOUTS = ["samsung", "pixel", "ios", "unknown"] as const;
@@ -215,28 +228,40 @@ function canonicalAppName(rawName: string) {
 const HOUR_UNITS = "hours|hour|hrs|hr|h|小時|小时|ชั่วโมง|ชม\\.?";
 const MINUTE_UNITS = "minutes|minute|mins|min|m|分鐘|分钟|นาที";
 
+// hours === null means the span was RECOGNIZED as a duration-shaped token
+// but its value was rejected (out-of-range magnitude, or a genuinely
+// ambiguous unit). Consuming the span keeps other patterns from re-matching
+// a fragment of it into a plausible-but-wrong number, keeps residue checks
+// honest, and keeps unit counts aligned for name-value pairing.
 type DurationMatch = {
-  hours: number;
+  hours: number | null;
   index: number;
   end: number;
   composite: boolean;
+  dropped?: "ambiguous" | "invalid";
 };
 
 function overlapsSpan(spans: Array<[number, number]>, start: number, end: number) {
   return spans.some(([s, e]) => start < e && end > s);
 }
 
-function findDurations(input: string): DurationMatch[] {
+// maxHours gates plausibility by view scope: 24 for day-scoped screens,
+// 168 when the screenshot is a week view (a 45h weekly total is plausible;
+// a bare ambiguous token in week view is almost never resolvable).
+export function findDurations(input: string, maxHours = 24): DurationMatch[] {
   const text = input.toLowerCase();
   const matches: DurationMatch[] = [];
   const spans: Array<[number, number]> = [];
+  const push = (match: DurationMatch) => {
+    matches.push(match);
+    spans.push([match.index, match.end]);
+  };
 
   const colonRe = /\b(\d{1,2})\s*:\s*(\d{2})\b/g;
   for (let m = colonRe.exec(text); m; m = colonRe.exec(text)) {
     const value = Number(m[1]) + Number(m[2]) / 60;
-    if (value >= 1 / 60 && value <= 24) {
-      matches.push({ hours: value, index: m.index, end: m.index + m[0].length, composite: true });
-      spans.push([m.index, m.index + m[0].length]);
+    if (value >= 1 / 60 && value <= maxHours) {
+      push({ hours: value, index: m.index, end: m.index + m[0].length, composite: true });
     }
   }
 
@@ -248,26 +273,37 @@ function findDurations(input: string): DurationMatch[] {
     const start = m.index;
     const end = m.index + m[0].length;
     if (overlapsSpan(spans, start, end)) continue;
-    const value = Number(m[1].replace(",", ".")) + (m[2] ? Number(m[2]) : 0) / 60;
-    if (value >= 1 / 60 && value <= 24) {
-      matches.push({ hours: value, index: start, end, composite: Boolean(m[2]) });
-      spans.push([start, end]);
+    const hoursPart = Number(m[1].replace(",", "."));
+    const minutesPart = m[2] ? Number(m[2]) : 0;
+    // Magnitude guard: two ordered units mean h then m.
+    if (hoursPart > maxHours || (m[2] && minutesPart > 59)) {
+      push({ hours: null, index: start, end, composite: Boolean(m[2]), dropped: "invalid" });
+      continue;
+    }
+    const value = hoursPart + minutesPart / 60;
+    if (value >= 1 / 60 && value <= maxHours) {
+      push({ hours: value, index: start, end, composite: Boolean(m[2]) });
     }
   }
 
   // tesseract's mixed eng+chi_tra+tha model misreads the latin unit letters
-  // h/m as Thai ท (observed on real Samsung uploads: "3 ท 16 ท"). Accept the
-  // composite "N [hท] M [mท]" shape; the lookaheads keep genuine Thai words
-  // (ทั้งหมด, ทุก...) from matching.
-  const confusedRe = /(\d{1,2})\s*[hท]\s*(\d{1,3})\s*[mท](?![a-z0-9\u0E00-\u0E7F])/gi;
+  // h/m as Thai \u0e17 (observed on real Samsung uploads). Accept the composite
+  // "N [h\u0e17] M [m\u0e17]" shape; the lookaheads keep genuine Thai words from
+  // matching.
+  const confusedRe = /(\d{1,2})\s*[h\u0E17]\s*(\d{1,3})\s*[m\u0E17](?![a-z0-9\u0E00-\u0E7F])/gi;
   for (let m = confusedRe.exec(text); m; m = confusedRe.exec(text)) {
     const start = m.index;
     const end = m.index + m[0].length;
     if (overlapsSpan(spans, start, end)) continue;
-    const value = Number(m[1]) + Number(m[2]) / 60;
-    if (value >= 1 / 60 && value <= 24) {
-      matches.push({ hours: value, index: start, end, composite: true });
-      spans.push([start, end]);
+    const hoursPart = Number(m[1]);
+    const minutesPart = Number(m[2]);
+    if (hoursPart > maxHours || minutesPart > 59) {
+      push({ hours: null, index: start, end, composite: true, dropped: "invalid" });
+      continue;
+    }
+    const value = hoursPart + minutesPart / 60;
+    if (value >= 1 / 60 && value <= maxHours) {
+      push({ hours: value, index: start, end, composite: true });
     }
   }
 
@@ -277,23 +313,29 @@ function findDurations(input: string): DurationMatch[] {
     const end = m.index + m[0].length;
     if (overlapsSpan(spans, start, end)) continue;
     const value = Number(m[1]) / 60;
-    if (value >= 1 / 60 && value <= 24) {
-      matches.push({ hours: value, index: start, end, composite: false });
-      spans.push([start, end]);
+    if (value >= 1 / 60 && value <= maxHours) {
+      push({ hours: value, index: start, end, composite: false });
     }
   }
 
-  // Bare "N ท" (a misread "N m") — Samsung prints sub-hour values as bare
-  // minutes, so minutes is the safe reading; range gates catch the rest.
-  const confusedMinRe = /(\d{1,3})\s*ท(?![a-z0-9\u0E00-\u0E7F])/gi;
+  // Bare "N \u0e17": a lone ambiguous unit. Above 59 it is no plausible display
+  // value; 25-59 can only be minutes (hours cap at 24); 1-24 could be either
+  // hours or minutes -- never guess: drop the token and let the caller mark
+  // the read unverified.
+  const confusedMinRe = /(\d{1,3})\s*\u0E17(?![a-z0-9\u0E00-\u0E7F])/gi;
   for (let m = confusedMinRe.exec(text); m; m = confusedMinRe.exec(text)) {
     const start = m.index;
     const end = m.index + m[0].length;
     if (overlapsSpan(spans, start, end)) continue;
-    const value = Number(m[1]) / 60;
-    if (value >= 1 / 60 && value <= 24) {
-      matches.push({ hours: value, index: start, end, composite: false });
-      spans.push([start, end]);
+    const value = Number(m[1]);
+    if (value > Math.max(59, maxHours)) {
+      push({ hours: null, index: start, end, composite: false, dropped: "invalid" });
+    } else if (maxHours <= 24 && value >= 25 && value <= 59) {
+      // Day view: 25-59 can only be minutes (hours cap at 24).
+      push({ hours: value / 60, index: start, end, composite: false });
+    } else if (value >= 1) {
+      // Day view 1-24, or anything up to 168 in week view: never guess.
+      push({ hours: null, index: start, end, composite: false, dropped: "ambiguous" });
     }
   }
 
@@ -301,7 +343,7 @@ function findDurations(input: string): DurationMatch[] {
 }
 
 function firstDurationHours(text: string) {
-  return findDurations(text)[0]?.hours ?? null;
+  return findDurations(text).find((match) => match.hours !== null)?.hours ?? null;
 }
 
 function stripDurations(text: string) {
@@ -396,7 +438,9 @@ function categoryPairsFromLine(text: string, durations: DurationMatch[]) {
   for (const duration of durations) {
     const segment = text.slice(cursor, duration.index);
     const kind = categoryKindFromText(segment);
-    if (kind) pairs.push({ kind, minutes: Math.round(duration.hours * 60) });
+    // Dropped tokens keep their segment consumed but produce no pair — the
+    // tile is dropped rather than silently guessed.
+    if (kind && duration.hours !== null) pairs.push({ kind, minutes: Math.round(duration.hours * 60) });
     cursor = duration.end;
   }
   return pairs;
@@ -419,15 +463,17 @@ type ScreenTimeLine = {
 function appRowFromLine(text: string, durations: DurationMatch[], categoryPairs: ScreenTimeLine["categoryPairs"], scope: TotalScope | null): RawAppLine | null {
   if (durations.length === 0 || categoryPairs.length > 0 || scope !== null) return null;
   if (BLOCKED_APP_ROW.test(text)) return null;
+  const firstValid = durations.find((duration) => duration.hours !== null);
+  if (!firstValid || firstValid.hours === null) return null;
   const rawName = stripDurations(text)
     .replace(/[·•|-]+\s*$/g, "")
     .trim();
   if (rawName.length < 1 || rawName.length > 40) return null;
-  return { rawName, minutes: Math.round(durations[0].hours * 60) };
+  return { rawName, minutes: Math.round(firstValid.hours * 60) };
 }
 
-function buildLine(text: string): ScreenTimeLine {
-  const durations = findDurations(text);
+function buildLine(text: string, maxHours: number): ScreenTimeLine {
+  const durations = findDurations(text, maxHours);
   const scope = totalScopeFromText(text);
   const categoryPairs = durations.length > 0 ? categoryPairsFromLine(text, durations) : [];
   const appRow = appRowFromLine(text, durations, categoryPairs, scope);
@@ -498,7 +544,7 @@ function nameUnitsFromPending(pending: ScreenTimeLine[]): NameUnit[] {
   return units;
 }
 
-function zipNameValueRuns(lines: ScreenTimeLine[], onPair: (unit: NameUnit, hours: number) => void) {
+function zipNameValueRuns(lines: ScreenTimeLine[], onPair: (unit: NameUnit, hours: number) => void, onFlag: (flag: ParseFlag) => void) {
   let pending: ScreenTimeLine[] = [];
   let index = 0;
 
@@ -511,12 +557,29 @@ function zipNameValueRuns(lines: ScreenTimeLine[], onPair: (unit: NameUnit, hour
         index += 1;
       }
       const units = nameUnitsFromPending(pending);
+      // Dropped (null) tokens still occupy their position so alignment
+      // survives; their pair simply produces nothing (tile dropped).
       const durations = values.flatMap((value) => value.durations.map((d) => ({ line: value, hours: d.hours })));
+
+      // Count guard for tile runs: one missing/extra token would shift
+      // every pair after it, so positional zipping is only trusted when
+      // durations match all units (tail-aligned labels included) or exactly
+      // the category units. Counts include excluded categories ("productivity
+      // and finance") and dropped tokens — the comparison happens BEFORE any
+      // exclusion or drop filtering.
+      const categoryUnitCount = units.filter((unit) => unit.type === "category").length;
+      if (categoryUnitCount > 0 && durations.length !== units.length && durations.length !== categoryUnitCount) {
+        onFlag("tile_count_mismatch");
+        for (const value of values) value.claimed = true;
+        pending = [];
+        continue;
+      }
+
       const offset = durations.length - units.length;
       units.forEach((unit, position) => {
         const value = durations[position + offset];
         if (!value) return;
-        onPair(unit, value.hours);
+        if (value.hours !== null) onPair(unit, value.hours);
         value.line.claimed = true;
       });
       pending = [];
@@ -532,12 +595,12 @@ function zipNameValueRuns(lines: ScreenTimeLine[], onPair: (unit: NameUnit, hour
   }
 }
 
-function analyzeScreenTime(rawText: string) {
+function analyzeScreenTime(rawText: string, maxHours: number) {
   const lines = rawText
     .split(/\r?\n/)
     .map((line) => normalizeOcrText(line))
     .filter(Boolean)
-    .map((line) => buildLine(line));
+    .map((line) => buildLine(line, maxHours));
 
   const apps: RawAppLine[] = [];
   const categoryMinutes = new Map<CategoryKind, number>();
@@ -551,20 +614,29 @@ function analyzeScreenTime(rawText: string) {
     for (const pair of line.categoryPairs) addCategory(pair.kind, pair.minutes);
   }
 
-  zipNameValueRuns(lines, (unit, hours) => {
-    if (unit.type === "label") {
-      unit.line.pairedTotal = hours;
-    } else if (unit.type === "category") {
-      addCategory(unit.kind, Math.round(hours * 60));
-    } else {
-      apps.push({ rawName: unit.rawName, minutes: Math.round(hours * 60) });
-    }
-  });
+  const flags: ParseFlag[] = [];
+  zipNameValueRuns(
+    lines,
+    (unit, hours) => {
+      if (unit.type === "label") {
+        unit.line.pairedTotal = hours;
+      } else if (unit.type === "category") {
+        addCategory(unit.kind, Math.round(hours * 60));
+      } else {
+        apps.push({ rawName: unit.rawName, minutes: Math.round(hours * 60) });
+      }
+    },
+    (flag) => flags.push(flag),
+  );
 
   let scrollMinutes = 0;
   for (const minutes of categoryMinutes.values()) scrollMinutes += minutes;
 
-  return { lines, apps, scrollHours: scrollMinutes > 0 ? scrollMinutes / 60 : null };
+  if (lines.some((line) => line.durations.some((duration) => duration.dropped === "ambiguous"))) {
+    flags.push("ambiguous_duration_dropped");
+  }
+
+  return { lines, apps, scrollHours: scrollMinutes > 0 ? scrollMinutes / 60 : null, flags };
 }
 
 function sameLineAnchoredHours(line: ScreenTimeLine, scope: TotalScope) {
@@ -572,7 +644,7 @@ function sameLineAnchoredHours(line: ScreenTimeLine, scope: TotalScope) {
     const match = label.exec(line.text);
     if (!match) continue;
     const afterLabel = match.index + match[0].length;
-    const duration = line.durations.find((candidate) => candidate.index >= afterLabel);
+    const duration = line.durations.find((candidate) => candidate.index >= afterLabel && candidate.hours !== null);
     if (!duration) continue;
     if (isAppOrCategoryContext(line.text.slice(afterLabel, duration.index))) continue;
     return duration.hours;
@@ -599,10 +671,11 @@ function resolveAnchoredTotal(lines: ScreenTimeLine[], scope: TotalScope) {
     for (let offset = 1; offset <= 8 && index + offset < lines.length; offset += 1) {
       const candidate = lines[index + offset];
       if (!candidate.durationOnly || candidate.claimed) continue;
-      candidates.push(candidate.durations[0]);
+      const firstValid = candidate.durations.find((duration) => duration.hours !== null);
+      if (firstValid) candidates.push(firstValid);
     }
     const preferred = candidates.find((candidate) => candidate.composite) ?? candidates[0];
-    if (preferred) return preferred.hours;
+    if (preferred && preferred.hours !== null) return preferred.hours;
   }
 
   return null;
@@ -634,10 +707,10 @@ export function sanitizeParsedResult(parsed: RawParsedScreenTime): ParsedScreenT
   const headlineHours = parsed.hours !== null && parsed.hours >= 0.5 && parsed.hours <= 12 ? parsed.hours : null;
   const totalHours = parsed.totalHours != null && parsed.totalHours >= 0.5 && parsed.totalHours <= 12 ? parsed.totalHours : null;
   const candidateScrollHours = parsed.scrollHours != null && parsed.scrollHours >= 0.5 && parsed.scrollHours <= 12 ? parsed.scrollHours : null;
-  const scrollHours =
-    candidateScrollHours && (!totalHours || Math.round(candidateScrollHours * 60) <= Math.round(totalHours * 60))
-      ? candidateScrollHours
-      : null;
+  const exceedsHeadline = Boolean(
+    candidateScrollHours && totalHours && Math.round(candidateScrollHours * 60) > Math.round(totalHours * 60),
+  );
+  const scrollHours = candidateScrollHours && !exceedsHeadline ? candidateScrollHours : null;
   const hours = scrollHours ?? headlineHours;
   const source = hours ? parsed.source : null;
   const totalMinutes = hours ? Math.round(hours * 60) : null;
@@ -664,12 +737,14 @@ export function sanitizeParsedResult(parsed: RawParsedScreenTime): ParsedScreenT
     apps,
     confidence: Math.max(0, Math.min(100, parsed.confidence)),
     layout: parsed.layout ?? "unknown",
+    flags: [...new Set([...(parsed.flags ?? []), ...(exceedsHeadline ? (["category_total_exceeds_headline"] as const) : [])])],
   };
 }
 
 export function parseScreenTimeText(rawText: string, ocrConfidence = 0): ParsedScreenTime {
   const layout = guessScreenTimeLayout(rawText);
-  const { lines, apps, scrollHours } = analyzeScreenTime(rawText);
+  const isWeekView = TOTAL_LABELS.weekly.some((label) => label.test(rawText));
+  const { lines, apps, scrollHours, flags } = analyzeScreenTime(rawText, isWeekView ? 168 : 24);
   const confidence = Math.max(0, Math.min(100, ocrConfidence));
   const confidenceOk = confidence === 0 || confidence >= 45;
 
@@ -678,18 +753,21 @@ export function parseScreenTimeText(rawText: string, ocrConfidence = 0): ParsedS
   // (total-only) rather than mixing scopes. Day-scoped totals keep it.
   const average = resolveAnchoredTotal(lines, "average");
   if (average && average >= 0.5 && average <= 12 && confidenceOk) {
-    return sanitizeParsedResult({ hours: average, totalHours: average, scrollHours: null, source: "average", apps, confidence, layout });
+    return sanitizeParsedResult({ hours: average, totalHours: average, scrollHours: null, source: "average", apps, confidence, layout, flags });
   }
 
   const weeklyTotal = resolveAnchoredTotal(lines, "weekly");
   if (weeklyTotal && weeklyTotal >= 3.5 && weeklyTotal <= 84 && confidenceOk) {
-    return sanitizeParsedResult({ hours: weeklyTotal / 7, totalHours: weeklyTotal / 7, scrollHours: null, source: "weekly-total", apps, confidence, layout });
+    return sanitizeParsedResult({ hours: weeklyTotal / 7, totalHours: weeklyTotal / 7, scrollHours: null, source: "weekly-total", apps, confidence, layout, flags });
   }
 
   const dayTotal = resolveAnchoredTotal(lines, "day");
   if (dayTotal && dayTotal >= 0.5 && dayTotal <= 12) {
-    return sanitizeParsedResult({ hours: dayTotal, totalHours: dayTotal, scrollHours, source: "day-total", apps, confidence, layout });
+    return sanitizeParsedResult({ hours: dayTotal, totalHours: dayTotal, scrollHours, source: "day-total", apps, confidence, layout, flags });
   }
 
-  return sanitizeParsedResult({ hours: null, totalHours: null, scrollHours, source: scrollHours ? "day-total" : null, apps, confidence, layout });
+  // Category-derived scroll time with no surviving headline: the headline
+  // was cropped or unreadable. Usable, but never verified.
+  const fallbackFlags: ParseFlag[] = scrollHours ? [...flags, "headline_crop_unrecoverable"] : flags;
+  return sanitizeParsedResult({ hours: null, totalHours: null, scrollHours, source: scrollHours ? "day-total" : null, apps, confidence, layout, flags: fallbackFlags });
 }
