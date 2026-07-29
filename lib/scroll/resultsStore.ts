@@ -47,15 +47,58 @@ export function addScrollResult(result: ScrollResult) {
   }
 }
 
-// Aggregate-only layout telemetry: one counter per {layout, outcome} enum
-// pair. No timestamps, no IPs, no rows — nothing that could identify a user.
-export function recordScrollTelemetry(layout: ScreenTimeLayout, outcome: ParseOutcome) {
-  const key = `${layout}:${outcome}`;
-  scrollStore.telemetry.set(key, (scrollStore.telemetry.get(key) ?? 0) + 1);
+// Aggregate-only telemetry: one counter per {layout, outcome} pair plus one
+// per degradation event. No timestamps, no IPs, no rows — nothing that
+// could identify a user.
+//
+// Counters go through a swappable storage interface so the durable-store
+// migration (Vercel KV, the queued BUILD_SPEC task) can drop in a backend
+// without touching call sites. Until then the in-memory backend applies and
+// counters reset on serverless instance recycling. All writes are
+// fire-and-forget: telemetry failure can never fail a parse or a request.
+export interface ScrollTelemetryStorage {
+  increment(key: string): void | Promise<void>;
+  snapshot(): Record<string, number> | Promise<Record<string, number>>;
 }
 
-export function buildScrollTelemetrySummary() {
-  return Object.fromEntries(scrollStore.telemetry);
+const inMemoryTelemetryStorage: ScrollTelemetryStorage = {
+  increment(key) {
+    scrollStore.telemetry.set(key, (scrollStore.telemetry.get(key) ?? 0) + 1);
+  },
+  snapshot() {
+    return Object.fromEntries(scrollStore.telemetry);
+  },
+};
+
+let telemetryStorage: ScrollTelemetryStorage = inMemoryTelemetryStorage;
+
+// Drop-in point for the durable backend (KV) when the migration lands.
+export function setScrollTelemetryStorage(storage: ScrollTelemetryStorage) {
+  telemetryStorage = storage;
+}
+
+function fireAndForget(operation: () => void | Promise<void>) {
+  try {
+    void Promise.resolve(operation()).catch(() => undefined);
+  } catch {
+    // telemetry must never propagate a failure
+  }
+}
+
+export function recordScrollTelemetry(layout: ScreenTimeLayout, outcome: ParseOutcome) {
+  fireAndForget(() => telemetryStorage.increment(`${layout}:${outcome}`));
+}
+
+export function recordScrollTelemetryEvent(event: string) {
+  fireAndForget(() => telemetryStorage.increment(`event:${event}`));
+}
+
+export async function buildScrollTelemetrySummary(): Promise<Record<string, number>> {
+  try {
+    return await telemetryStorage.snapshot();
+  } catch {
+    return {};
+  }
 }
 
 function percentileFromDistribution(hours: number, distribution: ScrollResult[]) {

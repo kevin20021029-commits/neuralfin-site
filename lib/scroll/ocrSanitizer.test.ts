@@ -104,52 +104,6 @@ test("thai localized screenshot matches catalog", () => {
   ]);
 });
 
-test("Samsung Digital Wellbeing day dashboard parses total and category scroll time without verification source", () => {
-  const parsed = parseScreenTimeText(
-    [
-      "Digital Wellbeing",
-      "Screen time today",
-      "6 h 2 m",
-      "Video 3 h 16 m",
-      "Social 2 h 35 m",
-      "Productivity 5 m",
-      "Most used apps",
-      "YouTube 3 h 16 m",
-      "WhatsApp 1 h 21 m",
-      "Instagram 45 m",
-    ].join("\n"),
-    83,
-  );
-
-  assert.equal(parsed.source, "day-total");
-  assert.equal(Math.round((parsed.totalHours ?? 0) * 100) / 100, 6.03);
-  assert.equal(Math.round((parsed.scrollHours ?? 0) * 100) / 100, 5.85);
-  assert.equal(Math.round((parsed.hours ?? 0) * 100) / 100, 5.85);
-  assert.deepEqual(parsed.apps, [
-    { name: "YouTube", minutes: 196 },
-    { name: "WhatsApp", minutes: 81 },
-    { name: "Instagram", minutes: 45 },
-  ]);
-});
-
-test("Samsung headline stays anchored to total instead of app or category durations", () => {
-  const parsed = parseScreenTimeText(
-    [
-      "Digital Wellbeing",
-      "Screen time today",
-      "Video 3 h 16 m",
-      "Social 2 h 35 m",
-      "6 h 2 m",
-      "YouTube 3 h 16 m",
-    ].join("\n"),
-    83,
-  );
-
-  assert.equal(parsed.source, "day-total");
-  assert.equal(Math.round((parsed.totalHours ?? 0) * 100) / 100, 6.03);
-  assert.equal(Math.round((parsed.hours ?? 0) * 100) / 100, 5.85);
-});
-
 test("total without categories falls back to total and emits no scroll chip metadata", () => {
   const parsed = parseScreenTimeText("Screen time today\n6 h 2 m\nYouTube 3 h 16 m", 83);
 
@@ -157,43 +111,6 @@ test("total without categories falls back to total and emits no scroll chip meta
   assert.equal(Math.round((parsed.hours ?? 0) * 100) / 100, 6.03);
   assert.equal(parsed.scrollHours, null);
   assert.equal(Math.round((parsed.totalHours ?? 0) * 100) / 100, 6.03);
-});
-
-// Samsung One UI fixture — tesseract column/block ordering: the headline
-// label, then the app-name column, then the value column (headline value
-// first), then category tiles as a names block followed by a values block.
-const SAMSUNG_BLOCK_FIXTURE = [
-  "Digital Wellbeing",
-  "Screen time today",
-  "YouTube",
-  "WhatsApp",
-  "Instagram",
-  "6 h 2 m",
-  "3 h 16 m",
-  "1 h 21 m",
-  "45 m",
-  "Screen time by category",
-  "Video",
-  "Social",
-  "Productivity and finance",
-  "3 h 16 m",
-  "2 h 35 m",
-  "5 m",
-].join("\n");
-
-test("Samsung block-ordered OCR anchors headline to the day total, never an app row", () => {
-  const parsed = parseScreenTimeText(SAMSUNG_BLOCK_FIXTURE, 83);
-
-  assert.equal(parsed.source, "day-total");
-  assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 362); // 6h 2m
-  assert.notEqual(Math.round((parsed.totalHours ?? 0) * 60), 196); // never YouTube's 3h 16m
-  assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 351); // Video 3h16m + Social 2h35m
-  assert.equal(Math.round((parsed.hours ?? 0) * 60), 351); // slider driven by scroll time
-  assert.deepEqual(parsed.apps, [
-    { name: "YouTube", minutes: 196 },
-    { name: "WhatsApp", minutes: 81 },
-    { name: "Instagram", minutes: 45 },
-  ]);
 });
 
 // iOS Screen Time fixture — category legend under the usage chart, ordered
@@ -290,13 +207,17 @@ test("unknown OEM layout with an anchored total degrades to total-only, not fail
 });
 
 test("layout guess separates samsung, pixel, and ios", () => {
-  assert.equal(guessScreenTimeLayout(SAMSUNG_BLOCK_FIXTURE), "samsung");
+  assert.equal(guessScreenTimeLayout(SAMSUNG_REAL_OCR_FIXTURE), "samsung");
   assert.equal(guessScreenTimeLayout(PIXEL_FIXTURE), "pixel");
   assert.equal(guessScreenTimeLayout(IOS_DAY_FIXTURE), "ios");
 });
 
+test("cropped Samsung category dashboard still guesses samsung", () => {
+  assert.equal(guessScreenTimeLayout(SAMSUNG_REAL_OCR_FIXTURE), "samsung");
+});
+
 test("parse outcome classification covers full, total_only, failed", () => {
-  assert.equal(classifyParseOutcome(parseScreenTimeText(SAMSUNG_BLOCK_FIXTURE, 83)), "full");
+  assert.equal(classifyParseOutcome(parseScreenTimeText(SAMSUNG_REAL_OCR_FIXTURE, 91)), "full");
   assert.equal(classifyParseOutcome(parseScreenTimeText(PIXEL_FIXTURE, 85)), "total_only");
   assert.equal(classifyParseOutcome(parseScreenTimeText("nothing useful here", 10)), "failed");
 });
@@ -348,6 +269,132 @@ test("Thai abbreviated duration units (ชม.) parse for headline and categorie
   assert.equal(parsed.source, "day-total");
   assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 362);
   assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 180); // Entertainment + Games; Creativity excluded
+});
+
+// Verbatim tesseract output (eng+chi_tra+tha worker, the app's exact
+// pipeline) for a real Samsung "Most used app categories" screenshot with
+// the headline cropped: latin h/m misread as Thai ท, tile names emitted as
+// one line with a wrap, tile values as one line with stray "า" noise.
+const SAMSUNG_REAL_OCR_FIXTURE =
+  "onZm\n@ YouTube 3 ท 16 ท\n圖 WhatsApp 1h21m\n圖 Instagram 45 m\nMost used app categories\nVideo Social Productivity and\nfinance\n3h16m 2 ท 35 ท 5 ท า\nApp timers\nIf you're using certain apps more than you'd like, set a timer to help\nmanage your usage.\n";
+
+test("real Samsung tile OCR with Thai-glyph confusion parses scroll time and apps", () => {
+  const parsed = parseScreenTimeText(SAMSUNG_REAL_OCR_FIXTURE, 91);
+
+  assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 351); // Video 3h16m + Social 2h35m
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 351);
+  assert.equal(parsed.totalHours, null); // headline cropped to "onZm" — unrecoverable
+  assert.equal(parsed.source, "day-total");
+  assert.deepEqual(parsed.apps, [
+    { name: "YouTube", minutes: 196 }, // "3 ท 16 ท"
+    { name: "WhatsApp", minutes: 81 },
+    { name: "Instagram", minutes: 45 },
+  ]);
+  assert.equal(classifyParseOutcome(parsed), "full");
+});
+
+test("Thai-glyph OCR confusion duration forms resolve", () => {
+  assert.equal(Math.round((parseScreenTimeText("Daily Average 3 ท 20 ท", 90).hours ?? 0) * 60), 200);
+  // 45 > 24 can only be minutes (hours cap at 24)
+  assert.equal(Math.round((parseScreenTimeText("Daily Average 45 ท", 90).hours ?? 0) * 60), 45);
+  // genuine Thai words must not match as durations
+  const thaiWords = parseScreenTimeText("มีแอปทั้งหมด 12 ทุกวัน", 90);
+  assert.equal(thaiWords.hours, null);
+});
+
+test("magnitude guard: two ordered units mean h then m", () => {
+  assert.equal(Math.round((parseScreenTimeText("Daily Average 3 ท 16 ท", 90).hours ?? 0) * 60), 196);
+  assert.equal(Math.round((parseScreenTimeText("Daily Average 2 ท 35 ท", 90).hours ?? 0) * 60), 155);
+  // minutes > 59 / hours > 24 reject the token, and the consumed span must
+  // not resurrect as a plausible-but-wrong bare match
+  assert.equal(parseScreenTimeText("Daily Average 99 ท 61 ท", 90).hours, null);
+  assert.equal(parseScreenTimeText("Daily Average 3 h 75 m", 90).hours, null);
+});
+
+test("lone ambiguous unit never guesses: 1-24 drops and flags unverified", () => {
+  const midRange = parseScreenTimeText("Daily Average 30 ท", 90);
+  assert.equal(Math.round((midRange.hours ?? 0) * 60), 30); // 25-59: minutes-only
+
+  const ambiguous = parseScreenTimeText("Daily Average 12 ท", 90);
+  assert.equal(ambiguous.hours, null); // could be 12h or 12m — never guess
+  assert.ok(ambiguous.flags.includes("ambiguous_duration_dropped"));
+
+  const overflow = parseScreenTimeText("Daily Average 99 ท", 90);
+  assert.equal(overflow.hours, null); // no plausible display value
+});
+
+test("week view widens the hour cap and the ambiguous band", () => {
+  // 38h is a plausible weekly total (rejected under the 24h day cap)
+  const weekly = parseScreenTimeText("This week\n38 h 30 m", 90);
+  assert.equal(weekly.source, "weekly-total");
+  assert.equal(Math.round((weekly.hours ?? 0) * 60), 330); // 38.5h / 7
+
+  // bare tokens become unresolvable in week view — drop, never guess
+  const bare45 = parseScreenTimeText("This week 45 ท", 90);
+  assert.equal(bare45.hours, null);
+  assert.ok(bare45.flags.includes("ambiguous_duration_dropped"));
+  const bare30 = parseScreenTimeText("This week 30 ท", 90); // 30 min in day view
+  assert.equal(bare30.hours, null);
+});
+
+test("tile count mismatch bails to unverified instead of shifting pairs", () => {
+  // Two tile names, one value token — positional zip would misattribute
+  const parsed = parseScreenTimeText(["Video Social", "3 h 16 m"].join("\n"), 85);
+  assert.equal(parsed.scrollHours, null);
+  assert.ok(parsed.flags.includes("tile_count_mismatch"));
+
+  // Counts compare BEFORE exclusion: 3 names (incl. excluded) ↔ 3 values OK
+  const balanced = parseScreenTimeText(
+    ["Video Social Productivity and finance", "3 h 16 m 2 h 35 m 5 m"].join("\n"),
+    85,
+  );
+  assert.equal(Math.round((balanced.scrollHours ?? 0) * 60), 351);
+  assert.ok(!balanced.flags.includes("tile_count_mismatch"));
+});
+
+test("category sum exceeding a surviving headline bails scroll to unverified", () => {
+  const parsed = parseScreenTimeText(
+    ["Screen time today", "2 h 0 m", "Video 3 h 16 m", "Social 2 h 35 m"].join("\n"),
+    85,
+  );
+  assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 120);
+  assert.equal(parsed.scrollHours, null); // 5h51m of categories can't fit a 2h day
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 120); // headline drives the slider
+  assert.ok(parsed.flags.includes("category_total_exceeds_headline"));
+});
+
+test("headline crop with parseable categories flags unverified degradation", () => {
+  const parsed = parseScreenTimeText(SAMSUNG_REAL_OCR_FIXTURE, 91);
+  assert.ok(parsed.flags.includes("headline_crop_unrecoverable"));
+  assert.ok(parsed.flags.includes("ambiguous_duration_dropped")); // the "5 ท" tile
+});
+
+test("an ambiguous tile drops without shifting its neighbours", () => {
+  // Third tile's value is ambiguous ("5 ท", 1-24) — Video and Social must
+  // keep their own values and the read must carry the unverified flag.
+  const parsed = parseScreenTimeText(
+    ["Video Social Productivity and finance", "3 h 16 m 2 h 35 m 5 ท"].join("\n"),
+    85,
+  );
+  assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 351);
+  assert.ok(parsed.flags.includes("ambiguous_duration_dropped"));
+});
+
+test("Samsung side-by-side category tiles pair names row with values row", () => {
+  const parsed = parseScreenTimeText(
+    [
+      "Screen time today",
+      "6 h 2 m",
+      "Most used app categories",
+      "Video Social Productivity and finance",
+      "3 h 16 m 2 h 35 m 5 m",
+    ].join("\n"),
+    85,
+  );
+
+  assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 362);
+  assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 351); // Productivity and finance excluded as ONE unit
+  assert.equal(parsed.source, "day-total");
 });
 
 test("app row only does not promote an app duration to headline", () => {

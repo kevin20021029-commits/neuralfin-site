@@ -2,7 +2,8 @@
 
 import { ChangeEvent, KeyboardEvent, type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { appLinks } from "@/lib/site";
-import { classifyParseOutcome, parseScreenTimeText, type AppRoast, type ParseOutcome, type ScreenTimeLayout } from "@/lib/scroll/ocrSanitizer";
+import { classifyParseOutcome, parseScreenTimeText, type AppRoast, type ParseFlag, type ParseOutcome, type ScreenTimeLayout } from "@/lib/scroll/ocrSanitizer";
+import { recognizeScreenTime } from "@/lib/scroll/ocrPipeline";
 import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, detectScrollLocale, normalPercentile, normalizeScrollLocale, type ScrollLocale, type ScrollRegion } from "@/lib/scroll/campaign";
 import { FLIP_MINUTES_PER_DAY, LADDER_TRACKS, getEducationOutput, getTrackName } from "@/lib/scroll/education";
 import { getArchetypeCopy, getScanStageMessage, getShareCaptionVariant, getTapeNote, type ScanStage } from "@/lib/scroll/personality";
@@ -414,26 +415,29 @@ function appLink(base: string, hours: number, region: ScrollRegion, verified: bo
   return url.toString();
 }
 
-// Aggregate-only: two enums, nothing else — no image data, no OCR text,
-// no app names. Tells us which OEM layouts need fixtures post-launch.
-function sendParseTelemetry(layout: ScreenTimeLayout, outcome: ParseOutcome) {
+// Aggregate-only: enum fields, nothing else — no image data, no OCR text,
+// no app names. Tells us which OEM layouts need fixtures post-launch and
+// which degradation paths fire in the wild. Fire-and-forget: telemetry
+// failure can never fail a parse.
+function sendParseTelemetry(layout: ScreenTimeLayout, outcome: ParseOutcome, events: readonly ParseFlag[] = []) {
   void fetch("/api/scroll-telemetry", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ layout, outcome }),
+    body: JSON.stringify(events.length ? { layout, outcome, events } : { layout, outcome }),
     keepalive: true,
   }).catch(() => undefined);
 }
 
 async function parseScreenshot(file: File) {
-  const mod = await import("tesseract.js");
-  const worker = await mod.createWorker("eng+chi_tra+tha");
-  try {
-    const result = await worker.recognize(file);
-    return parseScreenTimeText(result.data.text, result.data.confidence);
-  } finally {
-    await worker.terminate();
-  }
+  const { text, confidence, restrictedPassFailed } = await recognizeScreenTime(file);
+  const parsed = parseScreenTimeText(text, confidence);
+  return restrictedPassFailed ? { ...parsed, flags: [...parsed.flags, "restricted_pass_failed" as const] } : parsed;
+}
+
+// restricted_pass_failed alone doesn't demote a read — the fallback path may
+// still parse cleanly — but every other flag makes it unverified.
+function hasBlockingFlags(parsed: { flags: readonly string[] }) {
+  return parsed.flags.some((flag) => flag !== "restricted_pass_failed");
 }
 
 export function ScrollCalculator() {
@@ -590,9 +594,9 @@ export function ScrollCalculator() {
     try {
       const parsed = await parseScreenshot(file);
       window.clearTimeout(auditTimer);
-      sendParseTelemetry(parsed.layout, classifyParseOutcome(parsed));
+      sendParseTelemetry(parsed.layout, classifyParseOutcome(parsed), parsed.flags);
       setAppRoasts(parsed.apps);
-      if (parsed.hours && parsed.source !== "day-total") {
+      if (parsed.hours && parsed.source !== "day-total" && !hasBlockingFlags(parsed)) {
         setScanStage("success");
         await wait(350);
         const rounded = roundSliderHours(parsed.hours);
@@ -610,7 +614,9 @@ export function ScrollCalculator() {
         setUploadReadDuration(scrollReadText);
         setScanNotice(t.dropDone.replace("{hours}", rounded.toFixed(1)));
         scheduleAutoFlip();
-      } else if (parsed.hours && parsed.source === "day-total") {
+      } else if (parsed.hours) {
+        // Day-scoped totals and any flagged (degraded) read land here:
+        // slider set, but never the verified badge.
         setScanStage("fail");
         await wait(500);
         const rounded = roundSliderHours(parsed.hours);

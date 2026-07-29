@@ -25,6 +25,32 @@
 - Duration token tolerance (headlines, app rows, and category values alike):
   "N h M m", "N hr M min", "N hr, M min", "Nh Mm", "N:MM",
   "N 小時 M 分鐘", and Thai equivalents.
+- Two-pass OCR (`lib/scroll/ocrPipeline.ts`): the full eng+chi_tra+tha
+  worker reads names/labels; duration regions (whole values lines, and the
+  trailing duration words of app rows via word-level bboxes) are
+  re-recognized by an eng-only worker with a 0-9/h/m whitelist in
+  single-line mode. Resolution order per region: restricted-pass result →
+  multilingual text with the ท confusion-form fallback → drop. Any pipeline
+  failure degrades to single-pass; it never fails a parse.
+- Real-OCR tolerance (validated against tesseract output from the app's own
+  workers on Samsung uploads — the fallback layer under the restricted
+  pass): latin h/m misread as Thai ท is accepted in composite "N ท M ท"
+  tokens; a single stray character on a value line is OCR noise; tile
+  names/values rows pair positionally as units.
+- Never guess a plausible wrong number: magnitude caps are view-gated
+  (day 24h / week 168h, from the weekly labels); composite tokens reject
+  minutes > 59; a lone ambiguous bare token (1-24 in day view, anything in
+  week view) drops its tile and marks the read unverified
+  (`ambiguous_duration_dropped`). Tile-run pairing bails entirely on a
+  name↔value count mismatch (`tile_count_mismatch`, counted before
+  exclusion filtering), and category sums exceeding a surviving headline
+  drop the scroll ratio (`category_total_exceeds_headline`). A cropped
+  headline with parseable categories degrades to scroll-derived hours,
+  flagged `headline_crop_unrecoverable` — usable, never verified.
+- Fixtures: the verbatim raw-OCR text fixture drives deterministic parser
+  tests in CI; `lib/scroll/__fixtures__/samsung-tiles.png` +
+  `npm run test:e2e` run the real workers end-to-end (nightly lane — the
+  only test class that catches OCR-model behavior).
 - Unknown-layout degrade order (never a hard fail when data is extractable):
   (a) label-anchored total → total-only mode; (b) no anchored total → the
   "couldn't read" path with the manual slider. `sanitizeParsedResult` gates
@@ -32,14 +58,22 @@
 
 ## Layout Telemetry — OEM Expansion Mechanism
 
-One anonymous, aggregate-only event per parse attempt:
-`{ layout_guess: samsung|pixel|ios|unknown, outcome: full|total_only|failed }`,
-sent to `POST /api/scroll-telemetry`. The endpoint accepts the two enums and
-nothing else — no image data, no OCR text, no app names, and the store keeps
-only per-pair counters (no rows, timestamps, or IPs). This is the mechanism
-for deciding which OEM wellbeing layouts (Xiaomi/OPPO/vivo/Huawei skins) get
-dedicated fixtures post-launch: a rising `unknown`/`failed` or
-`unknown`/`total_only` count tells us where to invest next.
+One anonymous, aggregate-only report per parse attempt:
+`{ layout_guess: samsung|pixel|ios|unknown, outcome: full|total_only|failed,
+events?: [...] }`, sent to `POST /api/scroll-telemetry`. Events come from a
+fixed enum of degradation flags: `ambiguous_duration_dropped`,
+`tile_count_mismatch`, `headline_crop_unrecoverable`,
+`category_total_exceeds_headline`, `restricted_pass_failed`. The endpoint
+accepts these enum fields and nothing else — no image data, no OCR text, no
+app names — and the store keeps only counters (no rows, timestamps, or
+IPs). Counters go through `ScrollTelemetryStorage`
+(`lib/scroll/resultsStore.ts`), a swappable interface whose in-memory
+backend resets on serverless recycling; the durable-store migration swaps
+in the KV backend at `setScrollTelemetryStorage` without touching call
+sites. All writes are fire-and-forget — telemetry failure can never fail a
+parse. This is the mechanism for deciding which OEM wellbeing layouts
+(Xiaomi/OPPO/vivo/Huawei skins) get dedicated fixtures post-launch, and
+which degradation paths fire most in the wild.
 
 ## Routes (reconstructed)
 
