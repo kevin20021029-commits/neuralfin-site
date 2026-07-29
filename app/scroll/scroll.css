@@ -10,7 +10,9 @@
 }
 
 .scroll-wrap {
-  width: min(100%, 640px);
+  /* width must stay fluid: a fixed `width: min(100%, 640px)` would keep
+     beating the desktop max-width overrides below. */
+  width: 100%;
   max-width: 640px;
   margin: 0 auto;
   padding: 0 20px;
@@ -1117,7 +1119,9 @@
 
   .scroll-topgrid {
     display: grid;
-    grid-template-columns: minmax(0, 0.92fr) minmax(480px, 1fr);
+    /* Hero never compresses below readable width; the calculator caps at
+       600px instead of absorbing all extra width. */
+    grid-template-columns: minmax(360px, 1fr) minmax(480px, 600px);
     align-items: start;
     gap: clamp(34px, 4.8vw, 74px);
   }
@@ -1145,6 +1149,22 @@
     grid-template-columns: 1fr 1fr;
     align-items: start;
     gap: clamp(24px, 3vw, 44px);
+  }
+}
+
+@media (min-width: 1440px) {
+  /* Wide-screen tier: cap total content width and let extra viewport go to
+     margins — no full-bleed stretching, no stranded narrow strip. */
+  .scroll-wrap {
+    max-width: 1320px;
+  }
+
+  .scroll-topgrid {
+    gap: 84px;
+  }
+
+  .scroll-botgrid {
+    gap: 56px;
   }
 }
 
