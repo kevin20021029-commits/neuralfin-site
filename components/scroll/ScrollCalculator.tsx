@@ -19,6 +19,12 @@ type Lang = ScrollLocale;
 type TapeRow = { region: ScrollRegion; hours: number; flipped?: boolean };
 type UploadStatus = "idle" | "received" | "read" | "failed" | "partial";
 type ParsedScrollStat = { scrollHours: number; totalHours: number };
+// Scan outcome stored as numbers, never formatted strings — the chip and
+// notice re-derive on every render so a language switch re-localizes them.
+type ScanResult =
+  | { kind: "read"; verified: boolean; hours: number; scrollHours: number | null; totalHours: number | null; ratioScope: "day" | "week" | null }
+  | { kind: "partial"; found: "apps" | "categories" }
+  | { kind: "failed" };
 
 const regionOrder: ScrollRegion[] = ["ww", "hk", "sg", "th"];
 
@@ -490,11 +496,10 @@ export function ScrollCalculator() {
   const [scanning, setScanning] = useState(false);
   const [scanStage, setScanStage] = useState<ScanStage>("reading");
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
-  const [uploadReadDuration, setUploadReadDuration] = useState<string | null>(null);
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [uploadPreviewUrl, setUploadPreviewUrl] = useState<string | null>(null);
   const [parsedHours, setParsedHours] = useState<number | null>(null);
   const [parsedScrollStat, setParsedScrollStat] = useState<ParsedScrollStat | null>(null);
-  const [scanNotice, setScanNotice] = useState<string | null>(null);
   const [appRoasts, setAppRoasts] = useState<AppRoast[]>([]);
   const [tapeRows, setTapeRows] = useState<TapeRow[]>(demoTape);
   const [saveOverlayUrl, setSaveOverlayUrl] = useState<string | null>(null);
@@ -534,10 +539,33 @@ export function ScrollCalculator() {
   const dropTitleText = scanning
     ? getScanStageMessage(lang, scanStage)
     : t.dropTitle;
+  const readDurationText =
+    scanResult?.kind === "read"
+      ? scanResult.scrollHours && scanResult.totalHours
+        ? (scanResult.ratioScope === "week" ? t.dropReadScrollWeek : t.dropReadScrollDay)(
+            formatDurationFromHours(scanResult.scrollHours, lang),
+            formatDurationFromHours(scanResult.totalHours, lang),
+          )
+        : scanResult.scrollHours
+          ? t.dropReadScroll(formatDurationFromHours(scanResult.scrollHours, lang))
+          : formatDurationFromHours(scanResult.hours, lang)
+      : null;
+  const scanNotice =
+    scanResult === null
+      ? null
+      : scanResult.kind === "read"
+        ? scanResult.verified
+          ? t.dropDone.replace("{hours}", roundSliderHours(scanResult.hours).toFixed(1))
+          : t.dropDay(formatDurationFromHours(scanResult.hours, lang))
+        : scanResult.kind === "partial"
+          ? scanResult.found === "apps"
+            ? t.dropAppsOnly
+            : t.dropCategoriesOnly
+          : t.dropFail;
   const dropStateText = scanning
     ? t.dropReceived
-    : uploadStatus === "read" && uploadReadDuration
-      ? t.dropRead(uploadReadDuration)
+    : uploadStatus === "read" && readDurationText
+      ? t.dropRead(readDurationText)
       : uploadStatus === "partial"
         ? t.dropPartialChip
         : uploadStatus === "failed"
@@ -634,11 +662,10 @@ export function ScrollCalculator() {
     if (!file || scanning) return;
     replaceUploadPreview(file);
     setUploadStatus("received");
-    setUploadReadDuration(null);
+    setScanResult(null);
     setParsedScrollStat(null);
     setScanning(true);
     setScanStage("reading");
-    setScanNotice(null);
     const auditTimer = window.setTimeout(() => setScanStage("auditing"), 450);
     try {
       const parsed = await parseScreenshot(file);
@@ -649,41 +676,24 @@ export function ScrollCalculator() {
         setScanStage("success");
         await wait(350);
         const rounded = roundSliderHours(parsed.hours);
-        const duration = formatDurationFromHours(parsed.hours, lang);
-        const ratioText = parsed.ratioScope === "week" ? t.dropReadScrollWeek : t.dropReadScrollDay;
-        const scrollReadText = parsed.scrollHours && parsed.totalHours
-          ? ratioText(formatDurationFromHours(parsed.scrollHours, lang), formatDurationFromHours(parsed.totalHours, lang))
-          : parsed.scrollHours
-            ? t.dropReadScroll(formatDurationFromHours(parsed.scrollHours, lang))
-            : duration;
         setHours(rounded);
         setParsedHours(rounded);
         setParsedScrollStat(parsed.scrollHours && parsed.totalHours ? { scrollHours: parsed.scrollHours, totalHours: parsed.totalHours } : null);
         setVerified(true);
         setUploadStatus("read");
-        setUploadReadDuration(scrollReadText);
-        setScanNotice(t.dropDone.replace("{hours}", rounded.toFixed(1)));
+        setScanResult({ kind: "read", verified: true, hours: parsed.hours, scrollHours: parsed.scrollHours, totalHours: parsed.totalHours, ratioScope: parsed.ratioScope });
         scheduleAutoFlip();
       } else if (parsed.hours) {
         // Day-scoped totals and any flagged (degraded) read land here:
         // slider set, but never the verified badge.
         setScanStage("fail");
         await wait(500);
-        const rounded = roundSliderHours(parsed.hours);
-        const duration = formatDurationFromHours(parsed.hours, lang);
-        const ratioText = parsed.ratioScope === "week" ? t.dropReadScrollWeek : t.dropReadScrollDay;
-        const scrollReadText = parsed.scrollHours && parsed.totalHours
-          ? ratioText(formatDurationFromHours(parsed.scrollHours, lang), formatDurationFromHours(parsed.totalHours, lang))
-          : parsed.scrollHours
-            ? t.dropReadScroll(formatDurationFromHours(parsed.scrollHours, lang))
-            : duration;
-        setHours(rounded);
+        setHours(roundSliderHours(parsed.hours));
         setParsedHours(null);
         setParsedScrollStat(parsed.scrollHours && parsed.totalHours ? { scrollHours: parsed.scrollHours, totalHours: parsed.totalHours } : null);
         setVerified(false);
         setUploadStatus("read");
-        setUploadReadDuration(scrollReadText);
-        setScanNotice(t.dropDay(duration));
+        setScanResult({ kind: "read", verified: false, hours: parsed.hours, scrollHours: parsed.scrollHours, totalHours: parsed.totalHours, ratioScope: parsed.ratioScope });
         scheduleAutoFlip();
       } else if (parsed.apps.length > 0 || parsed.sawCategories) {
         // Partial parse: catalog-gated roasts may show (setAppRoasts above),
@@ -695,7 +705,7 @@ export function ScrollCalculator() {
         setParsedScrollStat(null);
         setVerified(false);
         setUploadStatus("partial");
-        setScanNotice(parsed.apps.length > 0 ? t.dropAppsOnly : t.dropCategoriesOnly);
+        setScanResult({ kind: "partial", found: parsed.apps.length > 0 ? "apps" : "categories" });
       } else {
         setScanStage("fail");
         await wait(500);
@@ -703,7 +713,7 @@ export function ScrollCalculator() {
         setParsedScrollStat(null);
         setVerified(false);
         setUploadStatus("failed");
-        setScanNotice(t.dropFail);
+        setScanResult({ kind: "failed" });
       }
     } catch {
       window.clearTimeout(auditTimer);
@@ -714,7 +724,7 @@ export function ScrollCalculator() {
       setParsedScrollStat(null);
       setVerified(false);
       setUploadStatus("failed");
-      setScanNotice(t.dropFail);
+      setScanResult({ kind: "failed" });
     } finally {
       setScanning(false);
       landOnHoursControl();
@@ -965,7 +975,10 @@ export function ScrollCalculator() {
                 </div>
                 <div className="div" />
                 <div className="flipline"><span>{t.cardflip}</span><b>{education.cardLine}</b></div>
-                <div className="challenge">{t.challenge}<br />{t.scan}</div>
+                <div className="cfoot">
+                  <div className="challenge">{t.challenge}<br />{t.scan}</div>
+                  <img className="qr" src="/assets/scroll-qr.png" alt="QR · neuralfin.ai" />
+                </div>
                 <div className="brand"><b><img src="/icon.png" alt="" />{PUBLIC_SCROLL_LABEL}</b><span>#ScrollAudit</span></div>
               </div>
               <button className="scroll-download" type="button" onClick={() => { void submitResult(); void saveCard(); }}>
