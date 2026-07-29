@@ -3,6 +3,7 @@ import test from "node:test";
 import { spawn, type ChildProcess } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { PNG } from "pngjs";
+import jsQR from "jsqr";
 
 // Parity regression: the exported share-card PNG must be the DOM card.
 // For each locale, screenshot the DOM card node and capture the actual
@@ -32,7 +33,8 @@ const MAX_GLOBAL_RATIO = 0.015; // measured floor ~0.5% (en) from glyph metrics
 const MAX_REGION_RATIO = 0.3; // a missing element saturates its region
 const MAX_DIM_DRIFT_PX = 8;
 
-const REGION_SELECTORS = [".big", ".rankline", ".rk-emoji", ".arch", ".arch-subtitle", ".roast", ".chips", ".vsbar", ".flipline", ".challenge", ".brand"];
+const REGION_SELECTORS = [".big", ".rankline", ".rk-emoji", ".arch", ".arch-subtitle", ".roast", ".chips", ".vsbar", ".flipline", ".challenge", ".brand", ".qr"];
+const QR_EXPECTED = "http://neuralfin.ai";
 
 let server: ChildProcess | null = null;
 
@@ -208,6 +210,23 @@ test("exported PNG matches the DOM card across locales", async () => {
         globalRatio <= MAX_GLOBAL_RATIO,
         `${locale}: export drifted from DOM card — ${(globalRatio * 100).toFixed(2)}% of pixels differ (max ${MAX_GLOBAL_RATIO * 100}%)`,
       );
+
+      // The QR is a scan target: decode it from the EXPORTED PNG so a
+      // rendering regression can never silently break scannability.
+      const qrRect = regions[".qr"];
+      assert.ok(qrRect, `${locale}: QR missing from the card DOM`);
+      {
+        const pad = 6;
+        const x0 = Math.max(0, Math.floor(qrRect.x0 * SCALE) - pad);
+        const y0 = Math.max(0, Math.floor(qrRect.y0 * SCALE) - pad);
+        const x1 = Math.min(exported.width, Math.ceil(qrRect.x1 * SCALE) + pad);
+        const y1 = Math.min(exported.height, Math.ceil(qrRect.y1 * SCALE) + pad);
+        const region = new PNG({ width: x1 - x0, height: y1 - y0 });
+        PNG.bitblt(exported, region, x0, y0, x1 - x0, y1 - y0, 0, 0);
+        const decoded = jsQR(new Uint8ClampedArray(region.data), region.width, region.height);
+        assert.ok(decoded, `${locale}: exported QR did not decode`);
+        assert.equal(decoded.data, QR_EXPECTED, `${locale}: exported QR decodes to wrong target`);
+      }
 
       for (const [selector, rect] of Object.entries(regions)) {
         // css rect → device px (SCALE) → downsampled coords (/2)

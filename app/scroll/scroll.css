@@ -808,6 +808,8 @@
   background: var(--mint);
 }
 
+.scroll-card .cfoot,
+.scroll-card .qr,
 .scroll-card .cb,
 .scroll-card .big,
 .scroll-card .rankline,
@@ -964,11 +966,28 @@
   overflow-wrap: anywhere;
 }
 
-.scroll-card .challenge {
+.scroll-card .cfoot {
   margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.scroll-card .challenge {
   color: var(--white);
   font-size: 13px;
   font-weight: 600;
+}
+
+/* White tile keeps the QR scannable on the dark card. */
+.scroll-card .qr {
+  width: 62px;
+  height: 62px;
+  flex-shrink: 0;
+  padding: 4px;
+  border-radius: 10px;
+  background: #fff;
 }
 
 .scroll-card .brand {
