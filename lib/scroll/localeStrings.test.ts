@@ -1,27 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CARD_FONT_FAMILIES, CARD_MONO_FAMILIES } from "./cardFont";
 import { getArchetypeCopy, getScanStageMessage, getShareCaptionVariant } from "./personality";
 import { getEducationOutput, getTrackName } from "./education";
 import { getRankFrame } from "./rank";
 
-// True rasterization isn't possible in this test environment (no canvas
-// backend), so the missing-glyph guard is enforced at the two layers we
-// control: the canvas font stack must name explicitly Thai- and
-// Han-capable families (per-glyph fallback then resolves them), and every
-// sampled card string must actually be in its native script rather than
+// The share card now exports the real DOM node, so glyph rendering is the
+// browser's (covered by the parity test across locales). These tests keep
+// the underlying guarantee: card strings are native-script content, never
 // transliteration or replacement characters.
-
-test("share-card font stack names Thai- and Han-capable families", () => {
-  for (const family of ['"Noto Sans Thai"', "Thonburi", '"Leelawadee UI"']) {
-    assert.ok(CARD_FONT_FAMILIES.includes(family), `missing Thai-capable family ${family}`);
-  }
-  for (const family of ['"PingFang TC"', '"PingFang SC"', '"Noto Sans TC"', '"Noto Sans SC"']) {
-    assert.ok(CARD_FONT_FAMILIES.includes(family), `missing Han-capable family ${family}`);
-  }
-  assert.match(CARD_FONT_FAMILIES, /sans-serif$/);
-  assert.match(CARD_MONO_FAMILIES, /monospace$/);
-});
 
 test("Thai card strings are native Thai script with no replacement glyphs", () => {
   const thai = /[ก-๛]/;
