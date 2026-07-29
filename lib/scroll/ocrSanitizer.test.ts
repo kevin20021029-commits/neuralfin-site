@@ -408,3 +408,21 @@ test("app row only does not promote an app duration to headline", () => {
     { name: "Instagram", minutes: 45 },
   ]);
 });
+
+test("app-row hour component survives misread hour-unit letters", () => {
+  // Requested fixture assertion: the clean form
+  const clean = parseScreenTimeText("Daily Average 3h 20m\nWhatsApp 1 h 21 m", 90);
+  assert.deepEqual(clean.apps, [{ name: "WhatsApp", minutes: 81 }]);
+
+  // The real-device failure: "h" misread as another letter dropped the hour
+  // and reported bare 21m. The composite shape must keep the hour.
+  for (const row of ["WhatsApp 1 n 21 m", "WhatsApp 1 b 21 m", "WhatsApp 1 ท 21 ท"]) {
+    const parsed = parseScreenTimeText(`Daily Average 3h 20m\n${row}`, 90);
+    assert.deepEqual(parsed.apps, [{ name: "WhatsApp", minutes: 81 }], row);
+  }
+
+  // "m" stays excluded from the hour slot: two bare minute tokens must not
+  // compose into a fake hour+minute reading
+  const bareMinutes = parseScreenTimeText("Daily Average 5 m 30 m", 90);
+  assert.notEqual(Math.round((bareMinutes.hours ?? 0) * 60), 330);
+});

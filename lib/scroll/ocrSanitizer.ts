@@ -286,11 +286,13 @@ export function findDurations(input: string, maxHours = 24): DurationMatch[] {
     }
   }
 
-  // tesseract's mixed eng+chi_tra+tha model misreads the latin unit letters
-  // h/m as Thai \u0e17 (observed on real Samsung uploads). Accept the composite
-  // "N [h\u0e17] M [m\u0e17]" shape; the lookaheads keep genuine Thai words from
-  // matching.
-  const confusedRe = /(\d{1,2})\s*[h\u0E17]\s*(\d{1,3})\s*[m\u0E17](?![a-z0-9\u0E00-\u0E7F])/gi;
+  // OCR misreads unit letters: the mixed eng+chi_tra+tha model turns h/m
+  // into Thai \u0e17, and lower-quality captures turn "h" into other single
+  // letters (n, b — observed as "1 n 21 m" reading as bare 21m and dropping
+  // the hour). The composite "N <letter> M <minute-unit>" shape is strongly
+  // h-then-m, so any single letter except m is accepted in the hour slot;
+  // the minute slot stays strict and magnitude guards still apply.
+  const confusedRe = /(\d{1,2})\s*[a-ln-z\u0E17]\s*(\d{1,3})\s*(?:min|m|\u0E17)(?![a-z0-9\u0E00-\u0E7F])/gi;
   for (let m = confusedRe.exec(text); m; m = confusedRe.exec(text)) {
     const start = m.index;
     const end = m.index + m[0].length;

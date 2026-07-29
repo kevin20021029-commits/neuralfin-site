@@ -8,7 +8,6 @@ import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, detectS
 import { FLIP_MINUTES_PER_DAY, LADDER_TRACKS, getEducationOutput, getTrackName } from "@/lib/scroll/education";
 import { getArchetypeCopy, getScanStageMessage, getShareCaptionVariant, getTapeNote, type ScanStage } from "@/lib/scroll/personality";
 import { getRankFrame } from "@/lib/scroll/rank";
-import { CARD_FONT_FAMILIES, CARD_MONO_FAMILIES } from "@/lib/scroll/cardFont";
 
 const HRS_YR = 365;
 const PUBLIC_HOME_URL = "https://www.neuralfin.ai";
@@ -457,6 +456,7 @@ export function ScrollCalculator() {
   const [appRoasts, setAppRoasts] = useState<AppRoast[]>([]);
   const [tapeRows, setTapeRows] = useState<TapeRow[]>(demoTape);
   const fileRef = useRef<HTMLInputElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const hoursBlockRef = useRef<HTMLDivElement>(null);
   const hoursSliderRef = useRef<HTMLInputElement>(null);
   const uploadPreviewRef = useRef<string | null>(null);
@@ -674,129 +674,39 @@ export function ScrollCalculator() {
     }
   }
 
-  function drawCard() {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1080;
-    canvas.height = 1740;
-    const c = canvas.getContext("2d");
-    if (!c) return canvas;
-    const ctx = c;
-    const W = canvas.width;
-    const H = canvas.height;
-    const PAD = 84;
-    function fillFitText(text: string, x: number, y: number, maxWidth: number, size: number, weight = 800) {
-      let fontSize = size;
-      do {
-        ctx.font = `${weight} ${fontSize}px ${CARD_FONT_FAMILIES}`;
-        if (ctx.measureText(text).width <= maxWidth || fontSize <= 24) break;
-        fontSize -= 2;
-      } while (fontSize > 24);
-      ctx.fillText(text, x, y);
-    }
-    const bg = c.createLinearGradient(0, 0, W, H);
-    bg.addColorStop(0, "#06100d");
-    bg.addColorStop(0.55, "#0a1713");
-    bg.addColorStop(1, "#07120f");
-    c.fillStyle = bg;
-    c.fillRect(0, 0, W, H);
-    c.fillStyle = "rgba(255,92,108,.22)";
-    c.beginPath();
-    c.arc(W - 80, 80, 360, 0, Math.PI * 2);
-    c.fill();
-    c.fillStyle = "rgba(0,230,138,.20)";
-    c.beginPath();
-    c.arc(80, H - 100, 390, 0, Math.PI * 2);
-    c.fill();
-    c.fillStyle = "#f7fbf7";
-    c.font = `800 34px ${CARD_FONT_FAMILIES}`;
-    c.fillText(t.cardtitle.toUpperCase(), PAD, 200);
-    if (verified) {
-      c.fillStyle = "#EDDBA8";
-      c.font = `700 28px ${CARD_FONT_FAMILIES}`;
-      c.fillText(`✓ ${t.vbadge}`, W - 390, 200);
-    }
-    c.fillStyle = "#FF5C6C";
-    c.font = `800 170px ${CARD_MONO_FAMILIES}`;
-    c.fillText(`-${fmt.format(yearly)}h`, PAD - 6, 350);
-    c.fillStyle = "rgba(247,251,247,.68)";
-    c.font = `600 34px ${CARD_FONT_FAMILIES}`;
-    c.fillText(t.pace, PAD, 400);
-    c.fillStyle = "#EDDBA8";
-    c.font = `700 46px ${CARD_FONT_FAMILIES}`;
-    c.fillText(rankLine, PAD, 470);
-    c.strokeStyle = "#FF5C6C";
-    c.lineWidth = 3;
-    c.strokeRect(PAD, 514, Math.min(720, arch.length * 24 + 64), 62);
-    c.fillStyle = "#FF5C6C";
-    c.font = `900 34px ${CARD_FONT_FAMILIES}`;
-    c.fillText(arch.toUpperCase(), PAD + 22, 556);
-    c.fillStyle = "rgba(247,251,247,.58)";
-    c.font = `600 28px ${CARD_FONT_FAMILIES}`;
-    c.fillText(archSubtitle, PAD, 614);
-    c.fillStyle = "#f7fbf7";
-    c.font = `600 40px ${CARD_FONT_FAMILIES}`;
-    c.fillText(`${fun.title} ${fun.num}.`, PAD, 668);
-    c.fillStyle = "rgba(247,251,247,.68)";
-    c.font = `italic 36px ${CARD_FONT_FAMILIES}`;
-    c.fillText(fun.sub, PAD, 724);
-    if (hasAppRoasts) {
-      c.font = `600 34px ${CARD_FONT_FAMILIES}`;
-      c.fillText(`${t.mostShorted} ${appRoastText}`, PAD, 788);
-    }
-    c.font = `600 32px ${CARD_FONT_FAMILIES}`;
-    c.fillStyle = "#f7fbf7";
-    c.fillText(`-${workWeeks} ${t.wkwks}`, PAD, 850);
-    c.fillText(`${diff >= 0 ? "+" : ""}${diff}% ${t.vsmkt}`, PAD + 360, 850);
-    if (scrollCardStat) {
-      c.fillStyle = "rgba(247,251,247,.68)";
-      fillFitText(scrollCardStat, PAD, 902, 720, 28);
-    }
-    c.strokeStyle = "rgba(255,255,255,.12)";
-    c.setLineDash([12, 12]);
-    c.beginPath();
-    c.moveTo(PAD, 960);
-    c.lineTo(W - PAD, 960);
-    c.stroke();
-    c.setLineDash([]);
-    c.fillStyle = "rgba(247,251,247,.68)";
-    c.font = `400 38px ${CARD_FONT_FAMILIES}`;
-    c.fillText(t.cardflip, PAD, 1060);
-    c.fillStyle = "#00e68a";
-    fillFitText(education.cardLine, PAD, 1124, W - PAD * 2, 34);
-    c.fillStyle = "#f7fbf7";
-    c.font = `700 42px ${CARD_FONT_FAMILIES}`;
-    c.fillText(t.challenge, PAD, H - 260);
-    c.fillText(t.scan, PAD, H - 202);
-    c.font = `700 36px ${CARD_FONT_FAMILIES}`;
-    c.fillText(PUBLIC_SCROLL_LABEL, PAD, H - 92);
-    c.fillStyle = "rgba(247,251,247,.68)";
-    c.fillText("#ScrollAudit", W - 310, H - 92);
-    return canvas;
-  }
-
   async function saveCard() {
-    const canvas = drawCard();
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-      const image = new File([blob], "my-scroll-pnl.png", { type: "image/png" });
-      const text = getShareCaptionVariant(lang, `-${fmt.format(yearly)}h`, rankLine);
-      const shareData = { files: [image], title: "My Scroll P&L", text };
-      if (navigator.canShare?.(shareData)) {
-        try {
-          await navigator.share(shareData);
-          return;
-        } catch (error) {
-          if (error instanceof DOMException && error.name === "AbortError") return;
-        }
+    const node = cardRef.current;
+    if (!node) return;
+    // Export the real DOM card node — parity with what the user sees is
+    // true by construction. ~1080px wide at 320px card width.
+    const { toBlob } = await import("html-to-image");
+    // style.margin override: the clone otherwise inherits the computed
+    // "margin: 0 auto" centering as a concrete left margin and renders the
+    // card offset out of its own canvas.
+    const blob = await toBlob(node, {
+      pixelRatio: 1080 / node.offsetWidth,
+      cacheBust: true,
+      style: { margin: "0" },
+    }).catch(() => null);
+    if (!blob) return;
+    const image = new File([blob], "my-scroll-pnl.png", { type: "image/png" });
+    const text = getShareCaptionVariant(lang, `-${fmt.format(yearly)}h`, rankLine);
+    const shareData = { files: [image], title: "My Scroll P&L", text };
+    if (navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
       }
-      const href = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = href;
-      a.download = "my-scroll-pnl.png";
-      a.click();
-      URL.revokeObjectURL(href);
-      await navigator.clipboard?.writeText(text).catch(() => undefined);
-    }, "image/png");
+    }
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = "my-scroll-pnl.png";
+    a.click();
+    URL.revokeObjectURL(href);
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
   }
 
   return (
@@ -960,13 +870,13 @@ export function ScrollCalculator() {
             ) : null}
 
             <section className="scroll-inline-card" aria-label="Your Scroll P&L card">
-              <div className={`scroll-card${verified ? " verified" : ""}`}>
+              <div className={`scroll-card${verified ? " verified" : ""}`} ref={cardRef}>
                 <div className="glow r" /><div className="glow g" />
                 {verified ? <div className="vbadge">✓ {t.vbadge}</div> : null}
                 <div className="cb">{t.cardtitle}</div>
                 <div className="big mono">-{fmt.format(yearly)}h</div>
                 <div className="pace">{t.pace}</div>
-                <div className="rankline">{rankLine} {percentile < 50 ? "" : Math.max(1, 100 - percentile) <= 25 ? "💀" : "📉"}</div>
+                <div className="rankline">{rankLine} <span className="rk-emoji">{percentile < 50 ? "" : Math.max(1, 100 - percentile) <= 25 ? "💀" : "📉"}</span></div>
                 <div><span className="arch">{arch}</span></div>
                 <div className="arch-subtitle">{archSubtitle}</div>
                 <div className="roast">{fun.title} {fun.num}. <i>{fun.sub}</i></div>

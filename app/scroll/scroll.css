@@ -882,6 +882,9 @@
   margin-top: 8px;
   color: var(--white);
   font-size: 13px;
+  /* Long app lists wrap rather than clip; the PNG export renders this same
+     node, so it inherits the behaviour. */
+  overflow-wrap: anywhere;
 }
 
 .scroll-card .roast i {
