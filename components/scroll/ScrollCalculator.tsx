@@ -975,7 +975,10 @@ export function ScrollCalculator() {
                 </div>
                 <div className="div" />
                 <div className="flipline"><span>{t.cardflip}</span><b>{education.cardLine}</b></div>
-                <div className="challenge">{t.challenge}<br />{t.scan}</div>
+                <div className="cfoot">
+                  <div className="challenge">{t.challenge}<br />{t.scan}</div>
+                  <img className="qr" src="/assets/scroll-qr.png" alt="QR · neuralfin.ai" />
+                </div>
                 <div className="brand"><b><img src="/icon.png" alt="" />{PUBLIC_SCROLL_LABEL}</b><span>#ScrollAudit</span></div>
               </div>
               <button className="scroll-download" type="button" onClick={() => { void submitResult(); void saveCard(); }}>
