@@ -1,4 +1,4 @@
-import { findDurations } from "./ocrSanitizer";
+import { findDurations, looksLikeTotalLabelLine } from "./ocrSanitizer";
 
 // Two-pass OCR. The full eng+chi_tra+tha worker is needed for category
 // names and labels, but it is exactly why latin h/m unit letters misread as
@@ -133,7 +133,8 @@ export async function recognizeScreenTime(image: TesseractLike): Promise<Recogni
 
     type Target =
       | { index: number; kind: "whole"; rectangle: ReturnType<typeof paddedRectangle> }
-      | { index: number; kind: "tail"; rectangle: ReturnType<typeof paddedRectangle>; namePrefix: string };
+      | { index: number; kind: "tail"; rectangle: ReturnType<typeof paddedRectangle>; namePrefix: string }
+      | { index: number; kind: "anchor-region"; rectangle: ReturnType<typeof paddedRectangle> };
 
     const targets: Target[] = [];
     lines.forEach((line, index) => {
@@ -152,7 +153,45 @@ export async function recognizeScreenTime(image: TesseractLike): Promise<Recogni
       });
     });
 
+    // Anchor-region recovery: big headline numerals next to charts are
+    // sometimes missed by the full pass entirely (observed: "Screen time
+    // today O" with the 3h26m numeral absent). For a total/average label
+    // line with no parseable value on it or on the next line, re-scan the
+    // numeral zone directly below the label with the restricted worker.
+    const maxX = Math.max(...lines.map((line) => line.bbox.x1));
+    const maxY = Math.max(...lines.map((line) => line.bbox.y1));
+    lines.forEach((line, index) => {
+      if (!looksLikeTotalLabelLine(line.text)) return;
+      const hasValue = (text: string) => findDurations(text, 168).some((d) => d.hours !== null);
+      if (hasValue(line.text)) return;
+      // Only a value the parser could actually ANCHOR suppresses recovery:
+      // a leading (prefix-clean) duration on the next line. A legend or app
+      // row below the label ("© Instagram 1h38m") is not the total.
+      const next = lines[index + 1];
+      if (next) {
+        const first = findDurations(next.text, 168).find((d) => d.hours !== null);
+        if (first && next.text.slice(0, first.index).replace(/[^\p{L}\p{N}]/gu, "").length <= 1) return;
+      }
+      // Chart glyphs OCR'd into the label line (a donut ring reads as "O")
+      // inflate the line bbox to chart height; measure the label from its
+      // real words only so the region starts right under the text.
+      const labelWords = line.words.filter((word) => word.text.length >= 2);
+      const labelBox = labelWords.length > 0 ? unionBbox(labelWords) : line.bbox;
+      const labelHeight = labelBox.y1 - labelBox.y0;
+      targets.push({
+        index,
+        kind: "anchor-region",
+        rectangle: {
+          left: Math.max(0, labelBox.x0 - RESTRICTED_PAD_PX),
+          top: labelBox.y1,
+          width: Math.min(maxX - labelBox.x0, Math.max((labelBox.x1 - labelBox.x0) * 2.5, 360)),
+          height: Math.min(Math.max(0, maxY - labelBox.y1), Math.ceil(labelHeight * 3.5)),
+        },
+      });
+    });
+
     const replacements = new Map<number, string>();
+    const insertions = new Map<number, string>();
     let restrictedPassFailed = false;
 
     if (targets.length > 0) {
@@ -164,15 +203,22 @@ export async function recognizeScreenTime(image: TesseractLike): Promise<Recogni
           tessedit_pageseg_mode: mod.PSM.SINGLE_LINE,
         });
         for (const target of targets) {
-          const restricted = await restrictedWorker.recognize(image, { rectangle: target.rectangle });
-          const accepted = acceptRestrictedLine(restricted.data.text);
-          if (!accepted) continue;
-          replacements.set(target.index, target.kind === "whole" ? accepted : `${target.namePrefix} ${accepted}`);
+          if (target.rectangle.width <= 8 || target.rectangle.height <= 8) continue;
+          try {
+            const restricted = await restrictedWorker.recognize(image, { rectangle: target.rectangle });
+            const accepted = acceptRestrictedLine(restricted.data.text);
+            if (!accepted) continue;
+            if (target.kind === "anchor-region") insertions.set(target.index, accepted);
+            else replacements.set(target.index, target.kind === "whole" ? accepted : `${target.namePrefix} ${accepted}`);
+          } catch {
+            // one bad region must not kill the other targets
+          }
         }
       } catch {
         // Restricted pass failed entirely — keep the multilingual text; the
         // parser's confusion-form fallback is the safety net.
         replacements.clear();
+        insertions.clear();
         restrictedPassFailed = true;
       } finally {
         if (restrictedWorker) await restrictedWorker.terminate();
@@ -180,7 +226,13 @@ export async function recognizeScreenTime(image: TesseractLike): Promise<Recogni
     }
 
     return {
-      text: lines.map((line, index) => replacements.get(index) ?? line.text).join("\n"),
+      text: lines
+        .flatMap((line, index) => {
+          const rendered = replacements.get(index) ?? line.text;
+          const inserted = insertions.get(index);
+          return inserted ? [rendered, inserted] : [rendered];
+        })
+        .join("\n"),
       confidence,
       restrictedPassFailed,
     };

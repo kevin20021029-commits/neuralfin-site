@@ -628,3 +628,40 @@ test("spaced zh unit tokens resolve as durations", () => {
   assert.equal(Math.round((parseScreenTimeText("每日平均 4 小 時 57 分 鐘", 90).hours ?? 0) * 60), 297);
   assert.equal(Math.round((parseScreenTimeText("每日平均 4 小 时 57 分 钟", 90).hours ?? 0) * 60), 297);
 });
+
+// Fixture #9 — verbatim OCR of the Samsung "Set goal" screen (donut chart,
+// legend, category tile grid with a WRAPPED joined name, App-timer rows).
+// The big 3h26m numeral is absent from the full OCR pass (donut reads as
+// "O") — the pipeline's anchor-region pass recovers it (see e2e); at
+// parser level this asserts everything else survives.
+const SAMSUNG_GOAL_OCR_FIXTURE =
+  "Set goal\nScreen time today O\n© Instagram 1h38m\n@ WhatsApp 31m\neo X 18m\nMost used app categories\nSocial Productivity and Maps and travel\nfinance\n3h6m 13m 1m\nApp timers\nIf you're using certain apps more than you'd like, set a timer to help\nmanage your usage.\nInstagram .\nPo Set timer\nSocial ,\nEe Set timer";
+
+test("Samsung goal screen: wrapped joined tile name pairs, timers never roast", () => {
+  const parsed = parseScreenTimeText(SAMSUNG_GOAL_OCR_FIXTURE, 88);
+
+  // "Social | Productivity and | Maps and travel" + wrapped "finance":
+  // productivity⊕finance merge into ONE excluded unit → 3 units ↔ 3 values
+  assert.ok(!parsed.flags.includes("tile_count_mismatch"));
+  assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 186); // Social 3h6m
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 186); // scroll-only fallback
+  assert.deepEqual(parsed.apps, [
+    { name: "Instagram", minutes: 98 }, // legend usage — not the 2h2m timer
+    { name: "WhatsApp", minutes: 31 },
+  ]);
+});
+
+test("recovered headline line anchors the goal screen day total", () => {
+  // The anchor-region pass splices the recovered numeral after its label.
+  const withRecovery = SAMSUNG_GOAL_OCR_FIXTURE.replace("Screen time today O", "Screen time today O\n3h26m");
+  const parsed = parseScreenTimeText(withRecovery, 88);
+  assert.equal(parsed.source, "day-total");
+  assert.equal(Math.round((parsed.totalHours ?? 0) * 60), 206);
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 186); // slider = scroll
+  assert.deepEqual(parsed.flags, []);
+});
+
+test("Set-timer rows are never app rows", () => {
+  const parsed = parseScreenTimeText("Daily Average 3h 20m\nInstagram 2 h 2 m Set timer", 90);
+  assert.deepEqual(parsed.apps, []);
+});

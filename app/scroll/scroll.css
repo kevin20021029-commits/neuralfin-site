@@ -769,6 +769,9 @@
   position: relative;
   width: min(320px, 100%);
   aspect-ratio: 9 / 14.5;
+  /* The ratio is the preferred shape, not a clip: long content (wrapped
+     roast lines + QR row) must grow the card, never cut off the footer. */
+  min-height: fit-content;
   overflow: hidden;
   display: flex;
   flex-direction: column;
