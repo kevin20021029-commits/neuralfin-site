@@ -11,23 +11,22 @@ export type RankLang = ScrollLocale;
 // number and its polarity, and the aspirational green tape row (low hours)
 // carried the worst-looking figure on the board ("Top 85%"). Under this
 // convention low hours simply read low.
-// lastReviewed: 2026-07-30
+// lastReviewed: 2026-07-30 (en); zh REVIEWED 2026-07-30
 const RANK_COPY = {
   en: {
     title: (percent: number, regionName: string) => `You scroll more than ${percent}% · ${regionName}`,
     light: "nice — your feed doesn't own you 🌱",
     heavy: "that's a heavy position to carry",
   },
-  // DRAFT — native review required
+  // REVIEWED-BY-MIRROR (source: reviewed zh-Hans)
   "zh-Hant": {
     title: (percent: number, regionName: string) => `你滑得比 ${percent}% 的人多 · ${regionName}`,
-    light: "不錯——feed 還沒收購你 🌱",
+    light: "挺好，你沒被信息流「控制」",
     heavy: "這個倉位有點重",
   },
-  // DRAFT — native review required
   "zh-Hans": {
     title: (percent: number, regionName: string) => `你滑得比 ${percent}% 的人多 · ${regionName}`,
-    light: "不错——feed 还没收购你 🌱",
+    light: "挺好，你没被信息流“控制”",
     heavy: "这个仓位有点重",
   },
   // DRAFT — native review required

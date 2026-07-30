@@ -65,7 +65,9 @@ const demoTape: TapeRow[] = [
   { region: "hk", hours: 11 },
 ];
 
-const str = {
+// Exported for locale tests: slot integrity and the zh-Hant/zh-Hans
+// character-mirror contract are asserted against this table.
+export const str = {
   en: {
     pill: "Built for the scroll generation",
     h1a: "Your scroll has a",
@@ -157,197 +159,198 @@ const str = {
       return { title: "Flying HK → New York", sub: "Without the air miles.", num: `×${Math.round(yr / 16)}` };
     },
   },
+  // REVIEWED-BY-MIRROR — character conversion (OpenCC-style s2t) of the
+  // reviewed zh-Hans set below; vocabulary is NOT re-chosen, only script.
+  // Source: reviewed zh-Hans (internal team, 2026-07-30). This replaces the
+  // previous Cantonese-register Hant copy — see VOICE.md.
+  // EXCEPTION: f1/f2/f3 below are converted legal text and carry
+  // NEEDS-COMPLIANCE-APPROVAL until signed off per script.
   "zh-Hant": {
     pill: "為滑屏世代而生",
     h1a: "你的滑屏也有",
-    sub: "拖到你的每日螢幕時間。看看虧了多少、排第幾名、發卡挑戰朋友，再到 App 把它翻綠。",
+    sub: "上傳你的每日屏幕時間。看看虧了多少、排第幾名、發卡挑戰朋友，再到 App 把它翻綠。",
     steps: ["上傳", "看看虧損", "發出去"],
-    slider: "你的每日螢幕時間",
-    // DRAFT — native review required
-    sliderSub: "計算你的滑屏：社交、影片、遊戲",
+    slider: "你的每日屏幕時間",
+    sliderSub: "統計你的屏幕使用時間：社交、視頻、遊戲",
     hday: "小時／天",
     axis: ["30分鐘", "6小時", "12小時"],
     regions: { ww: "全球", hk: "香港", sg: "新加坡", th: "泰國" },
     scrollpos: "滑屏持倉",
-    openloss: "未平虧損",
+    openloss: "浮虧",
     verified: "已驗證",
-    hrsyr: "每年時數",
+    hrsyr: "小時/年",
     pace: "照這個節奏",
     learnpos: "學習持倉",
     compounding: "複利中",
     feedcould: "你的 feed 本來可以教你的",
     lessonYield: (hours: string, lessons: number, phrase: string, track: string) =>
-      `你每天 ${hours} 小時 = ${lessons} 節微課藏在滑屏裡。你可在${phrase}完成${track}。`,
+      `你每天 ${hours} 小時 = ${lessons} 節微課藏在滑屏裡。${phrase}就能學完${track}。`,
     lessonZero: "第零課，免費：",
     hyr: "小時／年",
+    // NOTE: the `when` column is no longer rendered — rung captions derive
+    // from getLadderSchedule()/formatRungLabel.
     ladder: [
-      ["第1週", "ETF 到底是什麼", "以及為什麼人人都在講"],
-      ["第1個月", "看懂資產負債表不再冒汗", "知道數字藏在哪裡"],
-      ["第6個月", "建立你第一個自選股觀點", "自己的判斷，不是群組貼士"],
+      ["第一週", "ETF到底是個啥？", "為什麼最近人人都在聊它"],
+      ["第一個月", "教你輕鬆看懂資產負債表", "那些「貓膩」都藏在哪兒"],
+      ["第六個月", "搭建你自己的第一份「自選股＋投資邏輯」", "有理有據的真觀點，告別群聊小道消息"],
     ],
     milestone: (date: string) => [
-      date + "前",
-      "≈ 一門大學投資入門課",
-      "全由你的 feed 贊助",
+      `到${date}`,
+      "你等於免費蹭完了一門大學投資入門課",
+      "學費？零，全靠平時刷到的內容攢出來的",
     ],
-    dropTitle: "上傳你的螢幕時間截圖",
-    dropSub: "只在你的裝置上讀取 · 永不上傳",
-    dropHint: "iPhone：設定 → 螢幕使用時間 · Android：數位健康",
-    // DRAFT — native review required
+    dropTitle: "上傳你的屏幕使用時間截圖",
+    dropSub: "僅在本機讀取 · 絕不上傳",
+    dropHint: "iPhone：設置 → 屏幕使用時間 · Android：數字健康",
     dropReceived: "✓ 已收到截圖",
-    // DRAFT — native review required
     dropRead: (duration: string) => `✓ 已讀取：${duration}`,
-    // DRAFT — native review required
-    dropReadScrollDay: (scroll: string, total: string) => `${scroll}滑屏 / ${total}今日總時數`,
-    // DRAFT — native review required
-    dropReadScrollWeek: (scroll: string, total: string) => `${scroll}滑屏 / ${total}本週總時長`,
-    // DRAFT — native review required
+    dropReadScrollDay: (scroll: string, total: string) => `滑屏${scroll} / 今日${total}`,
+    dropReadScrollWeek: (scroll: string, total: string) => `滑屏${scroll} / 本週${total}`,
     dropReadScroll: (scroll: string) => `${scroll}滑屏時間`,
-    // DRAFT — native review required
     dropCouldnt: "讀不到這張截圖",
-    // DRAFT — native review required
-    dropReplace: "改用另一張截圖",
+    dropReplace: "換一張截圖",
     dropDone: "我們讀到 {hours} 小時／天——看起來對嗎？",
-    // DRAFT — native review required
-    dropDay: (duration: string) => `這是今天的數字（${duration}）——已設定。若要真實平均，請上傳週視圖。`,
-    dropApps: "讀不到你的時數——請在下方手動設定。",
-    // DRAFT — native review required
-    dropPartialChip: "\u2713 已找到你的 App 清單",
-    // DRAFT — native review required
-    dropAppsOnly: "找到你的 App 清單——但沒有總時數。捲到螢幕使用時間最上方，截圖每日平均。",
-    // DRAFT — native review required
-    dropCategoriesOnly: "找到你的類別清單——但沒有總時數。捲到螢幕使用時間最上方，截圖每日平均。",
-    // DRAFT — native review required
-    longPressSave: "長按圖片即可儲存",
-    // DRAFT — native review required
+    dropDay: (duration: string) => `這是今天的數字（${duration}）——已設置。要看真實平均值，請上傳週視圖。`,
+    dropApps: "讀不到你的時長——請在下面手動設置。",
+    dropPartialChip: "\u2713 已找到你的 App 列表",
+    dropAppsOnly: "找到了你的App使用列表，但沒找到總時長。請滑到「屏幕使用時間」頁面頂部，截圖那個「日均使用時長」。",
+    dropCategoriesOnly: "找到了你的分類使用情況，但沒找到總時長。請滑到「屏幕使用時間」頁面頂部，截圖那個「日均使用時長」。",
+    // Standard WeChat save pattern.
+    longPressSave: "長按保存圖片",
     overlayClose: "關閉",
-    dropFail: "讀不到你的時數——請在下方手動設定。",
+    dropFail: "讀不到你的時長——請在下面手動設置。",
     orManual: "或者手動拖一下",
-    priv: "截圖只在你的裝置上讀取，永不上傳。App 名稱除非你分享，否則保密。",
+    priv: "截圖僅在你的設備上讀取，絕不上傳。App名稱也不會外洩，除非你主動分享。",
     stand: "市場排行榜",
-    standsub: "以「翻轉率」排名——哪個市場最會把滑屏變本事，誰就贏。",
-    standnote: "目前為示範數據。正式版：由同一組匿名統計（僅時數＋市場）計算。上線初期平均值引用公開統計，社群數據足夠後切換。",
+    standsub: "按「翻轉率」排名——誰把滑屏變成本事，誰就贏。",
+    standnote: "演示數據。正式版將基於相同的匿名匯總數據（僅統計使用時長和市場）計算得出。上線初期的平均值先參考已公開的統計數據，等社區數據積累到一定規模後，再改用真實數據。",
     avgday: "平均／天",
     flipped: "已翻轉",
     youare: "你的市場",
-    tape: "即時行情",
-    tapesub: "最新滑屏紀錄，逐筆入市。全部匿名。",
-    tapenote: "目前為示範數據。正式版：上線初期以公開的螢幕時間統計（附來源）作基準；社群數據累積後切換為真實行情。只儲存時數＋市場，絕無任何識別資料。",
+    tape: "實時行情",
+    tapesub: "最近刷過的內容，按市場實時計價。全程匿名",
+    tapenote: "當前顯示的是演示數據。正式上線後：上線初期的排名先參照已公開的屏幕使用時間統計（會註明來源），等真實用戶數據積累到一定量後，「社區實時行情」功能將自動開啟。系統只記錄使用時長和所選市場，不會存儲任何能識別身份的信息。",
+    // NEEDS-COMPLIANCE-APPROVAL — converted legal text (s2t of the zh-Hans
+    // f1/f2/f3). Converted copy requires its own compliance sign-off per
+    // script; do not ship these three without it. See CLAUDE.md Hard Rule 3.
     f1: "交易服務由德林證券（香港）有限公司提供，該公司為香港證監會持牌法團。",
-    f2: "截圖分析只在你的瀏覽器本機進行；圖片與 App 名稱不會上傳或儲存。社群統計為匿名（僅時數與市場）。",
+    f2: "截圖分析只在你的瀏覽器本地進行；圖片與 App 名稱不會上傳或存儲。社區統計為匿名（僅時長與市場）。",
     f3: "本頁為市場推廣示意，僅供教育與娛樂。不構成投資建議、預測或回報推算。",
     vbadge: "已驗證滑屏",
     cardtitle: (year: number) => `我的滑屏損益 · ${year}`,
     cardflip: `每天翻轉 ${FLIP_MINUTES_PER_DAY} 分鐘 →`,
-    // DRAFT — native review required (privacy-adjacent: formal register)
-    shareOptIn: "將我的結果加入匿名市場統計（僅時數與市場）",
-    // DRAFT — native review required (blocking error state: formal register)
-    saveFailed: "無法儲存圖片。請再試一次，或直接為此卡片截圖。",
+    // Privacy-adjacent: formal register, no slang (VOICE.md).
+    shareOptIn: "將我的結果加入匿名市場統計（僅時長與市場）",
+    // Blocking error state: formal register, no slang (VOICE.md).
+    saveFailed: "無法保存圖片。請重試，或直接為此卡片截圖。",
     challenge: "你虧得比我多嗎？",
     scan: "掃你的 ↓",
     savebtn: "下載圖片 📸",
-    sticky1: "真正翻轉你的損益",
+    sticky1: "這一次，真正扭虧為盈",
     sticky2: "每天 10 分鐘，就在 NeuralFin App",
     anon: "匿名",
-    bench: "對比公開螢幕時間統計",
+    bench: "對比公開屏幕時間基準",
     mostShorted: "最重倉：",
     wkwks: "個工作週",
     vsmkt: "對比市場平均",
     youAt: (hours: string) => `你 · ${hours}小時`,
-    // DRAFT — native review required
     scrollChip: (scroll: string, total: string) => `${total}中有${scroll}是滑屏`,
     fun: (yr: number) => {
       if (yr < 500) return { title: "看完全部《星球大戰》", sub: "...連前傳都看了。", num: `×${Math.round(yr / 25)}` };
-      if (yr < 1200) return { title: "完整看完《鐵達尼號》", sub: "船每次都沉。", num: `×${Math.round(yr / 3.23)}` };
-      return { title: "香港飛紐約", sub: "里數一分都沒有。", num: `×${Math.round(yr / 16)}` };
+      if (yr < 1200) return { title: "等於看了《泰坦尼克號》", sub: "每次船都照樣沉", num: `×${Math.round(yr / 3.23)}遍` };
+      return { title: "相當於飛了香港→紐約", sub: "但一里「飛行里程」都沒攢到。", num: `×${Math.round(yr / 16)}趟` };
     },
   },
-  // DRAFT — native review required (every zh-Hans string below, converted
-  // from zh-Hant with mainland/SG vocabulary adjustments)
+  // REVIEWED — native review complete (reviewer: internal team, 2026-07-30).
+  // zh-Hans is the reviewed source of truth for both Chinese scripts;
+  // zh-Hant above is a character-conversion mirror of this set.
   "zh-Hans": {
     pill: "为滑屏世代而生",
     h1a: "你的滑屏也有",
-    sub: "拖到你的每日屏幕时间。看看亏了多少、排第几名、发卡挑战朋友，再到 App 把它翻绿。",
+    sub: "上传你的每日屏幕时间。看看亏了多少、排第几名、发卡挑战朋友，再到 App 把它翻绿。",
     steps: ["上传", "看看亏损", "发出去"],
     slider: "你的每日屏幕时间",
-    sliderSub: "计算你的滑屏：社交、视频、游戏",
+    sliderSub: "统计你的屏幕使用时间：社交、视频、游戏",
     hday: "小时／天",
     axis: ["30分钟", "6小时", "12小时"],
     regions: { ww: "全球", hk: "香港", sg: "新加坡", th: "泰国" },
     scrollpos: "滑屏持仓",
     openloss: "浮亏",
     verified: "已验证",
-    hrsyr: "每年小时数",
+    hrsyr: "小时/年",
     pace: "照这个节奏",
     learnpos: "学习持仓",
     compounding: "复利中",
     feedcould: "你的 feed 本来可以教你的",
+    // Reviewer's copy carried a literal "42"; restored to the ${lessons}
+    // slot — the figure is slider-derived (see fun.* below, same class).
     lessonYield: (hours: string, lessons: number, phrase: string, track: string) =>
-      `你每天 ${hours} 小时 = ${lessons} 节微课藏在滑屏里。你可在${phrase}完成${track}。`,
+      `你每天 ${hours} 小时 = ${lessons} 节微课藏在滑屏里。${phrase}就能学完${track}。`,
     lessonZero: "第零课，免费：",
     hyr: "小时／年",
+    // NOTE: the `when` column is no longer rendered — rung captions derive
+    // from getLadderSchedule()/formatRungLabel. Reviewer's 第一周/第一个月/
+    // 第六个月 are kept for the record but do not reach the UI.
     ladder: [
-      ["第1周", "ETF 到底是什么", "以及为什么人人都在聊"],
-      ["第1个月", "看懂资产负债表不再冒汗", "知道数字藏在哪里"],
-      ["第6个月", "建立你第一个自选股观点", "自己的判断，不是群里的荐股贴"],
+      ["第一周", "ETF到底是个啥？", "为什么最近人人都在聊它"],
+      ["第一个月", "教你轻松看懂资产负债表", "那些“猫腻”都藏在哪儿"],
+      ["第六个月", "搭建你自己的第一份“自选股＋投资逻辑”", "有理有据的真观点，告别群聊小道消息"],
     ],
+    // Reviewer collapsed this to one sentence; split at her own punctuation
+    // so it wraps across the milestone rung's three slots.
     milestone: (date: string) => [
-      date + "前",
-      "≈ 一门大学投资入门课",
-      "全由你的 feed 赞助",
+      `到${date}`,
+      "你等于免费蹭完了一门大学投资入门课",
+      "学费？零，全靠平时刷到的内容攒出来的",
     ],
     dropTitle: "上传你的屏幕使用时间截图",
-    dropSub: "只在你的设备上读取 · 永不上传",
+    dropSub: "仅在本机读取 · 绝不上传",
     dropHint: "iPhone：设置 → 屏幕使用时间 · Android：数字健康",
     dropReceived: "✓ 已收到截图",
     dropRead: (duration: string) => `✓ 已读取：${duration}`,
-    dropReadScrollDay: (scroll: string, total: string) => `${scroll}滑屏 / ${total}今日总时长`,
-    dropReadScrollWeek: (scroll: string, total: string) => `${scroll}滑屏 / ${total}本周总时长`,
+    dropReadScrollDay: (scroll: string, total: string) => `滑屏${scroll} / 今日${total}`,
+    dropReadScrollWeek: (scroll: string, total: string) => `滑屏${scroll} / 本周${total}`,
     dropReadScroll: (scroll: string) => `${scroll}滑屏时间`,
     dropCouldnt: "读不到这张截图",
     dropReplace: "换一张截图",
     dropDone: "我们读到 {hours} 小时／天——看起来对吗？",
     dropDay: (duration: string) => `这是今天的数字（${duration}）——已设置。要看真实平均值，请上传周视图。`,
     dropApps: "读不到你的时长——请在下面手动设置。",
-    // DRAFT — native review required
     dropPartialChip: "\u2713 已找到你的 App 列表",
-    // DRAFT — native review required
-    dropAppsOnly: "找到你的 App 列表——但没有总时长。滑到屏幕使用时间最上方，截图日均。",
-    // DRAFT — native review required
-    dropCategoriesOnly: "找到你的类别列表——但没有总时长。滑到屏幕使用时间最上方，截图日均。",
-    // DRAFT — native review required (standard WeChat save pattern)
+    dropAppsOnly: "找到了你的App使用列表，但没找到总时长。请滑到“屏幕使用时间”页面顶部，截图那个“日均使用时长”。",
+    dropCategoriesOnly: "找到了你的分类使用情况，但没找到总时长。请滑到“屏幕使用时间”页面顶部，截图那个“日均使用时长”。",
+    // Standard WeChat save pattern.
     longPressSave: "长按保存图片",
-    // DRAFT — native review required
     overlayClose: "关闭",
     dropFail: "读不到你的时长——请在下面手动设置。",
     orManual: "或者手动拖一下",
-    priv: "截图只在你的设备上读取，永不上传。App 名称除非你分享，否则保密。",
+    priv: "截图仅在你的设备上读取，绝不上传。App名称也不会外泄，除非你主动分享。",
     stand: "市场排行榜",
-    standsub: "按“翻转率”排名——哪个市场最会把滑屏变本事，谁就赢。",
-    standnote: "目前为演示数据。正式版：由同一组匿名统计（仅时长＋市场）计算。上线初期平均值引用公开统计，社区数据足够后切换。",
+    standsub: "按“翻转率”排名——谁把滑屏变成本事，谁就赢。",
+    standnote: "演示数据。正式版将基于相同的匿名汇总数据（仅统计使用时长和市场）计算得出。上线初期的平均值先参考已公开的统计数据，等社区数据积累到一定规模后，再改用真实数据。",
     avgday: "平均／天",
     flipped: "已翻转",
     youare: "你的市场",
     tape: "实时行情",
-    tapesub: "最新滑屏记录，逐笔入市。全部匿名。",
-    tapenote: "目前为演示数据。正式版：上线初期以公开的屏幕时间统计（附来源）为基准；社区数据积累后切换为真实行情。只存储时长＋市场，绝无任何识别信息。",
+    tapesub: "最近刷过的内容，按市场实时计价。全程匿名",
+    tapenote: "当前显示的是演示数据。正式上线后：上线初期的排名先参照已公开的屏幕使用时间统计（会注明来源），等真实用户数据积累到一定量后，“社区实时行情”功能将自动开启。系统只记录使用时长和所选市场，不会存储任何能识别身份的信息。",
     f1: "交易服务由德林证券（香港）有限公司提供，该公司为香港证监会持牌法团。",
     f2: "截图分析只在你的浏览器本地进行；图片与 App 名称不会上传或存储。社区统计为匿名（仅时长与市场）。",
     f3: "本页为市场推广示意，仅供教育与娱乐。不构成投资建议、预测或回报推算。",
     vbadge: "已验证滑屏",
     cardtitle: (year: number) => `我的滑屏损益 · ${year}`,
     cardflip: `每天翻转 ${FLIP_MINUTES_PER_DAY} 分钟 →`,
-    // DRAFT — native review required (privacy-adjacent: formal register)
+    // Privacy-adjacent: formal register, no slang (VOICE.md).
     shareOptIn: "将我的结果加入匿名市场统计（仅时长与市场）",
-    // DRAFT — native review required (blocking error state: formal register)
+    // Blocking error state: formal register, no slang (VOICE.md).
     saveFailed: "无法保存图片。请重试，或直接为此卡片截图。",
     challenge: "你亏得比我多吗？",
     scan: "扫你的 ↓",
     savebtn: "下载图片 📸",
-    sticky1: "真正翻转你的损益",
+    sticky1: "这一次，真正扭亏为盈",
     sticky2: "每天 10 分钟，就在 NeuralFin App",
     anon: "匿名",
-    bench: "对比公开屏幕时间统计",
+    bench: "对比公开屏幕时间基准",
     mostShorted: "最重仓：",
     wkwks: "个工作周",
     vsmkt: "对比市场平均",
@@ -355,8 +358,11 @@ const str = {
     scrollChip: (scroll: string, total: string) => `${total}中有${scroll}是滑屏`,
     fun: (yr: number) => {
       if (yr < 500) return { title: "看完全部《星球大战》", sub: "...连前传都看了。", num: `×${Math.round(yr / 25)}` };
-      if (yr < 1200) return { title: "完整看完《泰坦尼克号》", sub: "船每次都沉。", num: `×${Math.round(yr / 3.23)}` };
-      return { title: "香港飞纽约", sub: "里程一分都没有。", num: `×${Math.round(yr / 16)}` };
+      // Reviewer wrote the multiplier inline; the component renders it as a
+      // separate `num` column, so it lives there and her wording splits
+      // across title/sub. Rendered: "<title> <num>. <sub>".
+      if (yr < 1200) return { title: "等于看了《泰坦尼克号》", sub: "每次船都照样沉", num: `×${Math.round(yr / 3.23)}遍` };
+      return { title: "相当于飞了香港→纽约", sub: "但一里“飞行里程”都没攒到。", num: `×${Math.round(yr / 16)}趟` };
     },
   },
   // DRAFT — native review required (every th string below; Thai-native

@@ -6,7 +6,9 @@ export type ScrollEducationLang = ScrollLocale;
 export const LESSON_MINUTES = 5;
 export const FLIP_MINUTES_PER_DAY = 10;
 
-// zh strings: DRAFT — native review required (both scripts)
+// zh-Hans: REVIEWED (internal team, 2026-07-30).
+// zh-Hant: REVIEWED-BY-MIRROR (character conversion of the reviewed
+// zh-Hans set) — these pairs were already exact s2t mirrors.
 export const TRACKS = [
   { id: "foundations", en: "Investing Foundations", "zh-Hant": "投資基礎", "zh-Hans": "投资基础", th: "พื้นฐานการลงทุน", lessons: 40 },
   { id: "markets", en: "How Markets Move", "zh-Hant": "市場如何運作", "zh-Hans": "市场如何运作", th: "ตลาดขยับยังไง", lessons: 32 },
@@ -27,7 +29,7 @@ export const MICRO_TAKEAWAYS = {
     "Diversification means one bad bet can't sink you.",
     "Compounding means your gains start earning their own gains.",
   ],
-  // DRAFT — native review required
+  // REVIEWED-BY-MIRROR (source: reviewed zh-Hans)
   "zh-Hant": [
     "ETF 是一籃子股票，讓你用一筆交易買入。",
     "股票代表你持有一家真實公司的一小部分。",
@@ -35,7 +37,7 @@ export const MICRO_TAKEAWAYS = {
     "分散配置的意思是，一個錯誤押注不會拖垮全部。",
     "複利的意思是，你的收益開始產生自己的收益。",
   ],
-  // DRAFT — native review required
+  // REVIEWED (internal team, 2026-07-30)
   "zh-Hans": [
     "ETF 是一篮子股票，让你用一笔交易买入。",
     "股票代表你持有一家真实公司的一小部分。",

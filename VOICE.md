@@ -1,6 +1,6 @@
 # NeuralFin Voice
 
-Last reviewed: 2026-07-28
+Last reviewed: 2026-07-30
 
 ## Register
 
@@ -25,41 +25,42 @@ Off voice:
 - English internet slang is never literally translated into Chinese. Chinese strings get their own internet-native register and go through native review.
 - No return promises, forecasts, or investment advice in personality strings.
 
-## Pending native review
+## Chinese script policy (decided 2026-07-30)
 
-Before launch, the following zh strings require native + compliance review
-(checklist moved here from internal notes previously shipped in the
-ScrollCalculator string tables):
+**zh-Hans is the reviewed source of truth for both Chinese scripts.**
+zh-Hant is generated from it by character conversion only (OpenCC-style
+`s2t`), and carries the marker `REVIEWED-BY-MIRROR (source: reviewed
+zh-Hans)`.
 
-- 「照這個節奏」 (the "at your current pace" line)
-- zh step strip (步驟提示)
-- zh track names (課程名稱)
-- archetype subtitles (卡片副標)
-- tape notes
-- scan stages (掃描狀態)
-- share variants (分享文案)
-- micro-takeaway / lesson-zero copy (第零課文案)
+- **Vocabulary is not re-chosen during conversion.** Only characters
+  convert. The Hans set's word choices carry over as-is: 视频 → 視頻 (not
+  影片), 设置 → 設置 (not 設定), 设备 → 設備 (not 裝置), 屏幕 → 屏幕
+  (unchanged). Do not "improve" the Hant copy toward Taiwan-standard
+  vocabulary — that is what `s2twp` would do, and it is out of policy.
+- **Punctuation follows each script's convention.** Hans uses `“”`; Hant
+  uses `「」`. This is the one thing conversion changes beyond characters.
+- **The previous Cantonese-register zh-Hant copy is superseded and
+  removed.** Both scripts now share vocabulary. The register judgments that
+  used to live here — 你個名, 小注怡情, 群組貼士, 有在守紀律,
+  組合：感覺派, 演算法 vs 算法 — no longer apply and have been deleted
+  rather than migrated.
+- **Compliance strings are exempt from the mirror's sign-off.** Converted
+  legal text (f1/f2/f3) is marked `NEEDS-COMPLIANCE-APPROVAL` and requires
+  its own compliance review per script. Character conversion is not
+  compliance approval. See CLAUDE.md Hard Rule 3.
 
-Strings marked `DRAFT — native review required` in
-`components/scroll/ScrollCalculator.tsx` are part of the same pass.
+When zh-Hans changes, regenerate zh-Hant from it in the same change — never
+edit the Hant strings independently, or the two scripts drift.
 
-### zh-Hans (Simplified)
+### zh-Hans (Simplified) — REVIEWED
 
-The entire zh-Hans string set is machine-converted from zh-Hant with
-vocabulary adjustments for mainland/SG usage, and every string is DRAFT —
-native review required. Reviewers should specifically check:
+Native review complete (reviewer: internal team, 2026-07-30). The full
+zh-Hans tables live in `components/scroll/ScrollCalculator.tsx`,
+`lib/scroll/personality.ts`, `lib/scroll/education.ts`, and
+`lib/scroll/rank.ts`.
 
-- Vocabulary swaps made during conversion: 螢幕→屏幕, 影片→视频,
-  設定→设置, 裝置→设备, 數位健康→数字健康, 即時→实时, 社群→社区,
-  示範→演示, 儲存→存储, 時數→时长, 演算法→算法, 沽空→做空,
-  未平虧損→浮亏, 里數→里程, 鐵達尼號→泰坦尼克号, 「」→“”
-- De-Cantonesed phrasing: 你個名→你的名字, 小注怡情→小赌怡情,
-  群組貼士→群里的荐股贴, 有在守紀律→守住纪律了, 組合：感覺派→组合：全凭感觉
-- The full zh-Hans tables in `components/scroll/ScrollCalculator.tsx`,
-  `lib/scroll/personality.ts`, `lib/scroll/education.ts`, and
-  `lib/scroll/rank.ts`
-- Compliance strings (f1/f2/f3) additionally need compliance approval per
-  script — see the compliance rule in CLAUDE.md.
+Open item carried out of that review: compliance strings (f1/f2/f3) still
+need compliance approval per script — native review does not cover them.
 
 ### th (Thai)
 
@@ -76,13 +77,12 @@ review required. Judgment calls for the reviewer:
 - First person: DECIDED (pending review) — เรา everywhere, including the
   card title (P&L การไถของเรา) and challenge line. Gender-neutral
   consistency beats formality; reviewer may overrule.
-- Years: DECIDED (pending review) — Gregorian (2027), not Buddhist era
-  (2570), on the card and milestone dates. Rationale: the share card mixes
+- Years: DECIDED (pending review) — Gregorian (2026), not Buddhist era
+  (2569), on the card and milestone dates. Rationale: the share card mixes
   with an English URL/hashtag, CE years are conventional in Thai fintech,
   and Buddhist-era years would break shared-card comparability across
-  markets. Thai month names are kept (กรกฎาคม 2027). Reviewer may
+  markets. Thai month names are kept (กันยายน 2026). Reviewer may
   challenge.
-- "Top X%" kept in English inside Thai rank lines (internet-native mixing)
 - Company name stays in English in f1 (no official Thai name); SFC rendered
   as สำนักงาน ก.ล.ต. ฮ่องกง (SFC) — needs compliance confirmation
 - Thai spacing and ๆ usage throughout
