@@ -75,10 +75,12 @@ test("tape note config includes red and green voice pools", () => {
 });
 
 test("personality configs carry last reviewed dates", () => {
-  assert.ok(ARCHETYPES.every((item) => item.lastReviewed === "2026-07-28"));
-  assert.equal(TAPE_NOTE_CONFIG.lastReviewed, "2026-07-28");
-  assert.equal(SCAN_STAGE_CONFIG.lastReviewed, "2026-07-28");
-  assert.equal(SHARE_TEXT_VARIANTS.lastReviewed, "2026-07-28");
+  // Bumped when the zh native review landed and zh-Hant was regenerated as
+  // a character-conversion mirror of the reviewed zh-Hans set.
+  assert.ok(ARCHETYPES.every((item) => item.lastReviewed === "2026-07-30"));
+  assert.equal(TAPE_NOTE_CONFIG.lastReviewed, "2026-07-30");
+  assert.equal(SCAN_STAGE_CONFIG.lastReviewed, "2026-07-30");
+  assert.equal(SHARE_TEXT_VARIANTS.lastReviewed, "2026-07-30");
 });
 
 test("voice guide exists and personality strings stay out of formal component copy", () => {

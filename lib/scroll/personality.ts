@@ -10,67 +10,52 @@ export const ARCHETYPES = [
   {
     id: "saint",
     maxHours: 1.5,
-    lastReviewed: "2026-07-28",
+    lastReviewed: "2026-07-30",
     en: { title: "The Saint", subtitle: "suspicious. nobody's this disciplined" },
-    // DRAFT — native review required
-    "zh-Hant": { title: "聖人", subtitle: "太乾淨，像還沒開倉" },
-    // DRAFT — native review required
-    "zh-Hans": { title: "圣人", subtitle: "太干净，像还没开仓" },
-    // DRAFT — native review required
+    "zh-Hant": { title: "聖人", subtitle: "可疑啊，這自律程度不像人類" },
+    "zh-Hans": { title: "圣人", subtitle: "可疑啊，这自律程度不像人类" },
     th: { title: "นักบุญ", subtitle: "สะอาดเกินไป น่าสงสัยว่ายังไม่เปิดพอร์ต" },
   },
   {
     id: "casual",
     maxHours: 3,
-    lastReviewed: "2026-07-28",
+    lastReviewed: "2026-07-30",
     en: { title: "Casual Scroller", subtitle: "dabbling. respectable" },
-    // DRAFT — native review required
-    "zh-Hant": { title: "輕度滑友", subtitle: "小注怡情，尚算體面" },
-    // DRAFT — native review required
-    "zh-Hans": { title: "轻度滑友", subtitle: "小赌怡情，还算体面" },
-    // DRAFT — native review required
+    "zh-Hant": { title: "輕度滑友", subtitle: "入門水平，勉強及格" },
+    "zh-Hans": { title: "轻度滑友", subtitle: "入门水平，勉强及格" },
     th: { title: "สายเลื่อนชิลล์ ๆ", subtitle: "เล่นพอเพลิน ยังดูดีอยู่" },
   },
   {
     id: "certified",
     maxHours: 5,
-    lastReviewed: "2026-07-28",
+    lastReviewed: "2026-07-30",
     en: { title: "Certified Scroller", subtitle: "mid, and that's okay" },
-    // DRAFT — native review required
-    "zh-Hant": { title: "認證滑屏員", subtitle: "中段持倉，不算失控" },
-    // DRAFT — native review required
-    "zh-Hans": { title: "认证滑屏员", subtitle: "中段持仓，不算失控" },
-    // DRAFT — native review required
+    "zh-Hant": { title: "認證滑屏員", subtitle: "不上不下，但挺好" },
+    "zh-Hans": { title: "认证滑屏员", subtitle: "不上不下，但挺好" },
     th: { title: "นักเลื่อนตัวจริง", subtitle: "ถือสถานะกลาง ๆ ยังไม่หลุดมือ" },
   },
   {
     id: "favorite",
     maxHours: 8,
-    lastReviewed: "2026-07-28",
+    lastReviewed: "2026-07-30",
     en: { title: "The Algorithm's Favorite", subtitle: "the feed knows your name" },
-    // DRAFT — native review required
-    "zh-Hant": { title: "演算法的最愛", subtitle: "feed 已經認得你個名" },
-    // DRAFT — native review required
-    "zh-Hans": { title: "算法的最爱", subtitle: "feed 已经认得你的名字" },
-    // DRAFT — native review required
+    "zh-Hant": { title: "算法的最愛", subtitle: "你的名字，算法早就記住了" },
+    "zh-Hans": { title: "算法的最爱", subtitle: "你的名字，算法早就记住了" },
     th: { title: "ลูกรักอัลกอริทึม", subtitle: "ฟีดจำชื่อคุณได้แล้ว" },
   },
   {
     id: "grass",
     maxHours: Number.POSITIVE_INFINITY,
-    lastReviewed: "2026-07-28",
+    lastReviewed: "2026-07-30",
     en: { title: "Touch Grass Candidate", subtitle: "the algorithm sends its regards" },
-    // DRAFT — native review required
-    "zh-Hant": { title: "摸草候選人", subtitle: "演算法代你問好" },
-    // DRAFT — native review required
-    "zh-Hans": { title: "摸草候选人", subtitle: "算法代你问好" },
-    // DRAFT — native review required
+    "zh-Hant": { title: "摸草候選人", subtitle: "算法向你問好" },
+    "zh-Hans": { title: "摸草候选人", subtitle: "算法向你问好" },
     th: { title: "ผู้สมัครไปสัมผัสหญ้า", subtitle: "อัลกอริทึมฝากความคิดถึง" },
   },
 ] as const;
 
 export const TAPE_NOTE_CONFIG = {
-  lastReviewed: "2026-07-28",
+  lastReviewed: "2026-07-30",
   en: {
     red: [
       "certified scroller",
@@ -83,17 +68,14 @@ export const TAPE_NOTE_CONFIG = {
     ],
     green: ["flipped ✓", "locked in ✓"],
   },
-  // DRAFT — native review required
   "zh-Hant": {
-    red: ["認證滑屏員", "演算法贏了", "該摸摸草了", "已老實", "躺平持倉", "腦袋清倉，只剩 feed", "組合：感覺派"],
-    green: ["已翻綠 ✓", "有在守紀律 ✓"],
+    red: ["認證滑屏員", "算法贏了", "該摸摸草了", "已老實", "躺平持倉", "腦袋清倉，只剩 feed", "組合：全憑感覺"],
+    green: ["已翻綠 ✓", "守住紀律了 ✓"],
   },
-  // DRAFT — native review required
   "zh-Hans": {
     red: ["认证滑屏员", "算法赢了", "该摸摸草了", "已老实", "躺平持仓", "脑袋清仓，只剩 feed", "组合：全凭感觉"],
     green: ["已翻绿 ✓", "守住纪律了 ✓"],
   },
-  // DRAFT — native review required
   th: {
     red: ["นักเลื่อนตัวจริง", "อัลกอริทึมชนะ", "ไปสัมผัสหญ้าบ้างนะ", "ดอยแล้ว", "ถือยาวแบบไม่ได้ตั้งใจ", "สมองว่าง เหลือแต่ฟีด", "พอร์ต: ใช้ความรู้สึกล้วน ๆ"],
     green: ["พลิกเขียวแล้ว ✓", "คุมวินัยอยู่ ✓"],
@@ -101,28 +83,25 @@ export const TAPE_NOTE_CONFIG = {
 } as const;
 
 export const SCAN_STAGE_CONFIG = {
-  lastReviewed: "2026-07-28",
+  lastReviewed: "2026-07-30",
   en: {
     reading: "Reading on your device...",
     auditing: "Auditing the damage...",
     success: "Marking to market...",
     fail: "It's not looking good chief...",
   },
-  // DRAFT — native review required
   "zh-Hant": {
-    reading: "裝置本機讀取中...",
+    reading: "設備本地讀取中...",
     auditing: "正在盤點損益...",
-    success: "正在逐日入帳...",
-    fail: "這張盤面不太妙...",
+    success: "正在逐日入賬...",
+    fail: "兄弟，這個盤面不太妙...",
   },
-  // DRAFT — native review required
   "zh-Hans": {
     reading: "设备本地读取中...",
     auditing: "正在盘点损益...",
     success: "正在逐日入账...",
-    fail: "这个盘面不太妙...",
+    fail: "兄弟，这个盘面不太妙...",
   },
-  // DRAFT — native review required
   th: {
     reading: "กำลังอ่านบนเครื่องของคุณ...",
     auditing: "กำลังตรวจความเสียหาย...",
@@ -132,25 +111,22 @@ export const SCAN_STAGE_CONFIG = {
 } as const;
 
 export const SHARE_TEXT_VARIANTS = {
-  lastReviewed: "2026-07-28",
+  lastReviewed: "2026-07-30",
   en: [
     (loss: string, rank: string, url: string) => `I'm down ${loss} this year. ${rank} — are you down more? ${url} #ScrollAudit`,
     (loss: string, rank: string, url: string) => `I'm down ${loss} this year and the market is me. ${rank}. ${url} #ScrollAudit`,
     (loss: string, rank: string, url: string) => `My most shorted stock is my attention span. ${loss}. ${rank}. ${url} #ScrollAudit`,
   ],
-  // DRAFT — native review required
   "zh-Hant": [
     (loss: string, rank: string, url: string) => `我今年已經虧了 ${loss}。${rank}——你虧得比我多嗎？${url} #ScrollAudit`,
-    (loss: string, rank: string, url: string) => `我今年注意力帳面虧損 ${loss}，市場就是我本人。${rank}。${url} #ScrollAudit`,
-    (loss: string, rank: string, url: string) => `我最重倉沽空的是注意力。${loss}。${rank}。${url} #ScrollAudit`,
+    (loss: string, rank: string, url: string) => `我今年注意力賬面虧損 ${loss}，市場就是我本人。${rank}。${url} #ScrollAudit`,
+    (loss: string, rank: string, url: string) => `我做空最重的倉位是注意力。${loss}。${rank}。${url} #ScrollAudit`,
   ],
-  // DRAFT — native review required
   "zh-Hans": [
     (loss: string, rank: string, url: string) => `我今年已经亏了 ${loss}。${rank}——你亏得比我多吗？${url} #ScrollAudit`,
     (loss: string, rank: string, url: string) => `我今年注意力账面亏损 ${loss}，市场就是我本人。${rank}。${url} #ScrollAudit`,
     (loss: string, rank: string, url: string) => `我做空最重的仓位是注意力。${loss}。${rank}。${url} #ScrollAudit`,
   ],
-  // DRAFT — native review required
   th: [
     (loss: string, rank: string, url: string) => `ปีนี้เราติดลบไป ${loss} แล้ว ${rank} — คุณลบหนักกว่านี้ไหม? ${url} #ScrollAudit`,
     (loss: string, rank: string, url: string) => `ปีนี้ขาดทุนสมาธิไป ${loss} ตลาดก็คือเราเอง ${rank} ${url} #ScrollAudit`,

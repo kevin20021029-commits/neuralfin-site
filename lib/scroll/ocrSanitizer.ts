@@ -862,8 +862,13 @@ export function guessScreenTimeLayout(rawText: string): ScreenTimeLayout {
   if (/most\s*used\s*app\s*categories|app\s*timers/.test(text)) {
     return "samsung";
   }
+  // "Screen Time Today" is a Samsung caption, but iOS screenshots carry it
+  // too alongside their own markers. iOS evidence wins so the layout_guess
+  // telemetry that drives OEM prioritisation isn't skewed toward Samsung.
   if (text.split(/\r?\n/).some((line) => /screen\s*time\s*today/.test(line))) {
-    return "samsung";
+    // Only iOS-exclusive markers count. "Most used" appears on both
+    // platforms, so it must not tip the guess.
+    return /show\s*categories|daily\s*average|日均|每日平均/.test(text) ? "ios" : "samsung";
   }
   if (/show\s*categories|daily\s*average|screen\s*time|最\s*常\s*使\s*用|显示类别|顯示類別|显示\s*app|顯示\s*app|屏幕使用时间|螢幕使用時間|日均|每日平均/.test(text)) {
     return "ios";

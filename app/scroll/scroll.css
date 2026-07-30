@@ -80,7 +80,8 @@
 }
 
 .scroll-lang button {
-  min-height: 36px;
+  /* Touch-target budget: >= 44px (BUILD_SPEC performance/a11y budgets). */
+  min-height: 44px;
   border: 0;
   background: none;
   color: var(--muted);
@@ -354,13 +355,32 @@
   box-shadow: 0 0 0 3px var(--blue);
 }
 
+/* Ticks are positioned at their own value's offset along the track. With
+   `space-between` over five mixed labels, "saint" printed at 3.4 h and
+   "certified scroller" at 8.7 h — each two archetype bands from its name. */
 .scroll-scale {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
+  position: relative;
+  height: 30px;
   margin: 8px 0 12px;
   color: var(--muted);
   font-size: 11px;
+}
+
+/* left/transform are set inline per tick (see tickStyle): the label is
+   anchored by its own width fraction so it stays inside the track at both
+   ends instead of hanging off the edge. */
+.scroll-scale .tick {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+}
+
+.scroll-scale .tick.arch {
+  top: 15px;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--white);
+  text-overflow: ellipsis;
 }
 
 .scroll-regions {
@@ -371,7 +391,8 @@
 }
 
 .scroll-regions button {
-  min-height: 34px;
+  /* Touch-target budget: >= 44px (BUILD_SPEC performance/a11y budgets). */
+  min-height: 44px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: none;
@@ -917,6 +938,16 @@
   color: var(--white);
 }
 
+/* Styled by valence, not by sign: below the market average is a win, and it
+   was rendering as a red negative beside a genuine loss chip. */
+.scroll-card .chip.good {
+  border-color: rgba(61, 220, 151, 0.45);
+}
+
+.scroll-card .chip.good b {
+  color: var(--mint);
+}
+
 .scroll-card .vsbar {
   margin-top: 12px;
 }
@@ -947,8 +978,11 @@
   background: #ff5c6c;
 }
 
+/* The market bar must not read as empty track. At 3.5 h it was the LONGER
+   bar yet rendered at 0.35 alpha over a 0.08 track, so a glance said "my bar
+   is long and red" — the opposite of the data. */
 .scroll-card .track.mkt i {
-  background: rgba(247,251,247,0.35);
+  background: rgba(247,251,247,0.8);
 }
 
 .scroll-card .div {
@@ -1296,4 +1330,65 @@
   .scroll-hero .gain-t {
     animation: none;
   }
+}
+
+/* --- Consent, save feedback, and screen-reader summary --- */
+
+/* Opt-out for the anonymous {hours, region} submission, stated at the button
+   rather than only in the compliance footer. */
+/* The whole label is the tap target: >= 44px tall per the a11y budget,
+   without inflating the visual checkbox. (An absolutely-positioned ::before
+   on the input would have anchored to the initial containing block and left
+   a stray 44px box floating over unrelated content.) */
+.scroll-optin {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 4px;
+  margin: 4px auto 0;
+  max-width: 320px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.scroll-optin input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--mint);
+  cursor: pointer;
+}
+
+.scroll-optin:hover {
+  color: var(--white);
+}
+
+.scroll-optin input:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}
+
+.scroll-save-error {
+  margin: 8px auto 0;
+  max-width: 320px;
+  color: #ff5c6c;
+  font-size: 12px;
+  text-align: center;
+}
+
+.scroll-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

@@ -1,56 +1,49 @@
-import type { ScrollLocale } from "./campaign";
+import { PERCENTILE_MAX, PERCENTILE_MIN, type ScrollLocale } from "./campaign";
 
 export type RankLang = ScrollLocale;
 
+// ONE rank convention for the whole page (tile, card, tape): the percentile
+// of people you out-scroll. It rises monotonically with hours in a single
+// vocabulary, so the number never has to be read against a second metric.
+//
+// The previous framing swapped metric at the median — "Lighter than 51%"
+// below it, "Top 46% scroller" above — so crossing 4.2 h inverted both the
+// number and its polarity, and the aspirational green tape row (low hours)
+// carried the worst-looking figure on the board ("Top 85%"). Under this
+// convention low hours simply read low.
+// lastReviewed: 2026-07-30 (en); zh REVIEWED 2026-07-30
+const RANK_COPY = {
+  en: {
+    title: (percent: number, regionName: string) => `You scroll more than ${percent}% · ${regionName}`,
+    light: "nice — your feed doesn't own you 🌱",
+    heavy: "that's a heavy position to carry",
+  },
+  // REVIEWED-BY-MIRROR (source: reviewed zh-Hans)
+  "zh-Hant": {
+    title: (percent: number, regionName: string) => `你滑得比 ${percent}% 的人多 · ${regionName}`,
+    light: "挺好，你沒被信息流「控制」",
+    heavy: "這個倉位有點重",
+  },
+  "zh-Hans": {
+    title: (percent: number, regionName: string) => `你滑得比 ${percent}% 的人多 · ${regionName}`,
+    light: "挺好，你没被信息流“控制”",
+    heavy: "这个仓位有点重",
+  },
+  th: {
+    title: (percent: number, regionName: string) => `คุณเลื่อนมากกว่า ${percent}% · ${regionName}`,
+    light: "ดีมาก — ฟีดยังไม่ได้เป็นเจ้าของคุณ 🌱",
+    heavy: "สถานะนี้หนักอยู่นะ",
+  },
+} as const;
+
 export function getRankFrame(percentile: number, regionName: string, lang: RankLang) {
-  const p = Math.max(0, Math.min(100, Math.round(Number.isFinite(percentile) ? percentile : 50)));
-  const inverse = Math.max(1, 100 - p);
+  const safe = Number.isFinite(percentile) ? Math.round(percentile) : 50;
+  const p = Math.max(PERCENTILE_MIN, Math.min(PERCENTILE_MAX, safe));
+  const copy = RANK_COPY[lang];
 
-  if (p < 50) {
-    const light = {
-      en: {
-        title: `Lighter than ${100 - p}% of people 🌱`,
-        subtitle: "nice — your feed doesn't own you",
-      },
-      // DRAFT — native review required
-      "zh-Hant": {
-        title: `比 ${100 - p}% 的人更輕倉 🌱`,
-        subtitle: "不錯——feed 還沒收購你",
-      },
-      // DRAFT — native review required
-      "zh-Hans": {
-        title: `比 ${100 - p}% 的人更轻仓 🌱`,
-        subtitle: "不错——feed 还没收购你",
-      },
-      // DRAFT — native review required
-      th: {
-        title: `เบากว่า ${100 - p}% ของคนทั้งหมด 🌱`,
-        subtitle: "ดีมาก — ฟีดยังไม่ได้เป็นเจ้าของคุณ",
-      },
-    } as const;
-    return { ...light[lang], displayPercent: `P${p}` };
-  }
-
-  const top = {
-    en: {
-      title: `Top ${inverse}% scroller · ${regionName}`,
-      subtitle: `you scroll more than ${p}% of people`,
-    },
-    // DRAFT — native review required
-    "zh-Hant": {
-      title: `${regionName}前 ${inverse}% 滑屏員`,
-      subtitle: `你滑得比 ${p}% 的人多`,
-    },
-    // DRAFT — native review required
-    "zh-Hans": {
-      title: `${regionName}前 ${inverse}% 滑屏员`,
-      subtitle: `你滑得比 ${p}% 的人多`,
-    },
-    // DRAFT — native review required
-    th: {
-      title: `Top ${inverse}% นักเลื่อน · ${regionName}`,
-      subtitle: `คุณเลื่อนมากกว่า ${p}% ของคนทั้งหมด`,
-    },
-  } as const;
-  return { ...top[lang], displayPercent: `P${p}` };
+  return {
+    title: copy.title(p, regionName),
+    subtitle: p < 50 ? copy.light : copy.heavy,
+    displayPercent: `P${p}`,
+  };
 }

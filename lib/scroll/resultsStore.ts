@@ -1,4 +1,4 @@
-import { SCROLL_BENCHMARK, SCROLL_COMMUNITY_THRESHOLD, SCROLL_REGIONS, type ScrollRegion, normalPercentile } from "./campaign";
+import { SCROLL_BENCHMARK, SCROLL_COMMUNITY_THRESHOLD, SCROLL_REGIONS, type ScrollRegion, scrollPercentile } from "./campaign";
 import type { ParseOutcome, ScreenTimeLayout } from "./ocrSanitizer";
 
 export type ScrollResult = {
@@ -107,9 +107,9 @@ export async function buildScrollTelemetrySummary(): Promise<Record<string, numb
   }
 }
 
-function percentileFromDistribution(hours: number, distribution: ScrollResult[]) {
+function percentileFromDistribution(hours: number, distribution: ScrollResult[], region: ScrollRegion) {
   if (distribution.length === 0) {
-    return normalPercentile(hours);
+    return scrollPercentile(hours, region);
   }
   const atOrBelow = distribution.filter((result) => result.hours <= hours).length;
   return Math.round((atOrBelow / distribution.length) * 100);
@@ -126,9 +126,9 @@ export function buildScrollSummary() {
         {
           source: useCommunity && distribution.length > 0 ? "community" : "benchmark",
           label: useCommunity && distribution.length > 0 ? SCROLL_BENCHMARK.communityLabel : SCROLL_BENCHMARK.label,
-          p50: useCommunity && distribution.length > 0 ? percentileFromDistribution(4.2, distribution) : 50,
-          p75: useCommunity && distribution.length > 0 ? percentileFromDistribution(5.6, distribution) : normalPercentile(5.6),
-          p90: useCommunity && distribution.length > 0 ? percentileFromDistribution(7.0, distribution) : normalPercentile(7.0),
+          p50: useCommunity && distribution.length > 0 ? percentileFromDistribution(4.2, distribution, region) : 50,
+          p75: useCommunity && distribution.length > 0 ? percentileFromDistribution(5.6, distribution, region) : scrollPercentile(5.6, region),
+          p90: useCommunity && distribution.length > 0 ? percentileFromDistribution(7.0, distribution, region) : scrollPercentile(7.0, region),
         },
       ];
     }),
