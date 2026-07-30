@@ -80,7 +80,8 @@
 }
 
 .scroll-lang button {
-  min-height: 36px;
+  /* Touch-target budget: >= 44px (BUILD_SPEC performance/a11y budgets). */
+  min-height: 44px;
   border: 0;
   background: none;
   color: var(--muted);
@@ -365,21 +366,13 @@
   font-size: 11px;
 }
 
+/* left/transform are set inline per tick (see tickStyle): the label is
+   anchored by its own width fraction so it stays inside the track at both
+   ends instead of hanging off the edge. */
 .scroll-scale .tick {
   position: absolute;
   top: 0;
-  transform: translateX(-50%);
   white-space: nowrap;
-}
-
-/* Edge ticks stay inside the track rather than overflowing the container. */
-.scroll-scale .tick:first-child {
-  transform: none;
-  left: 0 !important;
-}
-
-.scroll-scale .tick:nth-child(3) {
-  transform: translateX(-100%);
 }
 
 .scroll-scale .tick.arch {
@@ -398,7 +391,8 @@
 }
 
 .scroll-regions button {
-  min-height: 34px;
+  /* Touch-target budget: >= 44px (BUILD_SPEC performance/a11y budgets). */
+  min-height: 44px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: none;
@@ -1342,11 +1336,17 @@
 
 /* Opt-out for the anonymous {hours, region} submission, stated at the button
    rather than only in the compliance footer. */
+/* The whole label is the tap target: >= 44px tall per the a11y budget,
+   without inflating the visual checkbox. (An absolutely-positioned ::before
+   on the input would have anchored to the initial containing block and left
+   a stray 44px box floating over unrelated content.) */
 .scroll-optin {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin: 10px auto 0;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 4px;
+  margin: 4px auto 0;
   max-width: 320px;
   color: var(--muted);
   font-size: 11px;
@@ -1356,19 +1356,20 @@
 
 .scroll-optin input {
   flex: none;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   margin: 0;
   accent-color: var(--mint);
+  cursor: pointer;
 }
 
-/* Touch target stays >= 44px without inflating the visual checkbox. */
-.scroll-optin input::before {
-  content: "";
-  position: absolute;
-  width: 44px;
-  height: 44px;
-  transform: translate(-14px, -14px);
+.scroll-optin:hover {
+  color: var(--white);
+}
+
+.scroll-optin input:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
 }
 
 .scroll-save-error {

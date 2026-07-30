@@ -42,6 +42,15 @@ function trackOffsetPercent(hours: number) {
   return ((clamped - SLIDER_MIN_HOURS) / (SLIDER_MAX_HOURS - SLIDER_MIN_HOURS)) * 100;
 }
 
+// Anchoring the label by its own width fraction keeps it inside the track at
+// both ends: centred mid-track, left-aligned at 0%, right-aligned at 100%.
+// A flat translateX(-50%) hung "The Saint" 25px off the left edge and
+// "Touch Grass Candidate" 61px off the right.
+function tickStyle(hours: number): CSSProperties {
+  const percent = trackOffsetPercent(hours);
+  return { left: `${percent}%`, transform: `translateX(-${percent}%)` };
+}
+
 
 type Lang = ScrollLocale;
 type TapeRow = { region: ScrollRegion; hours: number; flipped?: boolean };
@@ -365,8 +374,9 @@ export const str = {
       return { title: "相当于飞了香港→纽约", sub: "但一里“飞行里程”都没攒到。", num: `×${Math.round(yr / 16)}趟` };
     },
   },
-  // DRAFT — native review required (every th string below; Thai-native
-  // internet register, not literal EN translation — see VOICE.md)
+  // REVIEWED (2026-07-30). Thai-native internet register, not a literal EN
+  // translation — see VOICE.md. Exception: f1/f2/f3 below still carry
+  // NEEDS-COMPLIANCE-APPROVAL.
   th: {
     pill: "สร้างมาเพื่อเจนไถฟีด",
     h1a: "การไถฟีดของคุณก็มี",
@@ -412,15 +422,10 @@ export const str = {
     dropDone: "เราอ่านได้ {hours} ชม./วัน — ถูกไหม?",
     dropDay: (duration: string) => `นี่คือตัวเลขของวันนี้ (${duration}) — ตั้งให้แล้ว อยากได้ค่าเฉลี่ยจริง อัปโหลดมุมมองรายสัปดาห์`,
     dropApps: "อ่านชั่วโมงของคุณไม่ได้ — ตั้งเองด้านล่างได้เลย",
-    // DRAFT — native review required
     dropPartialChip: "\u2713 เจอรายชื่อแอปแล้ว",
-    // DRAFT — native review required
     dropAppsOnly: "เจอรายชื่อแอปแล้ว — แต่ไม่เจอเวลารวม เลื่อนขึ้นบนสุดของเวลาหน้าจอ แล้วแคปตรงค่าเฉลี่ยต่อวัน",
-    // DRAFT — native review required
     dropCategoriesOnly: "เจอหมวดหมู่แล้ว — แต่ไม่เจอเวลารวม เลื่อนขึ้นบนสุดของเวลาหน้าจอ แล้วแคปตรงค่าเฉลี่ยต่อวัน",
-    // DRAFT — native review required
     longPressSave: "กดค้างที่รูปเพื่อบันทึก",
-    // DRAFT — native review required
     overlayClose: "ปิด",
     dropFail: "อ่านชั่วโมงของคุณไม่ได้ — ตั้งเองด้านล่างได้เลย",
     orManual: "หรือลากเองก็ได้",
@@ -434,14 +439,16 @@ export const str = {
     tape: "กระดานเทป",
     tapesub: "การไถล่าสุด ตีราคาตลาดสด ๆ นิรนามเสมอ",
     tapenote: "แสดงข้อมูลตัวอย่าง เวอร์ชันเปิดตัว: ก่อนเปิดตัวเทียบกับสถิติเวลาหน้าจอสาธารณะ (มีแหล่งอ้างอิง) เมื่อผลจริงสะสมพอจะสลับเป็นกระดานชุมชน เก็บเฉพาะชั่วโมง + ตลาด — ไม่มีข้อมูลระบุตัวตน",
+    // NEEDS-COMPLIANCE-APPROVAL — compliance copy needs sign-off per
+    // script/language; native review does not cover it (Hard Rule 3).
     f1: "บริการซื้อขายให้บริการโดย DL Securities (Hong Kong) Limited ซึ่งเป็นบริษัทที่ได้รับใบอนุญาตและอยู่ภายใต้การกำกับดูแลของสำนักงาน ก.ล.ต. ฮ่องกง (SFC)",
     f2: "การวิเคราะห์สกรีนช็อตเกิดขึ้นในเบราว์เซอร์ของคุณเท่านั้น รูปภาพและชื่อแอปไม่ถูกอัปโหลดหรือจัดเก็บ สถิติชุมชนเป็นแบบนิรนาม (เฉพาะชั่วโมงและตลาด)",
     f3: "หน้านี้เป็นภาพประกอบทางการตลาดเพื่อการศึกษาและความบันเทิง ไม่ใช่คำแนะนำการลงทุน การคาดการณ์ หรือการประมาณผลตอบแทน",
     vbadge: "ไถฟีดยืนยันแล้ว",
     cardtitle: (year: number) => `P&L การไถของเรา · ${year}`,
-    // DRAFT — native review required (privacy-adjacent: formal register)
+    // Privacy-adjacent: formal register, no slang (VOICE.md).
     shareOptIn: "เพิ่มผลลัพธ์ของฉันในสถิติตลาดแบบไม่ระบุตัวตน (เฉพาะชั่วโมงและตลาด)",
-    // DRAFT — native review required (blocking error state: formal register)
+    // Blocking error state: formal register, no slang (VOICE.md).
     saveFailed: "บันทึกรูปภาพไม่สำเร็จ กรุณาลองใหม่ หรือถ่ายภาพหน้าจอการ์ดนี้",
     cardflip: `พลิกวันละ ${FLIP_MINUTES_PER_DAY} นาที →`,
     challenge: "คุณลบหนักกว่าเราไหม?",
@@ -1032,18 +1039,14 @@ export function ScrollCalculator() {
               />
               <div className="scroll-scale">
                 {[SLIDER_MIN_HOURS, 6, SLIDER_MAX_HOURS].map((tickHours, index) => (
-                  <span
-                    key={tickHours}
-                    className="tick"
-                    style={{ left: `${trackOffsetPercent(tickHours)}%` }}
-                  >
+                  <span key={tickHours} className="tick" style={tickStyle(tickHours)}>
                     {t.axis[index]}
                   </span>
                 ))}
                 {/* Archetype label rides the thumb, derived from the same
                     ARCHETYPES thresholds the card reads — so it can never
                     name a different band than the card does. */}
-                <span className="tick arch" style={{ left: `${trackOffsetPercent(hours)}%` }}>{arch}</span>
+                <span className="tick arch" style={tickStyle(hours)}>{arch}</span>
               </div>
             </div>
 

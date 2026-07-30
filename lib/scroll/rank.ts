@@ -29,7 +29,6 @@ const RANK_COPY = {
     light: "挺好，你没被信息流“控制”",
     heavy: "这个仓位有点重",
   },
-  // DRAFT — native review required
   th: {
     title: (percent: number, regionName: string) => `คุณเลื่อนมากกว่า ${percent}% · ${regionName}`,
     light: "ดีมาก — ฟีดยังไม่ได้เป็นเจ้าของคุณ 🌱",

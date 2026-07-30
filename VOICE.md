@@ -64,9 +64,10 @@ need compliance approval per script — native review does not cover them.
 
 ### th (Thai)
 
-The entire th string set is drafted in a Thai-native internet register (not
-literal translation of the EN slang) and every string is DRAFT — native
-review required. Judgment calls for the reviewer:
+REVIEWED (2026-07-30). The th set is written in a Thai-native internet
+register, not a literal translation of the EN slang. The judgment calls
+below were made during that pass and are recorded so a future reviewer can
+challenge them rather than rediscover them:
 
 - Trading-slang substitutions: "down bad" → ดอยแล้ว (bagholder slang),
   "open loss" → ขาดทุนลอยตัว, "most shorted" → ช็อตหนักสุด, "portfolio:
@@ -74,17 +75,19 @@ review required. Judgment calls for the reviewer:
 - "Touch grass" kept as the borrowed meme (ไปสัมผัสหญ้า), which circulates
   in Thai internet culture as-is
 - Scrolling rendered as การไถฟีด/การไถ/นักเลื่อน — confirm register
-- First person: DECIDED (pending review) — เรา everywhere, including the
+- First person: DECIDED — เรา everywhere, including the
   card title (P&L การไถของเรา) and challenge line. Gender-neutral
   consistency beats formality; reviewer may overrule.
-- Years: DECIDED (pending review) — Gregorian (2026), not Buddhist era
+- Years: DECIDED — Gregorian (2026), not Buddhist era
   (2569), on the card and milestone dates. Rationale: the share card mixes
   with an English URL/hashtag, CE years are conventional in Thai fintech,
   and Buddhist-era years would break shared-card comparability across
   markets. Thai month names are kept (กันยายน 2026). Reviewer may
   challenge.
 - Company name stays in English in f1 (no official Thai name); SFC rendered
-  as สำนักงาน ก.ล.ต. ฮ่องกง (SFC) — needs compliance confirmation
+  as สำนักงาน ก.ล.ต. ฮ่องกง (SFC). f1/f2/f3 remain
+  NEEDS-COMPLIANCE-APPROVAL: native review does not cover compliance copy,
+  which needs sign-off per script/language (CLAUDE.md Hard Rule 3).
 - Thai spacing and ๆ usage throughout
 - The full th tables live in `components/scroll/ScrollCalculator.tsx`,
   `lib/scroll/personality.ts`, `lib/scroll/education.ts`, and
