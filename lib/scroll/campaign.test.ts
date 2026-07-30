@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { detectScrollLocale, normalizeScrollLocale } from "./campaign";
+import {
+  PERCENTILE_MAX,
+  PERCENTILE_MIN,
+  SCROLL_REGIONS,
+  detectScrollLocale,
+  getRegionAverageHours,
+  normalizeScrollLocale,
+  scrollPercentile,
+} from "./campaign";
 
 test("normalizeScrollLocale accepts current and legacy values", () => {
   assert.equal(normalizeScrollLocale("en"), "en");
@@ -51,4 +59,49 @@ test("first Chinese or Thai entry in the language list wins", () => {
   assert.equal(detectScrollLocale(["en-US", "zh-TW"], "ww"), "zh-Hant");
   assert.equal(detectScrollLocale(["en-US", "zh-CN", "zh-TW"], "ww"), "zh-Hans");
   assert.equal(detectScrollLocale(["en-US", "th-TH", "zh-TW"], "ww"), "th");
+});
+
+// A3: the rank tile names a market, so the number must actually depend on it.
+// The previous T(hours) took no region and returned P68 for all four.
+test("percentile depends on the selected market", () => {
+  const seen = new Set(SCROLL_REGIONS.map((region) => scrollPercentile(5.2, region)));
+  assert.ok(seen.size > 1, `expected the percentile to move with region, got ${[...seen]}`);
+  // Thailand's own standings average is 5.2h, so a 5.2h Thai user must not
+  // be told they out-scroll most of Thailand.
+  assert.ok(
+    scrollPercentile(5.2, "th") < scrollPercentile(5.2, "sg"),
+    "a higher market average must place the same hours lower",
+  );
+});
+
+// A4: 9.7h-12h previously all returned P100 / "Top 1%" — 19% of the slider
+// producing one identical rank.
+test("the top of the slider is not a dead range", () => {
+  const tail = [9.5, 10, 11, 12].map((hours) => scrollPercentile(hours, "ww"));
+  assert.ok(new Set(tail).size > 1, `expected distinct ranks across the tail, got ${tail}`);
+  assert.ok(Math.max(...tail) <= PERCENTILE_MAX);
+});
+
+test("percentiles stay inside a living range and rise monotonically", () => {
+  let previous = 0;
+  for (let hours = 0.5; hours <= 12.0001; hours += 0.1) {
+    const p = scrollPercentile(Math.round(hours * 10) / 10, "ww");
+    assert.ok(p >= PERCENTILE_MIN && p <= PERCENTILE_MAX, `P${p} outside [1, 99]`);
+    assert.ok(p >= previous, "percentile must not decrease as hours rise");
+    previous = p;
+  }
+});
+
+// B4: a normal distribution over a strictly positive quantity assigned ~2%
+// of people negative screen time.
+test("no share of the population sits below zero hours", () => {
+  assert.equal(scrollPercentile(0, "ww"), PERCENTILE_MIN);
+  assert.equal(scrollPercentile(-3, "ww"), PERCENTILE_MIN);
+  assert.equal(scrollPercentile(Number.NaN, "ww"), PERCENTILE_MIN);
+});
+
+test("region averages come from the standings table", () => {
+  assert.equal(getRegionAverageHours("th"), 5.2);
+  assert.equal(getRegionAverageHours("sg"), 4.1);
+  assert.equal(getRegionAverageHours("ww"), 4.4);
 });

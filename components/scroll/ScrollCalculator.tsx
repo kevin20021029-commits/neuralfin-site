@@ -1,19 +1,47 @@
 "use client";
 
 import { ChangeEvent, KeyboardEvent, type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
-import { appLinks } from "@/lib/site";
-import { classifyParseOutcome, parseScreenTimeText, type AppRoast, type ParseFlag, type ParseOutcome, type ScreenTimeLayout } from "@/lib/scroll/ocrSanitizer";
+import { appLinks, appStoreLinkForRegion } from "@/lib/site";
+import { classifyParseOutcome, parseScreenTimeText, type AppRoast, type ParseFlag, type ParseOutcome, type ParsedScreenTime, type ScreenTimeLayout } from "@/lib/scroll/ocrSanitizer";
 import { recognizeScreenTime } from "@/lib/scroll/ocrPipeline";
 import { detectWebviewEnv, type WebviewEnv } from "@/lib/scroll/webview";
-import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, detectScrollLocale, normalPercentile, normalizeScrollLocale, type ScrollLocale, type ScrollRegion } from "@/lib/scroll/campaign";
+import { SCROLL_CAMPAIGN_UTM, SCROLL_DEEP_LINK_PARAMS, SCROLL_STANDINGS, detectScrollLocale, getRegionAverageHours, normalizeScrollLocale, scrollPercentile, type ScrollLocale, type ScrollRegion } from "@/lib/scroll/campaign";
 import { FLIP_MINUTES_PER_DAY, LADDER_TRACKS, getEducationOutput, getTrackName } from "@/lib/scroll/education";
 import { getArchetypeCopy, getScanStageMessage, getShareCaptionVariant, getTapeNote, type ScanStage } from "@/lib/scroll/personality";
 import { getRankFrame } from "@/lib/scroll/rank";
 
-const HRS_YR = 365;
 const PUBLIC_HOME_URL = "https://www.neuralfin.ai";
 const PUBLIC_SCROLL_LABEL = "www.neuralfin.ai/scroll";
 const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+
+const SLIDER_MIN_HOURS = 0.5;
+const SLIDER_MAX_HOURS = 12;
+
+// Region from the locale's region subtag (BCP-47 position), not a substring
+// scan of the whole tag.
+export function regionFromLocale(locale: string): ScrollRegion {
+  const subtag = locale.split(/[-_]/).slice(1).find((part) => /^[A-Za-z]{2}$/.test(part))?.toLowerCase();
+  if (subtag === "hk" || subtag === "mo") return "hk";
+  if (subtag === "sg") return "sg";
+  if (subtag === "th") return "th";
+  return "ww";
+}
+
+// Days in the current year — a fixed 365 under-counts every leap year, and
+// this feeds the card's headline number.
+function daysInYear(date = new Date()) {
+  const year = date.getFullYear();
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
+}
+
+// Axis labels sit at their own value's offset along the track. Positioning
+// five mixed labels with `space-between` put "saint" at 3.4 h and
+// "certified scroller" at 8.7 h — each two archetype bands from its name.
+function trackOffsetPercent(hours: number) {
+  const clamped = Math.max(SLIDER_MIN_HOURS, Math.min(SLIDER_MAX_HOURS, hours));
+  return ((clamped - SLIDER_MIN_HOURS) / (SLIDER_MAX_HOURS - SLIDER_MIN_HOURS)) * 100;
+}
+
 
 type Lang = ScrollLocale;
 type TapeRow = { region: ScrollRegion; hours: number; flipped?: boolean };
@@ -46,7 +74,8 @@ const str = {
     slider: "Your daily screen time",
     sliderSub: "count your scroll — social, video, games",
     hday: "h / day",
-    scales: ["30 min", "saint", "6 h", "certified scroller", "12 h"],
+    // Numeric axis ticks only — archetype ticks derive from ARCHETYPES.
+    axis: ["30 min", "6 h", "12 h"],
     regions: { ww: "Worldwide", hk: "Hong Kong", sg: "Singapore", th: "Thailand" },
     scrollpos: "Scroll position",
     openloss: "Open loss",
@@ -104,8 +133,12 @@ const str = {
     f2: "Screenshot analysis happens locally in your browser; images and app names are not uploaded or stored. Community stats are anonymous (hours and market only).",
     f3: "This page is a marketing illustration for education and entertainment. It is not financial advice, a forecast, or a projection of returns.",
     vbadge: "VERIFIED SCROLL",
-    cardtitle: "My Scroll P&L · 2026",
+    cardtitle: (year: number) => `My Scroll P&L · ${year}`,
     cardflip: `Flipping ${FLIP_MINUTES_PER_DAY} min/day →`,
+    // Privacy-adjacent: formal register, no slang (VOICE.md).
+    shareOptIn: "Add my result to the anonymous market stats (hours and market only)",
+    // Blocking error state: formal register, no slang (VOICE.md).
+    saveFailed: "Couldn't save the picture. Please try again, or screenshot the card.",
     challenge: "Are you down more than me?",
     scan: "Scan yours ↓",
     savebtn: "Download picture 📸",
@@ -133,7 +166,7 @@ const str = {
     // DRAFT — native review required
     sliderSub: "計算你的滑屏：社交、影片、遊戲",
     hday: "小時／天",
-    scales: ["30分鐘", "聖人", "6小時", "認證滑屏員", "12小時"],
+    axis: ["30分鐘", "6小時", "12小時"],
     regions: { ww: "全球", hk: "香港", sg: "新加坡", th: "泰國" },
     scrollpos: "滑屏持倉",
     openloss: "未平虧損",
@@ -204,8 +237,12 @@ const str = {
     f2: "截圖分析只在你的瀏覽器本機進行；圖片與 App 名稱不會上傳或儲存。社群統計為匿名（僅時數與市場）。",
     f3: "本頁為市場推廣示意，僅供教育與娛樂。不構成投資建議、預測或回報推算。",
     vbadge: "已驗證滑屏",
-    cardtitle: "我的滑屏損益 · 2026",
+    cardtitle: (year: number) => `我的滑屏損益 · ${year}`,
     cardflip: `每天翻轉 ${FLIP_MINUTES_PER_DAY} 分鐘 →`,
+    // DRAFT — native review required (privacy-adjacent: formal register)
+    shareOptIn: "將我的結果加入匿名市場統計（僅時數與市場）",
+    // DRAFT — native review required (blocking error state: formal register)
+    saveFailed: "無法儲存圖片。請再試一次，或直接為此卡片截圖。",
     challenge: "你虧得比我多嗎？",
     scan: "掃你的 ↓",
     savebtn: "下載圖片 📸",
@@ -235,7 +272,7 @@ const str = {
     slider: "你的每日屏幕时间",
     sliderSub: "计算你的滑屏：社交、视频、游戏",
     hday: "小时／天",
-    scales: ["30分钟", "圣人", "6小时", "认证滑屏员", "12小时"],
+    axis: ["30分钟", "6小时", "12小时"],
     regions: { ww: "全球", hk: "香港", sg: "新加坡", th: "泰国" },
     scrollpos: "滑屏持仓",
     openloss: "浮亏",
@@ -298,8 +335,12 @@ const str = {
     f2: "截图分析只在你的浏览器本地进行；图片与 App 名称不会上传或存储。社区统计为匿名（仅时长与市场）。",
     f3: "本页为市场推广示意，仅供教育与娱乐。不构成投资建议、预测或回报推算。",
     vbadge: "已验证滑屏",
-    cardtitle: "我的滑屏损益 · 2026",
+    cardtitle: (year: number) => `我的滑屏损益 · ${year}`,
     cardflip: `每天翻转 ${FLIP_MINUTES_PER_DAY} 分钟 →`,
+    // DRAFT — native review required (privacy-adjacent: formal register)
+    shareOptIn: "将我的结果加入匿名市场统计（仅时长与市场）",
+    // DRAFT — native review required (blocking error state: formal register)
+    saveFailed: "无法保存图片。请重试，或直接为此卡片截图。",
     challenge: "你亏得比我多吗？",
     scan: "扫你的 ↓",
     savebtn: "下载图片 📸",
@@ -328,7 +369,7 @@ const str = {
     slider: "เวลาหน้าจอต่อวันของคุณ",
     sliderSub: "นับเฉพาะการไถ — โซเชียล วิดีโอ เกม",
     hday: "ชม. / วัน",
-    scales: ["30 นาที", "นักบุญ", "6 ชม.", "นักเลื่อนตัวจริง", "12 ชม."],
+    axis: ["30 นาที", "6 ชม.", "12 ชม."],
     regions: { ww: "ทั่วโลก", hk: "ฮ่องกง", sg: "สิงคโปร์", th: "ไทย" },
     scrollpos: "สถานะไถฟีด",
     openloss: "ขาดทุนลอยตัว",
@@ -391,7 +432,11 @@ const str = {
     f2: "การวิเคราะห์สกรีนช็อตเกิดขึ้นในเบราว์เซอร์ของคุณเท่านั้น รูปภาพและชื่อแอปไม่ถูกอัปโหลดหรือจัดเก็บ สถิติชุมชนเป็นแบบนิรนาม (เฉพาะชั่วโมงและตลาด)",
     f3: "หน้านี้เป็นภาพประกอบทางการตลาดเพื่อการศึกษาและความบันเทิง ไม่ใช่คำแนะนำการลงทุน การคาดการณ์ หรือการประมาณผลตอบแทน",
     vbadge: "ไถฟีดยืนยันแล้ว",
-    cardtitle: "P&L การไถของเรา · 2026",
+    cardtitle: (year: number) => `P&L การไถของเรา · ${year}`,
+    // DRAFT — native review required (privacy-adjacent: formal register)
+    shareOptIn: "เพิ่มผลลัพธ์ของฉันในสถิติตลาดแบบไม่ระบุตัวตน (เฉพาะชั่วโมงและตลาด)",
+    // DRAFT — native review required (blocking error state: formal register)
+    saveFailed: "บันทึกรูปภาพไม่สำเร็จ กรุณาลองใหม่ หรือถ่ายภาพหน้าจอการ์ดนี้",
     cardflip: `พลิกวันละ ${FLIP_MINUTES_PER_DAY} นาที →`,
     challenge: "คุณลบหนักกว่าเราไหม?",
     scan: "สแกนของคุณ ↓",
@@ -487,6 +532,35 @@ function hasBlockingFlags(parsed: { flags: readonly string[] }) {
   return parsed.flags.some((flag) => flag !== "restricted_pass_failed");
 }
 
+// A read can be flag-free and still wrong, so the badge needs positive
+// evidence rather than merely the absence of complaints.
+const VERIFY_MIN_CONFIDENCE = 60;
+
+// Category rows were recognized but the parser could not reconcile them
+// against the headline (it suppressed the ratio). That is an explicit
+// statement that the two numbers on the screenshot were not squared with
+// each other — enough for the slider, not enough to assert VERIFIED.
+//
+// Only the "average" path attempts that reconciliation. The weekly-total
+// path deliberately carries no scroll ratio, so its null scrollHours is by
+// design and must not cost a correct weekly parse its badge.
+function categoriesUnreconciled(parsed: ParsedScreenTime) {
+  return parsed.source === "average" && parsed.sawCategories && parsed.scrollHours === null;
+}
+
+// The badge is the page's strongest claim: that this figure came from the
+// user's own screenshot and was checked. Gate it on anchored source, clean
+// flags, real OCR confidence, and a reconciled category cross-check.
+export function canVerifyParse(parsed: ParsedScreenTime) {
+  return Boolean(
+    parsed.hours &&
+      parsed.source !== "day-total" &&
+      !hasBlockingFlags(parsed) &&
+      !categoriesUnreconciled(parsed) &&
+      parsed.confidence >= VERIFY_MIN_CONFIDENCE,
+  );
+}
+
 export function ScrollCalculator() {
   const [hours, setHours] = useState(3.5);
   const [lang, setLang] = useState<Lang>("en");
@@ -503,6 +577,12 @@ export function ScrollCalculator() {
   const [appRoasts, setAppRoasts] = useState<AppRoast[]>([]);
   const [tapeRows, setTapeRows] = useState<TapeRow[]>(demoTape);
   const [saveOverlayUrl, setSaveOverlayUrl] = useState<string | null>(null);
+  const [shareStats, setShareStats] = useState(true);
+  const [saveError, setSaveError] = useState(false);
+  // Submit at most once per distinct result. Without this every click of the
+  // download button filed another identical row, inflating the aggregate the
+  // percentiles and standings are computed from.
+  const submittedRef = useRef<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const hoursBlockRef = useRef<HTMLDivElement>(null);
@@ -514,19 +594,31 @@ export function ScrollCalculator() {
 
   const t = str[lang];
   const regionName = t.regions[region];
-  const yearly = Math.round(hours * HRS_YR);
-  const percentile = normalPercentile(hours);
+  const yearDays = daysInYear();
+  const yearly = Math.round(hours * yearDays);
+  // Region-aware: changing the market now changes the comparison the rank
+  // tile has always named.
+  const percentile = scrollPercentile(hours, region);
   const fun = t.fun(yearly);
-  const marketAverage = SCROLL_STANDINGS.find((item) => item.region === region)?.averageHours ?? 4.4;
+  const marketAverage = getRegionAverageHours(region);
   const diff = Math.round(((hours - marketAverage) / marketAverage) * 100);
+  // Below the market average is the good direction on a loss-themed card,
+  // so the chip is styled by valence, not by the sign of the number.
+  const diffIsFavourable = diff < 0;
   const workWeeks = Math.round(yearly / 40);
+  // Derived, not the frozen "+61" — that string sat in a slider-driven
+  // column while never moving, and drifts the moment the flip target changes.
+  const flipHoursPerYear = Math.round((FLIP_MINUTES_PER_DAY * yearDays) / 60);
   const archetype = getArchetypeCopy(hours, lang);
   const arch = archetype.title;
   const archSubtitle = archetype.subtitle;
   const rankFrame = getRankFrame(percentile, regionName, lang);
   const rankLine = rankFrame.title;
-  const maxBar = Math.max(hours, marketAverage) * 1.15;
-  const appStoreHref = appLink(appLinks.appStore, hours, region, verified, lang);
+  // Fixed domain, so BOTH bars move. Normalising to max(you, avg) pinned
+  // whichever bar led at 1/1.15 = 87% for every value, making 12 h vs 4.4 h
+  // indistinguishable from 4.5 h vs 4.4 h.
+  const maxBar = SLIDER_MAX_HOURS;
+  const appStoreHref = appLink(appStoreLinkForRegion(region), hours, region, verified, lang);
   const playStoreHref = appLink(appLinks.googlePlay, hours, region, verified, lang);
   const rangeFill = ((hours - 0.5) / 11.5) * 100;
   const hasAppRoasts = appRoasts.length > 0;
@@ -535,7 +627,17 @@ export function ScrollCalculator() {
     ? t.scrollChip(formatDurationFromHours(parsedScrollStat.scrollHours, lang), formatDurationFromHours(parsedScrollStat.totalHours, lang))
     : null;
   const education = getEducationOutput(hours, lang);
-  const ladderRows = [...t.ladder, t.milestone(education.milestoneLabel)];
+  const cardYear = new Date().getFullYear();
+  // Rung captions come from the ladder schedule, not a frozen Week 1 /
+  // Month 1 / Month 6 list that disagreed with the milestone below it.
+  const ladderRows: Array<[string, string, string]> = [
+    ...t.ladder.map(([, title, sub], index) => [
+      education.ladderSchedule[index]?.label ?? "",
+      title,
+      sub,
+    ] as [string, string, string]),
+    t.milestone(education.milestoneLabel) as unknown as [string, string, string],
+  ];
   const dropTitleText = scanning
     ? getScanStageMessage(lang, scanStage)
     : t.dropTitle;
@@ -572,17 +674,20 @@ export function ScrollCalculator() {
           ? t.dropCouldnt
           : t.dropTitle;
 
+  // Worldwide is not a peer of its own members — it was being ranked against
+  // HK/SG/TH and awarded 🥉 while Thailand got "—". Medals go to the actual
+  // markets; Worldwide still renders, as a reference row.
   const sortedStandings = useMemo(
     () => [...SCROLL_STANDINGS].sort((a, b) => b.flippedPercent - a.flippedPercent),
     [],
   );
+  const rankedMarkets = useMemo(() => sortedStandings.filter((item) => item.region !== "ww"), [sortedStandings]);
 
   useEffect(() => {
-    const locale = navigator.language.toLowerCase();
-    let detectedRegion: ScrollRegion = "ww";
-    if (locale.includes("hk")) detectedRegion = "hk";
-    else if (locale.includes("sg")) detectedRegion = "sg";
-    else if (locale.includes("th")) detectedRegion = "th";
+    // Parse the region SUBTAG rather than substring-matching the whole
+    // locale string: "zh-Hant" contains no region but "…-TH" style
+    // substrings can appear anywhere in a tag.
+    const detectedRegion = regionFromLocale(navigator.language);
     setRegion(detectedRegion);
 
     // Precedence: URL param → stored manual choice → browser/region default.
@@ -630,7 +735,15 @@ export function ScrollCalculator() {
     setUploadPreviewUrl(nextUrl);
   }
 
+  // Opt-out, defaulting on. The payload stays {hours, region} — the same
+  // anonymous contract the footer already discloses — but saving the card no
+  // longer implies submitting, and the choice is stated at the button rather
+  // than only in the compliance footer.
   async function submitResult() {
+    if (!shareStats) return;
+    const key = `${hours}|${region}`;
+    if (submittedRef.current === key) return;
+    submittedRef.current = key;
     await fetch("/api/scroll-results", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -672,7 +785,7 @@ export function ScrollCalculator() {
       window.clearTimeout(auditTimer);
       sendParseTelemetry(parsed.layout, classifyParseOutcome(parsed), parsed.flags);
       setAppRoasts(parsed.apps);
-      if (parsed.hours && parsed.source !== "day-total" && !hasBlockingFlags(parsed)) {
+      if (parsed.hours && canVerifyParse(parsed)) {
         setScanStage("success");
         await wait(350);
         const rounded = roundSliderHours(parsed.hours);
@@ -748,7 +861,15 @@ export function ScrollCalculator() {
 
   async function saveCard() {
     const node = cardRef.current;
-    if (!node) return;
+    setSaveError(false);
+    if (!node) {
+      setSaveError(true);
+      return;
+    }
+    // A zero-width node made pixelRatio Infinity, which failed toBlob and
+    // returned silently. Guard the divisor and fall back to 1:1.
+    const width = node.offsetWidth;
+    const pixelRatio = width > 0 ? 1080 / width : 1;
     // Export the real DOM card node — parity with what the user sees is
     // true by construction. ~1080px wide at 320px card width.
     const { toBlob } = await import("html-to-image");
@@ -756,11 +877,14 @@ export function ScrollCalculator() {
     // "margin: 0 auto" centering as a concrete left margin and renders the
     // card offset out of its own canvas.
     const blob = await toBlob(node, {
-      pixelRatio: 1080 / node.offsetWidth,
+      pixelRatio,
       cacheBust: true,
       style: { margin: "0" },
     }).catch(() => null);
-    if (!blob) return;
+    if (!blob) {
+      setSaveError(true);
+      return;
+    }
     const text = getShareCaptionVariant(lang, `-${fmt.format(yearly)}h`, rankLine);
     // In-app browsers (WeChat, LINE, IG/FB) don't reliably support blob
     // downloads or file share. The universal in-place pattern: show the
@@ -787,7 +911,9 @@ export function ScrollCalculator() {
     a.href = href;
     a.download = "my-scroll-pnl.png";
     a.click();
-    URL.revokeObjectURL(href);
+    // Revoking on the same tick as the click races the download and yields a
+    // failed or 0-byte file in Safari and Firefox. Release on a later tick.
+    window.setTimeout(() => URL.revokeObjectURL(href), 60_000);
     await navigator.clipboard?.writeText(text).catch(() => undefined);
   }
 
@@ -801,10 +927,10 @@ export function ScrollCalculator() {
           <div className="scroll-header-right">
             <div className="scroll-pill">{t.pill}</div>
             <div className="scroll-lang" role="group" aria-label="Language">
-              <button className={lang === "en" ? "on" : ""} onClick={() => setLang("en")} type="button">EN</button>
-              <button className={lang === "zh-Hant" ? "on" : ""} onClick={() => setLang("zh-Hant")} type="button" aria-label="繁體中文">繁</button>
-              <button className={lang === "zh-Hans" ? "on" : ""} onClick={() => setLang("zh-Hans")} type="button" aria-label="简体中文">简</button>
-              <button className={lang === "th" ? "on" : ""} onClick={() => setLang("th")} type="button" aria-label="ภาษาไทย">ไทย</button>
+              <button className={lang === "en" ? "on" : ""} onClick={() => setLang("en")} type="button" aria-pressed={lang === "en"}>EN</button>
+              <button className={lang === "zh-Hant" ? "on" : ""} onClick={() => setLang("zh-Hant")} type="button" aria-pressed={lang === "zh-Hant"} aria-label="繁體中文">繁</button>
+              <button className={lang === "zh-Hans" ? "on" : ""} onClick={() => setLang("zh-Hans")} type="button" aria-pressed={lang === "zh-Hans"} aria-label="简体中文">简</button>
+              <button className={lang === "th" ? "on" : ""} onClick={() => setLang("th")} type="button" aria-pressed={lang === "th"} aria-label="ภาษาไทย">ไทย</button>
             </div>
           </div>
         </header>
@@ -886,6 +1012,7 @@ export function ScrollCalculator() {
                 max="12"
                 step="0.1"
                 value={hours}
+                aria-valuetext={`${hours.toFixed(1)} ${t.hday}`}
                 aria-describedby={scanNotice ? "scroll-scan-notice" : undefined}
                 style={{ "--fill": `${rangeFill}%` } as CSSProperties}
                 onChange={(event) => {
@@ -897,12 +1024,32 @@ export function ScrollCalculator() {
                   setVerified(keepVerified);
                 }}
               />
-              <div className="scroll-scale">{t.scales.map((label) => <span key={label}>{label}</span>)}</div>
+              <div className="scroll-scale">
+                {[SLIDER_MIN_HOURS, 6, SLIDER_MAX_HOURS].map((tickHours, index) => (
+                  <span
+                    key={tickHours}
+                    className="tick"
+                    style={{ left: `${trackOffsetPercent(tickHours)}%` }}
+                  >
+                    {t.axis[index]}
+                  </span>
+                ))}
+                {/* Archetype label rides the thumb, derived from the same
+                    ARCHETYPES thresholds the card reads — so it can never
+                    name a different band than the card does. */}
+                <span className="tick arch" style={{ left: `${trackOffsetPercent(hours)}%` }}>{arch}</span>
+              </div>
             </div>
+
+            {/* One polite live region carrying the whole summary. Eight
+                separate regions would talk over each other on every drag. */}
+            <p className="scroll-sr-only" role="status" aria-live="polite">
+              {`${hours.toFixed(1)} ${t.hday} · ${arch} · ${rankLine} · -${fmt.format(yearly)} ${t.hrsyr}`}
+            </p>
 
             <div className="scroll-regions" role="group" aria-label="Compare against">
               {regionOrder.map((key) => (
-                <button className={region === key ? "on" : ""} key={key} type="button" onClick={() => setRegion(key)}>
+                <button className={region === key ? "on" : ""} key={key} type="button" aria-pressed={region === key} onClick={() => setRegion(key)}>
                   {key === "ww" ? "🌏 " : ""}{t.regions[key]}
                 </button>
               ))}
@@ -933,7 +1080,7 @@ export function ScrollCalculator() {
                 </div>
                 <div className="scroll-pos gain">
                   <div className="name"><b>{t.learnpos} <span className="tag g">{t.compounding}</span></b><span>{t.feedcould}</span></div>
-                  <div className="num mono">+61 {t.hyr}</div>
+                  <div className="num mono">+{fmt.format(flipHoursPerYear)} {t.hyr}</div>
                 </div>
                 {ladderRows.map(([when, title, sub], index) => (
                   <div className="scroll-rung" key={when} style={{ "--stagger": `${index * 90}ms` } as CSSProperties}>
@@ -955,7 +1102,7 @@ export function ScrollCalculator() {
               <div className={`scroll-card${verified ? " verified" : ""}`} ref={cardRef}>
                 <div className="glow r" /><div className="glow g" />
                 {verified ? <div className="vbadge">✓ {t.vbadge}</div> : null}
-                <div className="cb">{t.cardtitle}</div>
+                <div className="cb">{t.cardtitle(cardYear)}</div>
                 <div className="big mono">-{fmt.format(yearly)}h</div>
                 <div className="pace">{t.pace}</div>
                 <div className="rankline">{rankLine} <span className="rk-emoji">{percentile < 50 ? "" : Math.max(1, 100 - percentile) <= 25 ? "💀" : "📉"}</span></div>
@@ -965,7 +1112,7 @@ export function ScrollCalculator() {
                 {hasAppRoasts ? <div className="roast">{t.mostShorted} <b>{appRoastText}</b></div> : null}
                 <div className="chips">
                   <span className="chip"><b>-{workWeeks}</b> {t.wkwks}</span>
-                  <span className="chip"><b>{diff >= 0 ? "+" : ""}{diff}%</b> {t.vsmkt}</span>
+                  <span className={`chip${diffIsFavourable ? " good" : ""}`}><b>{diff >= 0 ? "+" : ""}{diff}%</b> {t.vsmkt}</span>
                   {scrollCardStat ? <span className="chip"><b>{scrollCardStat}</b></span> : null}
                 </div>
                 <div className="vsbar">
@@ -984,6 +1131,19 @@ export function ScrollCalculator() {
               <button className="scroll-download" type="button" onClick={() => { void submitResult(); void saveCard(); }}>
                 {t.savebtn}
               </button>
+              {saveError ? (
+                <p className="scroll-save-error" role="status" aria-live="polite">{t.saveFailed}</p>
+              ) : null}
+              {/* Stated at the button, not only in the compliance footer.
+                  Unchecking stops the POST; the card still saves either way. */}
+              <label className="scroll-optin">
+                <input
+                  type="checkbox"
+                  checked={shareStats}
+                  onChange={(event) => setShareStats(event.target.checked)}
+                />
+                <span>{t.shareOptIn}</span>
+              </label>
               <div className="scroll-stores inline-stores">
                 <a className="scroll-store-button" href={appStoreHref} aria-label="Download on the App Store"><img src="/assets/app-store.svg" alt="Download on the App Store" /></a>
                 <a className="scroll-store-button" href={playStoreHref} aria-label="Get it on Google Play"><img src="/assets/google-play.svg" alt="Get it on Google Play" /></a>
@@ -997,9 +1157,9 @@ export function ScrollCalculator() {
           <section className="scroll-standings scroll-rise d2">
             <h2>{t.stand} 🏆</h2>
             <p className="ssub">{t.standsub}</p>
-            {sortedStandings.map((item, index) => (
-              <div className={`srow${index === 0 ? " leader" : ""}${item.region === region ? " you" : ""}`} key={item.region}>
-                <div className="medal">{["🥇", "🥈", "🥉", "—"][index]}</div>
+            {sortedStandings.map((item) => (
+              <div className={`srow${rankedMarkets[0]?.region === item.region ? " leader" : ""}${item.region === region ? " you" : ""}`} key={item.region}>
+                <div className="medal">{item.region === "ww" ? "🌏" : ["🥇", "🥈", "🥉"][rankedMarkets.indexOf(item)] ?? "—"}</div>
                 <div className="mkt"><b>{item.region === "ww" ? "🌏 " : ""}{t.regions[item.region]}</b>{item.region === region ? <span>{t.youare}</span> : null}</div>
                 <div className="avg mono">{item.averageHours.toFixed(1)}h<span>{t.avgday}</span></div>
                 <div className="flippct mono">{item.flippedPercent}%<span>{t.flipped}</span></div>
@@ -1012,13 +1172,17 @@ export function ScrollCalculator() {
             <h2>{t.tape} 📟</h2>
             <p className="tsub">{t.tapesub}</p>
             {tapeRows.map((row, index) => {
-              const rowYear = Math.round(row.hours * HRS_YR);
-              const rowP = normalPercentile(row.hours);
-              const rowTop = Math.max(1, 100 - rowP);
+              const rowYear = Math.round(row.hours * yearDays);
+              // Same percentile function and same region basis as the tile
+              // and the card — and the same direction, so the green flipped
+              // row no longer carries the worst-looking number on the board.
+              const rowP = scrollPercentile(row.hours, row.region);
               return (
                 <div className={`trow${row.flipped ? " flipped" : ""}`} key={`${row.region}-${row.hours}-${index}`}>
                   <span className="who"><b>{t.anon} · {t.regions[row.region]}</b> · {getTapeNote(lang, Boolean(row.flipped), index)}</span>
-                  <span><span className="tnum mono">{row.flipped ? "+10m" : `-${fmt.format(rowYear)}h`}</span><span className="pct mono">Top {rowTop}%</span></span>
+                  {/* Flipped rows report the same quantity as the rest of the
+                      row (their own hours), not a constant "+10m". */}
+                  <span><span className="tnum mono">{row.flipped ? `+${FLIP_MINUTES_PER_DAY}m` : `-${fmt.format(rowYear)}h`}</span><span className="pct mono">&gt;{rowP}%</span></span>
                 </div>
               );
             })}

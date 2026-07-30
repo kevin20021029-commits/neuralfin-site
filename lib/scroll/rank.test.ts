@@ -2,27 +2,38 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { getRankFrame } from "./rank";
 
-test("rank frame compliments users below median", () => {
-  const frame = getRankFrame(15, "Worldwide", "en");
-
-  assert.equal(frame.title, "Lighter than 85% of people 🌱");
-  assert.equal(frame.subtitle, "nice — your feed doesn't own you");
-  assert.equal(frame.displayPercent, "P15");
+// A5: one metric, one direction, across the whole range. The previous frame
+// swapped metric at the median ("Lighter than 51%" -> "Top 46% scroller"),
+// so crossing 4.2 h inverted both the number and its polarity.
+test("rank frame uses one metric across the whole range", () => {
+  assert.equal(getRankFrame(15, "Worldwide", "en").title, "You scroll more than 15% · Worldwide");
+  assert.equal(getRankFrame(50, "Worldwide", "en").title, "You scroll more than 50% · Worldwide");
+  assert.equal(getRankFrame(63, "Worldwide", "en").title, "You scroll more than 63% · Worldwide");
 });
 
-test("rank frame keeps top framing at and above median", () => {
-  assert.equal(getRankFrame(50, "Worldwide", "en").title, "Top 50% scroller · Worldwide");
-  assert.equal(getRankFrame(63, "Worldwide", "en").title, "Top 37% scroller · Worldwide");
-  assert.equal(getRankFrame(63, "全球", "zh-Hant").title, "全球前 37% 滑屏員");
-  assert.equal(getRankFrame(63, "全球", "zh-Hans").title, "全球前 37% 滑屏员");
+test("rank percentile rises monotonically and never inverts", () => {
+  const values = [1, 15, 49, 50, 63, 90, 99];
+  const rendered = values.map((p) => Number(getRankFrame(p, "Worldwide", "en").displayPercent.slice(1)));
+  for (let i = 1; i < rendered.length; i += 1) {
+    assert.ok(rendered[i] > rendered[i - 1], `expected P${rendered[i]} > P${rendered[i - 1]}`);
+  }
 });
 
-test("rank frame localizes light scroller copy", () => {
-  const hant = getRankFrame(15, "全球", "zh-Hant");
-  assert.equal(hant.title, "比 85% 的人更輕倉 🌱");
-  assert.equal(hant.subtitle, "不錯——feed 還沒收購你");
+// A4: "0%" and "100%" never render.
+test("rank frame clamps the displayed percentile to a living range", () => {
+  assert.equal(getRankFrame(0, "Worldwide", "en").displayPercent, "P1");
+  assert.equal(getRankFrame(100, "Worldwide", "en").displayPercent, "P99");
+  assert.equal(getRankFrame(Number.NaN, "Worldwide", "en").displayPercent, "P50");
+});
 
-  const hans = getRankFrame(15, "全球", "zh-Hans");
-  assert.equal(hans.title, "比 85% 的人更轻仓 🌱");
-  assert.equal(hans.subtitle, "不错——feed 还没收购你");
+test("rank frame keeps the compliment below the median and a roast above", () => {
+  assert.equal(getRankFrame(15, "Worldwide", "en").subtitle, "nice — your feed doesn't own you 🌱");
+  assert.equal(getRankFrame(63, "Worldwide", "en").subtitle, "that's a heavy position to carry");
+});
+
+test("rank frame localizes in every locale", () => {
+  assert.equal(getRankFrame(63, "全球", "zh-Hant").title, "你滑得比 63% 的人多 · 全球");
+  assert.equal(getRankFrame(63, "全球", "zh-Hans").title, "你滑得比 63% 的人多 · 全球");
+  assert.equal(getRankFrame(63, "ไทย", "th").title, "คุณเลื่อนมากกว่า 63% · ไทย");
+  assert.equal(getRankFrame(15, "全球", "zh-Hant").subtitle, "不錯——feed 還沒收購你 🌱");
 });

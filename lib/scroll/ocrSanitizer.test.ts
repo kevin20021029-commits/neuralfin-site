@@ -665,3 +665,42 @@ test("Set-timer rows are never app rows", () => {
   const parsed = parseScreenTimeText("Daily Average 3h 20m\nInstagram 2 h 2 m Set timer", 90);
   assert.deepEqual(parsed.apps, []);
 });
+
+// An iOS Screen Time screenshot carries a "Screen Time Today" card as well
+// as its own markers. Guessing "samsung" for it skews the layout_guess
+// telemetry that decides which OEM skins get dedicated fixtures.
+test("iOS screenshots are not mislabelled as Samsung by the Today card", () => {
+  const iosText = [
+    "Screen Time",
+    "DAILY AVERAGE",
+    "5h 12m",
+    "Most Used Show Categories",
+    "Social 2h 41m",
+    "Screen Time Today",
+    "5h 12m",
+  ].join("\n");
+  assert.equal(guessScreenTimeLayout(iosText), "ios");
+
+  // A genuine Samsung Today card with no iOS markers still reads samsung.
+  assert.equal(guessScreenTimeLayout("Screen time today\n3h 26m\nSet goal"), "samsung");
+});
+
+// PARKED (A0a) — documents the live defect rather than asserting it fixed.
+// Real tesseract output for an iOS "11h 47m" headline is "1 1 h 47m": the
+// digits are split, findDurations has no intra-number space tolerance (it
+// tolerates spaced zh unit tokens only), and resolveAnchoredTotal's leading
+// -value guard treats the orphaned "1" as <=1 char of punctuation noise.
+// The read lands at 1.78h instead of 11.78h.
+// When the tokenizer gains intra-number tolerance, flip this to assert
+// 11.783 and delete the note.
+test("PARKED A0a: OCR-split digits still under-read a two-digit headline", () => {
+  const split = ["Screen Time", "DAILY AVERAGE", "1 1 h 47m | 12% from last week"].join("\n");
+  const parsed = parseScreenTimeText(split, 93);
+  assert.equal(Math.round((parsed.hours ?? 0) * 60), 107); // 1h47m — the defect
+  assert.notEqual(Math.round((parsed.hours ?? 0) * 60), 707); // 11h47m — the truth
+
+  // Clean text of the same headline parses correctly, which is what proves
+  // the defect is tokenization and not the daily-vs-weekly branch.
+  const clean = ["Screen Time", "DAILY AVERAGE", "11h 47m | 12% from last week"].join("\n");
+  assert.equal(Math.round((parseScreenTimeText(clean, 93).hours ?? 0) * 60), 707);
+});

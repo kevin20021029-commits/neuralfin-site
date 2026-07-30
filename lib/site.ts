@@ -30,6 +30,15 @@ export const appLinks = {
   webApp: "http://web.neuralfin.ai/",
 } as const;
 
+// App Store links are storefront-scoped. The scroll calculator offers HK, SG
+// and TH, so a /cn/ link sends those users to a storefront they cannot buy
+// from. Google Play is storefront-agnostic and needs no equivalent.
+const APP_STORE_STOREFRONTS = { ww: "us", hk: "hk", sg: "sg", th: "th" } as const;
+
+export function appStoreLinkForRegion(region: keyof typeof APP_STORE_STOREFRONTS) {
+  return appLinks.appStore.replace("/cn/", `/${APP_STORE_STOREFRONTS[region] ?? "us"}/`);
+}
+
 export const milestones = [
   ["August 2024", "Incorporated the holding company in the Cayman Islands."],
   ["March 2025", "NeuralFin completed its Series A financing at an implied valuation of approximately US$35 million."],
