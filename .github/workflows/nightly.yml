@@ -1,0 +1,58 @@
+# Nightly lane — the two suites too slow for every PR.
+#
+#   test:parity  renders the share card in all four locales at two viewports
+#                and compares the exported PNG against the DOM. It is the ONLY
+#                gate on card rendering, and the 360px pass is what catches the
+#                card clipping its own footer.
+#   test:e2e     drives the real tesseract workers over fixture screenshots.
+#                It is the only test class that catches OCR-model behaviour —
+#                text fixtures cannot, which is where the A0a under-read lived.
+#
+# Both need a Chromium download; e2e also pulls ~10 MB of traineddata at
+# runtime. Either can fail on network rather than on a real regression, so
+# they stay off the PR path where a flake would train people to ignore red.
+name: Nightly
+
+on:
+  schedule:
+    # 02:00 UTC daily.
+    - cron: "0 2 * * *"
+  # Runnable by hand before a release or after touching the card/parser.
+  workflow_dispatch:
+
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+jobs:
+  browser-suites:
+    name: card parity · OCR e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Version pinned to match the parity harness's own error hint.
+      - name: Install Chromium
+        run: npx playwright@1.62.0 install --with-deps chromium
+
+      # The parity harness starts its own `next start`, so it needs a build.
+      - name: Production build
+        run: npm run build
+
+      - name: Card export parity (4 locales × 2 viewports)
+        run: npm run test:parity
+
+      # Kept separate so a network-flaky traineddata fetch cannot mask a
+      # genuine parity failure above.
+      - name: OCR end-to-end (real tesseract workers)
+        run: npm run test:e2e
