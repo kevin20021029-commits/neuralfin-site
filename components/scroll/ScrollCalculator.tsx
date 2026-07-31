@@ -1143,7 +1143,11 @@ export function ScrollCalculator() {
                   <div className="scroll-rung" key={when} style={{ "--stagger": `${index * 90}ms` } as CSSProperties}>
                     <div className="when mono">{when}</div>
                     <div>
-                      <span>{title}{index < LADDER_TRACKS.length ? <i>{getTrackName(LADDER_TRACKS[index], lang)}</i> : null}</span>
+                      <span>{title}</span>
+                      {/* Own line: inline after the title, the chip landed
+                          wherever the title happened to wrap — beside
+                          "sweating" on one rung, below the title on another. */}
+                      {index < LADDER_TRACKS.length ? <i>{getTrackName(LADDER_TRACKS[index], lang)}</i> : null}
                       <span>{sub}</span>
                     </div>
                   </div>

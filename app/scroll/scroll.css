@@ -564,7 +564,7 @@
   display: flex;
   gap: 12px;
   border-bottom: 1px dashed var(--line);
-  padding: 10px 0;
+  padding: 13px 0;
   font-size: 14px;
   animation-delay: var(--stagger, 0ms);
 }
@@ -593,17 +593,29 @@
   font-size: 14px;
 }
 
+/* The course a lesson belongs to. This is HIERARCHY, not status — but it
+   was styled as a bordered chip, identical to the COMPOUNDING status tag
+   above it, and inline (margin-left) it wrapped wherever the title happened
+   to end. The result read as a floating object with nothing to attach to.
+   Hierarchy is expressed by connection and subordination, so: a turn-down
+   connector pointing back at the title it belongs to, pulled tight beneath
+   that title (2px above, 9px below), and no border or fill so it reads as
+   an annotation rather than a competing chip. */
 .scroll-rung i {
   display: inline-flex;
-  margin-left: 8px;
-  border: 1px solid rgba(22,240,194,0.18);
-  border-radius: 999px;
+  align-items: baseline;
+  gap: 6px;
+  margin: 2px 0 9px;
   color: var(--mint);
-  padding: 2px 7px;
-  font-size: 10px;
+  font-size: 11px;
   font-style: normal;
-  font-weight: 800;
-  vertical-align: 1px;
+  font-weight: 700;
+}
+
+.scroll-rung i::before {
+  content: "\21B3";
+  opacity: 0.5;
+  font-weight: 400;
 }
 
 .scroll-lesson-zero {
