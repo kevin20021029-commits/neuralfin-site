@@ -1140,7 +1140,11 @@ export function ScrollCalculator() {
                   <div className="num mono">+{fmt.format(flipHoursPerYear)} {t.hyr}</div>
                 </div>
                 {ladderRows.map(([when, title, sub], index) => (
-                  <div className="scroll-rung" key={when} style={{ "--stagger": `${index * 90}ms` } as CSSProperties}>
+                  <div
+                    className={`scroll-rung${index === ladderRows.length - 1 ? " milestone" : ""}`}
+                    key={when}
+                    style={{ "--stagger": `${index * 90}ms` } as CSSProperties}
+                  >
                     <div className="when mono">{when}</div>
                     <div>
                       <span>{title}</span>

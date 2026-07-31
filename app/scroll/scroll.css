@@ -582,6 +582,32 @@
   text-transform: uppercase;
 }
 
+/* Tracked monospace is a Latin/numeral affordance. Applied to Han it reads
+   loose and unset; applied to Thai it pulls apart clusters the script needs
+   kept together, and the mono stack has no real Thai coverage anyway. Those
+   scripts get the normal sans face at normal tracking. */
+:root[lang^="zh"] .scroll-rung .when,
+:root[lang="th"] .scroll-rung .when {
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+}
+
+/* The last rung is the milestone, and its label is a DATE, not a "WEEK 3"
+   tag — "BY SEPTEMBER 2026" broke across three lines in a column sized for
+   the short form, and the localized dates orphaned their last token
+   ("到2026年9" / "月", "ภายใน กันยายน" / "2026"). It stacks instead, so the
+   date gets the full width it needs. This also reads correctly: the
+   milestone is the payoff, not another week. */
+.scroll-rung.milestone {
+  flex-direction: column;
+  gap: 5px;
+}
+
+.scroll-rung.milestone .when {
+  min-width: 0;
+  padding-top: 0;
+}
+
 .scroll-rung span {
   display: block;
   color: var(--muted);
