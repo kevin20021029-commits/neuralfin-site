@@ -63,36 +63,36 @@ zh-Hans tables live in `components/scroll/ScrollCalculator.tsx`,
 Open item carried out of that review: compliance strings (f1/f2/f3) still
 need compliance approval per script — native review does not cover them.
 
-### th (Thai)
+### th (Thai) — REVIEWED
 
-REVIEWED (2026-07-30). The th set is written in a Thai-native internet
-register, not a literal translation of the EN slang. The judgment calls
-below were made during that pass and are recorded so a future reviewer can
-challenge them rather than rediscover them:
+Native review complete (reviewer: native speaker, 2026-07-31), all 119 rows.
+The th set is written in a Thai-native internet register, not a literal
+translation of the EN slang. The judgment calls flagged before review are
+now resolved:
 
-- Trading-slang substitutions: "down bad" → ดอยแล้ว (bagholder slang),
-  "open loss" → ขาดทุนลอยตัว, "most shorted" → ช็อตหนักสุด, "portfolio:
-  vibes" → พอร์ต: ใช้ความรู้สึกล้วน ๆ
-- "Touch grass" kept as the borrowed meme (ไปสัมผัสหญ้า), which circulates
-  in Thai internet culture as-is
-- Scrolling rendered as การไถฟีด/การไถ/นักเลื่อน — confirm register
-- First person: DECIDED — เรา everywhere, including the
-  card title (P&L การไถของเรา) and challenge line. Gender-neutral
-  consistency beats formality; reviewer may overrule.
-- Years: DECIDED — Gregorian (2026), not Buddhist era
-  (2569), on the card and milestone dates. Rationale: the share card mixes
-  with an English URL/hashtag, CE years are conventional in Thai fintech,
-  and Buddhist-era years would break shared-card comparability across
-  markets. Thai month names are kept (กันยายน 2026). Reviewer may
-  challenge.
-- Company name stays in English in f1 (no official Thai name); SFC rendered
-  as สำนักงาน ก.ล.ต. ฮ่องกง (SFC). f1/f2/f3 were signed off on 2026-07-31
-  and are frozen again under CLAUDE.md Hard Rule 3 — native review does not
-  cover compliance copy, and any future edit needs a fresh approval.
-- Thai spacing and ๆ usage throughout
-- The full th tables live in `components/scroll/ScrollCalculator.tsx`,
-  `lib/scroll/personality.ts`, `lib/scroll/education.ts`, and
-  `lib/scroll/rank.ts`
+- **First person: CONFIRMED** — เรา everywhere, including the card title
+  (P&L การไถฟีดของเรา) and the challenge line.
+- **Years: CONFIRMED** — Gregorian (2026), not Buddhist era (2569), on the
+  card and milestone dates. Thai month names are kept.
+- **"down bad": RESOLVED** — the reviewer replaced ดอยแล้ว (bagholder slang)
+  with **จมดิ่ง** in the tape notes. Do not reinstate ดอยแล้ว.
+- **"touch grass": KEPT** as the borrowed meme, tightened to
+  **ผู้สมัครแตะหญ้า**.
+- **"open loss": RESOLVED** — ขาดทุนลอยตัว shortened to plain **ขาดทุน**.
+- **"most shorted": RESOLVED** — ช็อตหนักสุด replaced with **ลบหนักสุด**.
+- **Scrolling: RESOLVED** — the verb is **ไถฟีด / ไถ** throughout, and the
+  agent noun is **นักไถ** (นักไถใบเซอร์, นักไถสายชิล). The earlier
+  เลื่อน/นักเลื่อน forms were replaced everywhere, including the rank line.
+
+Compliance strings (f1/f2/f3) were returned UNCHANGED by the reviewer and
+remain `NEEDS-COMPLIANCE-APPROVAL`: native review does not cover compliance
+copy, which needs its own sign-off per script/language (CLAUDE.md Hard
+Rule 3). SFC is rendered สำนักงาน ก.ล.ต. ฮ่องกง (SFC); the company name
+stays in English (no official Thai name).
+
+The full th tables live in `components/scroll/ScrollCalculator.tsx`,
+`lib/scroll/personality.ts`, `lib/scroll/education.ts`, and
+`lib/scroll/rank.ts`.
 
 ## Maintenance
 

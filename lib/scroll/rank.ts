@@ -30,7 +30,10 @@ const RANK_COPY = {
     heavy: "这个仓位有点重",
   },
   th: {
-    title: (percent: number, regionName: string) => `คุณเลื่อนมากกว่า ${percent}% · ${regionName}`,
+    // Reviewer supplied the pre-A5 two-branch strings ("Top 37% นักไถฟีด" /
+    // "คุณไถมากกว่า 63%"). The page now uses ONE monotonic convention, so the
+    // vocabulary is adopted (ไถ, not เลื่อน) inside the current structure.
+    title: (percent: number, regionName: string) => `คุณไถมากกว่า ${percent}% · ${regionName}`,
     light: "ดีมาก — ฟีดยังไม่ได้เป็นเจ้าของคุณ 🌱",
     heavy: "สถานะนี้หนักอยู่นะ",
   },

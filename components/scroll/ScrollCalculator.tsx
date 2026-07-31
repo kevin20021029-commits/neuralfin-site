@@ -373,35 +373,43 @@ export const str = {
       return { title: "相当于飞了香港→纽约", sub: "但一里“飞行里程”都没攒到。", num: `×${Math.round(yr / 16)}趟` };
     },
   },
-  // REVIEWED (2026-07-30). Thai-native internet register, not a literal EN
-  // translation — see VOICE.md. f1/f2/f3 below are COMPLIANCE-APPROVED
-  // 2026-07-31.
+  // REVIEWED — native review complete (reviewer: native speaker,
+  // 2026-07-31), all 119 rows. Thai-native internet register, not a literal
+  // EN translation — see VOICE.md.
+  // EXCEPTION: f1/f2/f3 were returned UNCHANGED by the reviewer and native
+  // review does not cover compliance copy — they still need formal
+  // compliance sign-off for Thai (CLAUDE.md Hard Rule 3).
   th: {
-    pill: "สร้างมาเพื่อเจนไถฟีด",
-    h1a: "การไถฟีดของคุณก็มี",
-    sub: "ลากไปที่เวลาหน้าจอต่อวันของคุณ ดูความเสียหาย ดูอันดับ แชร์การ์ด แล้วไปพลิกให้เขียวในแอป",
+    pill: "สร้างมาเพื่อสายไถฟีด",
+    h1a: "การไถฟีดของคุณก็มี ",
+    sub: "ไปที่เวลาหน้าจอเฉลี่ยต่อวันของคุณ ดูความเสียหาย ดูอันดับ โพสต์การ์ด แล้วพลิกให้เป็นสีเขียวในแอป",
     steps: ["อัปโหลด", "ดูความเสียหาย", "โพสต์เลย"],
     slider: "เวลาหน้าจอต่อวันของคุณ",
-    sliderSub: "นับเฉพาะการไถ — โซเชียล วิดีโอ เกม",
+    sliderSub: "นับเวลาที่คุณไถฟีด — โซเชียล วิดีโอ และเกม",
     hday: "ชม. / วัน",
     axis: ["30 นาที", "6 ชม.", "12 ชม."],
     regions: { ww: "ทั่วโลก", hk: "ฮ่องกง", sg: "สิงคโปร์", th: "ไทย" },
     scrollpos: "สถานะไถฟีด",
-    openloss: "ขาดทุนลอยตัว",
+    openloss: "ขาดทุน",
     verified: "ยืนยันแล้ว",
     hrsyr: "ชั่วโมงต่อปี",
-    pace: "ตามจังหวะนี้",
+    pace: "ตามอัตราปัจจุบัน",
     learnpos: "สถานะการเรียน",
     compounding: "กำลังทบต้น",
     feedcould: "สิ่งที่ฟีดของคุณสอนคุณได้",
+    // Reviewer's copy carried a literal "42"; restored to the ${lessons}
+    // slot — the figure is slider-derived.
     lessonYield: (hours: string, lessons: number, phrase: string, track: string) =>
-      `วันละ ${hours} ชม. = ${lessons} บทเรียนสั้นซ่อนอยู่ในการไถของคุณ เรียนจบ${track}ได้${phrase}`,
-    lessonZero: "บทเรียนที่ศูนย์ ฟรี:",
+      `เวลาไถฟีด ${hours} ชม./วัน = บทเรียนสั้น ${lessons} บท ซ่อนอยู่ในการไถฟีดของคุณ สามารถเรียนจบ ${track} ได้ ${phrase}`,
+    lessonZero: "บทเรียนแรก ฟรี:",
     hyr: "ชม./ปี",
+    // NOTE: the `when` column is no longer rendered — rung captions derive
+    // from getLadderSchedule()/formatRungLabel. Reviewer's สัปดาห์ที่ 1 /
+    // เดือนที่ 1 / เดือนที่ 6 are kept for the record but do not reach the UI.
     ladder: [
-      ["สัปดาห์ 1", "ETF จริง ๆ แล้วคืออะไร", "และทำไมใคร ๆ ก็พูดถึงมันไม่หยุด"],
-      ["เดือน 1", "อ่านงบดุลได้แบบไม่เหงื่อตก", "รู้ว่าตัวเลขซ่อนอยู่ตรงไหน"],
-      ["เดือน 6", "สร้างมุมมองหุ้นเฝ้าดูตัวแรกของคุณ", "ความเห็นของตัวเอง ไม่ใช่ทิปจากกลุ่มแชท"],
+      ["สัปดาห์ที่ 1", "ETF คืออะไร?", "ทำไมทุกคนถึงพูดถึงมัน"],
+      ["เดือนที่ 1", "อ่านงบดุลเป็นแบบเหงื่อไม่ตก", "รู้ว่าตัวเลขสำคัญอยู่ตรงไหน"],
+      ["เดือนที่ 6", "สร้าง Watchlist หุ้นชุดแรกจากมุมมองของตัวเอง", "ไม่ใช่ทิปจากกลุ่มแชท"],
     ],
     milestone: (date: string) => [
       "ภายใน " + date,
@@ -409,64 +417,72 @@ export const str = {
       "สนับสนุนโดยฟีดของคุณล้วน ๆ",
     ],
     dropTitle: "อัปโหลดสกรีนช็อตเวลาหน้าจอของคุณ",
-    dropSub: "อ่านบนเครื่องของคุณ · ไม่อัปโหลดเด็ดขาด",
+    dropSub: "อ่านบนอุปกรณ์ของคุณ · ไม่มีการอัปโหลด",
     dropHint: "iPhone: การตั้งค่า → เวลาหน้าจอ · Android: Digital Wellbeing",
     dropReceived: "✓ ได้รับสกรีนช็อตแล้ว",
     dropRead: (duration: string) => `✓ อ่านได้: ${duration}`,
-    dropReadScrollDay: (scroll: string, total: string) => `ไถไป ${scroll} จากทั้งวัน ${total}`,
-    dropReadScrollWeek: (scroll: string, total: string) => `ไถไป ${scroll} จากทั้งสัปดาห์ ${total}`,
-    dropReadScroll: (scroll: string) => `เวลาไถ ${scroll}`,
+    dropReadScrollDay: (scroll: string, total: string) => `ไถฟีดไป ${scroll} จากทั้งวัน ${total}`,
+    dropReadScrollWeek: (scroll: string, total: string) => `ไถฟีดไป ${scroll} จากทั้งสัปดาห์ ${total}`,
+    dropReadScroll: (scroll: string) => `เวลาไถฟีด ${scroll}`,
     dropCouldnt: "อ่านสกรีนช็อตนี้ไม่ได้",
     dropReplace: "ลองสกรีนช็อตอื่น",
-    dropDone: "เราอ่านได้ {hours} ชม./วัน — ถูกไหม?",
-    dropDay: (duration: string) => `นี่คือตัวเลขของวันนี้ (${duration}) — ตั้งให้แล้ว อยากได้ค่าเฉลี่ยจริง อัปโหลดมุมมองรายสัปดาห์`,
-    dropApps: "อ่านชั่วโมงของคุณไม่ได้ — ตั้งเองด้านล่างได้เลย",
-    dropPartialChip: "\u2713 เจอรายชื่อแอปแล้ว",
-    dropAppsOnly: "เจอรายชื่อแอปแล้ว — แต่ไม่เจอเวลารวม เลื่อนขึ้นบนสุดของเวลาหน้าจอ แล้วแคปตรงค่าเฉลี่ยต่อวัน",
-    dropCategoriesOnly: "เจอหมวดหมู่แล้ว — แต่ไม่เจอเวลารวม เลื่อนขึ้นบนสุดของเวลาหน้าจอ แล้วแคปตรงค่าเฉลี่ยต่อวัน",
-    longPressSave: "กดค้างที่รูปเพื่อบันทึก",
+    dropDone: "เราอ่านค่าได้ {hours} ชม./วัน — ถูกต้องไหม?",
+    dropDay: (duration: string) => `ตัวเลขของวันนี้ (${duration}) — บันทึกให้แล้ว ถ้าอยากได้ค่าเฉลี่ยจริง อัปโหลดมุมมองรายสัปดาห์`,
+    dropApps: "อ่านชั่วโมงของคุณไม่ได้ — ตั้งค่าเองด้านล่างได้เลย",
+    dropPartialChip: "\u2713 พบรายการแอปของคุณแล้ว",
+    dropAppsOnly: "พบรายการแอปแล้ว แต่ยังไม่พบยอดรวม เลื่อนขึ้นไปด้านบนสุดของหน้าเวลาหน้าจอ แล้วแคปภาพค่าเฉลี่ยรายวัน",
+    dropCategoriesOnly: "พบหมวดหมู่แล้ว แต่ยังไม่พบยอดรวม เลื่อนขึ้นไปด้านบนสุดของหน้าเวลาหน้าจอ แล้วแคปภาพค่าเฉลี่ยรายวัน",
+    longPressSave: "กดค้างที่ภาพเพื่อบันทึก",
     overlayClose: "ปิด",
-    dropFail: "อ่านชั่วโมงของคุณไม่ได้ — ตั้งเองด้านล่างได้เลย",
-    orManual: "หรือลากเองก็ได้",
-    priv: "สกรีนช็อตถูกอ่านบนเครื่องของคุณและไม่มีการอัปโหลด ชื่อแอปเป็นความลับ เว้นแต่คุณจะแชร์เอง",
+    dropFail: "อ่านค่าชั่วโมงไม่ได้ — ตั้งค่าด้านล่างเองได้เลย",
+    orManual: "หรือลากปรับก็ได้",
+    priv: "อ่านภาพหน้าจอบนอุปกรณ์ของคุณเท่านั้น ไม่มีการอัปโหลด ชื่อแอปจะไม่ถูกเปิดเผย ยกเว้นคุณเลือกแชร์เอง",
     stand: "อันดับตลาด",
-    standsub: "จัดอันดับด้วย % ที่พลิกได้ — ตลาดที่เปลี่ยนการไถเป็นสกิลได้ชนะ",
-    standnote: "ข้อมูลตัวอย่าง เวอร์ชันเปิดตัว: คำนวณจากสถิตินิรนามชุดเดียวกัน (ชั่วโมง + ตลาดเท่านั้น) ช่วงก่อนเปิดตัวใช้ค่าเฉลี่ยจากสถิติสาธารณะจนกว่าข้อมูลชุมชนจะมากพอ",
+    standsub: "จัดอันดับตาม % ที่พลิกได้ ยิ่งเปลี่ยนเวลาไถฟีดเป็นทักษะได้มาก อันดับยิ่งสูง",
+    standnote: "ข้อมูลตัวอย่าง เวอร์ชันเปิดตัว: คำนวณจากข้อมูลนิรนาม (ชั่วโมงการใช้งาน + ตลาดเท่านั้น) ช่วงก่อนเปิดตัว อ้างอิงค่าเฉลี่ยจากข้อมูลสาธารณะ จนกว่าจะมีข้อมูลจากผู้ใช้เพียงพอ",
     avgday: "เฉลี่ย / วัน",
     flipped: "พลิกแล้ว",
     youare: "ตลาดของคุณ",
-    tape: "กระดานเทป",
-    tapesub: "การไถล่าสุด ตีราคาตลาดสด ๆ นิรนามเสมอ",
-    tapenote: "แสดงข้อมูลตัวอย่าง เวอร์ชันเปิดตัว: ก่อนเปิดตัวเทียบกับสถิติเวลาหน้าจอสาธารณะ (มีแหล่งอ้างอิง) เมื่อผลจริงสะสมพอจะสลับเป็นกระดานชุมชน เก็บเฉพาะชั่วโมง + ตลาด — ไม่มีข้อมูลระบุตัวตน",
-    // COMPLIANCE-APPROVED 2026-07-31 — signed off for this script. Now
-    // frozen: do not modify without a new approval (Hard Rule 3). The SFC
-    // rendering (สำนักงาน ก.ล.ต. ฮ่องกง) is part of what was approved.
+    tape: "เทป",
+    tapesub: "การไถล่าสุด ตีราคาตลาด นิรนามเสมอ",
+    tapenote: "แสดงข้อมูลตัวอย่าง เวอร์ชันเปิดตัว: อันดับก่อนเปิดตัวจะเทียบกับสถิติเวลาหน้าจอที่เผยแพร่ (จากแหล่งอ้างอิง); ฟีดชุมชนจะเริ่มทำงานเมื่อมีผลลัพธ์จริงสะสมเข้ามา เราเก็บเฉพาะชั่วโมงใช้งานและข้อมูลตลาดเท่านั้น — ไม่มีข้อมูลระบุตัวตน",
+    // NEEDS-COMPLIANCE-APPROVAL (Thai) — the native reviewer returned these
+    // three UNCHANGED, and native review does not constitute compliance
+    // sign-off. Thai compliance copy still needs formal approval per
+    // CLAUDE.md Hard Rule 3. The SFC rendering is สำนักงาน ก.ล.ต. ฮ่องกง.
     f1: "บริการซื้อขายให้บริการโดย DL Securities (Hong Kong) Limited ซึ่งเป็นบริษัทที่ได้รับใบอนุญาตและอยู่ภายใต้การกำกับดูแลของสำนักงาน ก.ล.ต. ฮ่องกง (SFC)",
     f2: "การวิเคราะห์สกรีนช็อตเกิดขึ้นในเบราว์เซอร์ของคุณเท่านั้น รูปภาพและชื่อแอปไม่ถูกอัปโหลดหรือจัดเก็บ สถิติชุมชนเป็นแบบนิรนาม (เฉพาะชั่วโมงและตลาด)",
     f3: "หน้านี้เป็นภาพประกอบทางการตลาดเพื่อการศึกษาและความบันเทิง ไม่ใช่คำแนะนำการลงทุน การคาดการณ์ หรือการประมาณผลตอบแทน",
-    vbadge: "ไถฟีดยืนยันแล้ว",
-    cardtitle: (year: number) => `P&L การไถของเรา · ${year}`,
+    vbadge: "ยืนยันการไถฟีดแล้ว",
+    // Reviewer's copy hardcoded "2026"; kept on the ${year} slot (B5).
+    cardtitle: (year: number) => `P&L การไถฟีดของเรา · ${year}`,
     // Privacy-adjacent: formal register, no slang (VOICE.md).
     shareOptIn: "เพิ่มผลลัพธ์ของฉันในสถิติตลาดแบบไม่ระบุตัวตน (เฉพาะชั่วโมงและตลาด)",
     // Blocking error state: formal register, no slang (VOICE.md).
     saveFailed: "บันทึกรูปภาพไม่สำเร็จ กรุณาลองใหม่ หรือถ่ายภาพหน้าจอการ์ดนี้",
-    cardflip: `พลิกวันละ ${FLIP_MINUTES_PER_DAY} นาที →`,
-    challenge: "คุณลบหนักกว่าเราไหม?",
+    cardflip: `พลิกให้เขียววันละ ${FLIP_MINUTES_PER_DAY} นาที →`,
+    challenge: "คุณแดงหนักกว่าเราไหม?",
     scan: "สแกนของคุณ ↓",
     savebtn: "ดาวน์โหลดรูป 📸",
-    sticky1: "พลิก P&L ของคุณจริง ๆ",
+    sticky1: "พลิก P&L ของคุณ",
     sticky2: "วันละ 10 นาทีในแอป NeuralFin",
     anon: "นิรนาม",
     bench: "เทียบสถิติเวลาหน้าจอสาธารณะ",
-    mostShorted: "ช็อตหนักสุด:",
+    mostShorted: "ลบหนักสุด:",
     wkwks: "สัปดาห์ทำงาน",
     vsmkt: "เทียบค่าเฉลี่ยตลาด",
     youAt: (hours: string) => `คุณ · ${hours} ชม.`,
-    scrollChip: (scroll: string, total: string) => `${scroll} จาก ${total} คือการไถ`,
+    // Reviewer wrote "⟨scroll⟩ ชม. จาก ⟨total⟩ ชม."; the slots are already
+    // formatted durations that carry their own unit ("2 ชม. 41 นาที"), so
+    // the extra ชม. is dropped to avoid "2 ชม. 41 นาที ชม.".
+    scrollChip: (scroll: string, total: string) => `${scroll} จาก ${total} ใช้ไปกับการไถ`,
     fun: (yr: number) => {
-      if (yr < 500) return { title: "ดูสตาร์ วอร์ส ครบทุกภาค", sub: "...รวมไตรภาคพรีเควลด้วย", num: `×${Math.round(yr / 25)}` };
-      if (yr < 1200) return { title: "ดูไททานิคจบเต็ม ๆ หนึ่งรอบ", sub: "เรือจมทุกครั้ง", num: `×${Math.round(yr / 3.23)}` };
-      return { title: "บินฮ่องกง → นิวยอร์ก", sub: "ไมล์สะสมไม่ได้สักแต้ม", num: `×${Math.round(yr / 16)}` };
+      // Reviewer wrote the multiplier inline; the component renders it as a
+      // separate `num` column, so it lives there and the wording splits
+      // across title/sub. Rendered: "<title> <num>. <sub>".
+      if (yr < 500) return { title: "ดู Star Wars ครบทุกภาค", sub: "...รวมพรีเควลด้วย", num: `×${Math.round(yr / 25)}` };
+      if (yr < 1200) return { title: "ดู Titanic จบรอบ", sub: "...เรือจมทุกครั้ง", num: `×${Math.round(yr / 3.23)}` };
+      return { title: "บินฮ่องกง → นิวยอร์ก", sub: "...ไม่ได้สะสมไมล์สักแต้ม", num: `×${Math.round(yr / 16)}` };
     },
   },
 } as const;
