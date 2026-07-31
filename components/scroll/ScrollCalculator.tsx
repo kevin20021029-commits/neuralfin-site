@@ -172,8 +172,7 @@ export const str = {
   // reviewed zh-Hans set below; vocabulary is NOT re-chosen, only script.
   // Source: reviewed zh-Hans (internal team, 2026-07-30). This replaces the
   // previous Cantonese-register Hant copy — see VOICE.md.
-  // EXCEPTION: f1/f2/f3 below are converted legal text and carry
-  // NEEDS-COMPLIANCE-APPROVAL until signed off per script.
+  // f1/f2/f3 below are converted legal text, COMPLIANCE-APPROVED 2026-07-31.
   "zh-Hant": {
     pill: "為滑屏世代而生",
     h1a: "你的滑屏也有",
@@ -239,9 +238,9 @@ export const str = {
     tape: "實時行情",
     tapesub: "最近刷過的內容，按市場實時計價。全程匿名",
     tapenote: "當前顯示的是演示數據。正式上線後：上線初期的排名先參照已公開的屏幕使用時間統計（會註明來源），等真實用戶數據積累到一定量後，「社區實時行情」功能將自動開啟。系統只記錄使用時長和所選市場，不會存儲任何能識別身份的信息。",
-    // NEEDS-COMPLIANCE-APPROVAL — converted legal text (s2t of the zh-Hans
-    // f1/f2/f3). Converted copy requires its own compliance sign-off per
-    // script; do not ship these three without it. See CLAUDE.md Hard Rule 3.
+    // COMPLIANCE-APPROVED 2026-07-31 — converted legal text (s2t of the
+    // zh-Hans f1/f2/f3), signed off for this script. Now frozen: do not
+    // modify without a new approval (CLAUDE.md Hard Rule 3).
     f1: "交易服務由德林證券（香港）有限公司提供，該公司為香港證監會持牌法團。",
     f2: "截圖分析只在你的瀏覽器本地進行；圖片與 App 名稱不會上傳或存儲。社區統計為匿名（僅時長與市場）。",
     f3: "本頁為市場推廣示意，僅供教育與娛樂。不構成投資建議、預測或回報推算。",
@@ -375,8 +374,8 @@ export const str = {
     },
   },
   // REVIEWED (2026-07-30). Thai-native internet register, not a literal EN
-  // translation — see VOICE.md. Exception: f1/f2/f3 below still carry
-  // NEEDS-COMPLIANCE-APPROVAL.
+  // translation — see VOICE.md. f1/f2/f3 below are COMPLIANCE-APPROVED
+  // 2026-07-31.
   th: {
     pill: "สร้างมาเพื่อเจนไถฟีด",
     h1a: "การไถฟีดของคุณก็มี",
@@ -439,8 +438,9 @@ export const str = {
     tape: "กระดานเทป",
     tapesub: "การไถล่าสุด ตีราคาตลาดสด ๆ นิรนามเสมอ",
     tapenote: "แสดงข้อมูลตัวอย่าง เวอร์ชันเปิดตัว: ก่อนเปิดตัวเทียบกับสถิติเวลาหน้าจอสาธารณะ (มีแหล่งอ้างอิง) เมื่อผลจริงสะสมพอจะสลับเป็นกระดานชุมชน เก็บเฉพาะชั่วโมง + ตลาด — ไม่มีข้อมูลระบุตัวตน",
-    // NEEDS-COMPLIANCE-APPROVAL — compliance copy needs sign-off per
-    // script/language; native review does not cover it (Hard Rule 3).
+    // COMPLIANCE-APPROVED 2026-07-31 — signed off for this script. Now
+    // frozen: do not modify without a new approval (Hard Rule 3). The SFC
+    // rendering (สำนักงาน ก.ล.ต. ฮ่องกง) is part of what was approved.
     f1: "บริการซื้อขายให้บริการโดย DL Securities (Hong Kong) Limited ซึ่งเป็นบริษัทที่ได้รับใบอนุญาตและอยู่ภายใต้การกำกับดูแลของสำนักงาน ก.ล.ต. ฮ่องกง (SFC)",
     f2: "การวิเคราะห์สกรีนช็อตเกิดขึ้นในเบราว์เซอร์ของคุณเท่านั้น รูปภาพและชื่อแอปไม่ถูกอัปโหลดหรือจัดเก็บ สถิติชุมชนเป็นแบบนิรนาม (เฉพาะชั่วโมงและตลาด)",
     f3: "หน้านี้เป็นภาพประกอบทางการตลาดเพื่อการศึกษาและความบันเทิง ไม่ใช่คำแนะนำการลงทุน การคาดการณ์ หรือการประมาณผลตอบแทน",
