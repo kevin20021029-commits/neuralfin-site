@@ -4,6 +4,8 @@ import { str } from "@/components/scroll/ScrollCalculator";
 import { FLIP_MINUTES_PER_DAY } from "./education";
 import { parseScreenTimeText } from "./ocrSanitizer";
 import { getRankFrame } from "./rank";
+import { getArchetypeCopy, getTapeNote } from "./personality";
+import { getEducationOutput } from "./education";
 
 const LOCALES = ["en", "zh-Hant", "zh-Hans", "th"] as const;
 const CHINESE = ["zh-Hant", "zh-Hans"] as const;
@@ -113,4 +115,44 @@ test("parser accepts both Chinese scripts regardless of UI locale", () => {
     assert.ok(parsed.sawCategories, `${label}: category rows not recognized`);
     assert.equal(Math.round((parsed.scrollHours ?? 0) * 60), 219, `${label}: 2h41m + 58m`);
   }
+});
+
+// The Thai reviewer's rows arrived with several literal values where the
+// code carries slots (a hardcoded "42", a frozen "2026", a fixed
+// "กรกฎาคม 2027"). These lock the slots in so a future copy paste cannot
+// silently freeze a computed figure.
+test("Thai keeps computed figures on slots, not literals", () => {
+  const t = str.th;
+  const yielded = t.lessonYield("7.0", 84, "ภายใน 20 วัน", "พื้นฐานการลงทุน");
+  assert.ok(yielded.includes("84"), `lessonYield froze the lesson count: ${yielded}`);
+  assert.ok(!yielded.includes("42"), `lessonYield still carries the reviewer's literal 42: ${yielded}`);
+
+  assert.ok(t.cardtitle(2031).includes("2031"), "cardtitle froze the year");
+  assert.ok(!t.cardtitle(2031).includes("2026"), "cardtitle still carries a literal 2026");
+
+  assert.ok(t.cardflip.includes(String(FLIP_MINUTES_PER_DAY)), "cardflip froze the flip minutes");
+
+  const edu = getEducationOutput(3.5, "th", new Date("2026-07-28T12:00:00Z"));
+  assert.ok(!edu.cardLine.includes("2027"), `cardLine froze the milestone year: ${edu.cardLine}`);
+  assert.ok(edu.cardLine.includes(edu.milestoneLabel), "cardLine must use the derived milestone");
+  assert.ok(!edu.cardLine.includes("42"), `cardLine still carries the reviewer's literal 42: ${edu.cardLine}`);
+});
+
+// The reviewer replaced เลื่อน/นักเลื่อน with ไถ/นักไถ everywhere, and
+// replaced ดอยแล้ว with จมดิ่ง. Guard against reinstatement.
+test("Thai uses the reviewed vocabulary consistently", () => {
+  const surfaces = [
+    str.th.sliderSub, str.th.scrollpos, str.th.mostShorted, str.th.openloss,
+    getRankFrame(63, "ไทย", "th").title,
+    getArchetypeCopy(4, "th").title,
+    getArchetypeCopy(1, "th").title,
+    getTapeNote("th", false, 3),
+  ];
+  for (const s of surfaces) {
+    assert.ok(!s.includes("เลื่อน"), `superseded เลื่อน survives in: ${s}`);
+    assert.ok(!s.includes("ดอยแล้ว"), `superseded ดอยแล้ว survives in: ${s}`);
+    assert.ok(!s.includes("ช็อตหนักสุด"), `superseded ช็อตหนักสุด survives in: ${s}`);
+  }
+  assert.equal(getTapeNote("th", false, 3), "จมดิ่ง");
+  assert.equal(getArchetypeCopy(1, "th").title, "มีวินัย");
 });

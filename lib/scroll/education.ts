@@ -48,9 +48,9 @@ export const MICRO_TAKEAWAYS = {
   th: [
     "ETF คือตะกร้าหุ้นที่ซื้อได้ในเทรดเดียว",
     "หุ้นคือความเป็นเจ้าของชิ้นเล็ก ๆ ของบริษัทจริง",
-    "ดัชนีติดตามทั้งตลาด ให้คุณดูการขยับเป็นตัวเลขเดียว",
-    "การกระจายพอร์ตแปลว่าพลาดตัวเดียวไม่ทำให้จมทั้งลำ",
-    "ดอกเบี้ยทบต้นแปลว่ากำไรของคุณเริ่มสร้างกำไรของมันเอง",
+    "ดัชนีคือภาพรวมตลาดทั้งหมด ให้คุณเห็นการเคลื่อนไหวเป็นตัวเลขเดียว",
+    "การกระจายความเสี่ยงหมายถึงการลงทุนผิดตัวเดียวไม่ทำให้คุณเจ๊ง",
+    "ผลตอบแทนทบต้นคือเมื่อกำไรของคุณเริ่มสร้างกำไรต่อ",
   ],
 } as const;
 
@@ -188,7 +188,7 @@ export function getEducationOutput(hours: number, lang: ScrollEducationLang, dat
         : lang === "zh-Hans"
           ? `每天 ${FLIP_LESSONS_PER_DAY} 课 · 课程完成于 ${milestoneLabel}`
           : lang === "th"
-            ? `วันละ ${FLIP_LESSONS_PER_DAY} บทเรียน · เรียนจบราว ${milestoneLabel}`
+            ? `${FLIP_LESSONS_PER_DAY} บทเรียน/วัน · จบคอร์สภายใน${milestoneLabel}`
             : `${FLIP_LESSONS_PER_DAY} lessons/day · course done by ${milestoneLabel}`,
   };
 }
