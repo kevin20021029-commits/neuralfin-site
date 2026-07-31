@@ -328,6 +328,11 @@ const MINUTE_UNITS = "minutes|minute|mins|min|m|分\\s?鐘|分\\s?钟|นาท�
 // Numbers get the same single-space tolerance the zh unit tokens already
 // have. Deliberately ONE space between digits and the same digit-count caps
 // as before, so two adjacent numbers can never glue into a third value.
+// Hours need THREE digits: a weekly total legitimately reaches 168h, and a
+// 100h+ week is ~14h/day — exactly the cohort this campaign targets. Capped
+// at two, "105h 20m" matched as "05h 20m" and a 15.0h/day user read as
+// 0.76h/day. Out-of-range values are still rejected by the magnitude guard
+// below, so widening the group cannot let an implausible number through.
 const DIGITS_2 = "\\d(?:\\s?\\d)?";
 const DIGITS_3 = "\\d(?:\\s?\\d){0,2}";
 
@@ -374,7 +379,7 @@ export function findDurations(input: string, maxHours = 24): DurationMatch[] {
   }
 
   const hoursRe = new RegExp(
-    `(${DIGITS_2}(?:[.,]\\d+)?)\\s*(?:${HOUR_UNITS})(?![a-z])(?:\\s*,?\\s*(${DIGITS_3})\\s*(?:${MINUTE_UNITS})(?![a-z]))?`,
+    `(${DIGITS_3}(?:[.,]\\d+)?)\\s*(?:${HOUR_UNITS})(?![a-z])(?:\\s*,?\\s*(${DIGITS_3})\\s*(?:${MINUTE_UNITS})(?![a-z]))?`,
     "gi",
   );
   for (let m = hoursRe.exec(text); m; m = hoursRe.exec(text)) {
@@ -391,6 +396,12 @@ export function findDurations(input: string, maxHours = 24): DurationMatch[] {
     const value = hoursPart + minutesPart / 60;
     if (value >= 1 / 60 && value <= maxHours) {
       push({ hours: value, index: start, end, composite: Boolean(m[2]) });
+    } else {
+      // Rejected on magnitude, but the span still has to be consumed. Left
+      // unclaimed, "24h 1m" let minutesRe re-match the "1m" fragment and
+      // emit a bare 1-minute value — the exact "plausible-but-wrong number"
+      // this module's span accounting exists to prevent.
+      push({ hours: null, index: start, end, composite: Boolean(m[2]), dropped: "invalid" });
     }
   }
 

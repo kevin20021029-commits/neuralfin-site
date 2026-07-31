@@ -1151,7 +1151,9 @@
 }
 
 .scroll-save-overlay button {
-  min-height: 40px;
+  /* This is the only way out of a full-screen modal — it must meet the
+     >= 44px touch budget, not sit 4px under it. */
+  min-height: 44px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.06);
@@ -1344,6 +1346,23 @@
 
   .scroll-botgrid {
     gap: 56px;
+  }
+}
+
+/* Below ~340px the logo and the four-way language switcher (167px) no
+   longer fit one header row, and the page gained a horizontal scrollbar.
+   320px — the WCAG 1.4.10 reflow floor — already passed, but a low-vision
+   user at high browser zoom lands well under it, so the header wraps
+   instead of overflowing. */
+@media (max-width: 340px) {
+  .scroll-header {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .scroll-header-right {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 

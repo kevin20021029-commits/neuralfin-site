@@ -716,3 +716,49 @@ test("A0a tolerance never glues separate numbers together", () => {
   const tooBig = findDurations("1 1 1 h", 24);
   assert.ok(!tooBig.some((d) => d.hours === 111), "111h must never be produced");
 });
+
+// A weekly total legitimately reaches 168h, and a 100h+ week is ~14h/day —
+// exactly the cohort this campaign targets. With the hour group capped at
+// two digits, "105h 20m" matched as "05h 20m" and a 15.0h/day user was
+// shown 0.76h/day as a real, confident read.
+test("three-digit hour values parse, they do not shrink", () => {
+  const mins = (t: string, cap: number) =>
+    findDurations(t, cap).filter((d) => d.hours !== null).map((d) => Math.round(d.hours! * 60));
+  assert.deepEqual(mins("105h 20m", 168), [6320]);
+  assert.deepEqual(mins("112h", 168), [6720]);
+  assert.deepEqual(mins("168h", 168), [10080]);
+  assert.deepEqual(mins("99h 30m", 168), [5970]);
+
+  // On a day view the same token is impossible and must DROP, never shrink.
+  assert.deepEqual(mins("105h 20m", 24), []);
+  assert.deepEqual(mins("100h", 24), []);
+
+  // End to end: an unrepresentable week fails to manual rather than
+  // displaying a plausible wrong number.
+  const p = parseScreenTimeText(["Screen Time", "WEEKLY TOTAL", "105h 20m"].join("\n"), 92);
+  assert.equal(p.hours, null);
+});
+
+// The module's span accounting exists so a rejected token cannot leave a
+// fragment behind for another pattern to re-match. A composite rejected on
+// MAGNITUDE was skipping that, so "24h 1m" surfaced a bare 1-minute value.
+test("a composite rejected on magnitude still consumes its span", () => {
+  const d = findDurations("24h 1m", 24);
+  assert.equal(d.length, 1, "the composite must claim the whole span");
+  assert.equal(d[0].hours, null, "and yield no value");
+  assert.equal(d[0].dropped, "invalid");
+
+  // The fragment must not reappear as a plausible small number.
+  const values = d.filter((x) => x.hours !== null).map((x) => Math.round(x.hours! * 60));
+  assert.deepEqual(values, [], "no 1-minute fragment may survive");
+});
+
+// Guard the tolerance itself: widening the hour group must not let two
+// adjacent numbers glue into a third value.
+test("widening the hour group never glues separate numbers", () => {
+  const mins = (t: string, cap = 24) =>
+    findDurations(t, cap).filter((d) => d.hours !== null).map((d) => Math.round(d.hours! * 60));
+  assert.deepEqual(mins("10h 12h"), [600, 720]);
+  assert.deepEqual(mins("6h 12m 3h 20m"), [372, 200]);
+  assert.deepEqual(mins("Social 2h 41m"), [161]);
+});
