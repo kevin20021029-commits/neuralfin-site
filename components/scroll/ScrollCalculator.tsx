@@ -191,7 +191,7 @@ export const str = {
     pace: "照這個節奏",
     learnpos: "學習持倉",
     compounding: "複利中",
-    feedcould: "你的 feed 本來可以教你的",
+    feedcould: "同樣的時間，刷手機本可以教你這些",
     lessonYield: (hours: string, lessons: number, phrase: string, track: string) =>
       `你每天 ${hours} 小時 = ${lessons} 節微課藏在滑屏裡。${phrase}就能學完${track}。`,
     lessonZero: "第零課，免費：",
@@ -290,7 +290,7 @@ export const str = {
     pace: "照这个节奏",
     learnpos: "学习持仓",
     compounding: "复利中",
-    feedcould: "你的 feed 本来可以教你的",
+    feedcould: "同样的时间，刷手机本可以教你这些",
     // Reviewer's copy carried a literal "42"; restored to the ${lessons}
     // slot — the figure is slider-derived (see fun.* below, same class).
     lessonYield: (hours: string, lessons: number, phrase: string, track: string) =>
