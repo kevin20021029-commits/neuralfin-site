@@ -54,6 +54,11 @@ function tickStyle(hours: number): CSSProperties {
 
 type Lang = ScrollLocale;
 type TapeRow = { region: ScrollRegion; hours: number; flipped?: boolean };
+type ScrollSummary = {
+  useCommunity?: boolean;
+  markets?: Partial<Record<ScrollRegion, { count: number; averageHours: number | null }>>;
+  recent?: Array<{ hours: number; region: ScrollRegion }>;
+};
 type UploadStatus = "idle" | "received" | "read" | "failed" | "partial";
 type ParsedScrollStat = { scrollHours: number; totalHours: number };
 // Scan outcome stored as numbers, never formatted strings — the chip and
@@ -134,6 +139,9 @@ export const str = {
     stand: "Market standings",
     standsub: "Ranked by % flipped — the market that turns scroll into skill wins.",
     standnote: "Demo data. Launch build: computed from the same anonymous aggregates (hours + market only). Pre-launch averages cite published statistics until community volume takes over.",
+    // Shown once community averages replace the published ones. Formal
+    // register: this is a data-handling statement (VOICE.md).
+    standnoteLive: "Averages are live, computed from anonymous community results (hours and market only). Flip rate still cites published statistics until in-app data is available.",
     avgday: "avg / day",
     flipped: "flipped",
     youare: "your market",
@@ -232,6 +240,8 @@ export const str = {
     stand: "市場排行榜",
     standsub: "按「翻轉率」排名——誰把滑屏變成本事，誰就贏。",
     standnote: "演示數據。正式版將基於相同的匿名匯總數據（僅統計使用時長和市場）計算得出。上線初期的平均值先參考已公開的統計數據，等社區數據積累到一定規模後，再改用真實數據。",
+    // DRAFT — native review required (new string; mirror of the zh-Hans line)
+    standnoteLive: "平均值已改用匿名社區數據（僅時長與市場）計算。翻轉率仍引用公開統計數據，直到 App 端數據可用為止。",
     avgday: "平均／天",
     flipped: "已翻轉",
     youare: "你的市場",
@@ -336,6 +346,8 @@ export const str = {
     stand: "市场排行榜",
     standsub: "按“翻转率”排名——谁把滑屏变成本事，谁就赢。",
     standnote: "演示数据。正式版将基于相同的匿名汇总数据（仅统计使用时长和市场）计算得出。上线初期的平均值先参考已公开的统计数据，等社区数据积累到一定规模后，再改用真实数据。",
+    // DRAFT — native review required (new string)
+    standnoteLive: "平均值已改用匿名社区数据（仅时长与市场）计算。翻转率仍引用公开统计数据，直到 App 端数据可用为止。",
     avgday: "平均／天",
     flipped: "已翻转",
     youare: "你的市场",
@@ -439,6 +451,8 @@ export const str = {
     stand: "อันดับตลาด",
     standsub: "จัดอันดับตาม % ที่พลิกได้ ยิ่งเปลี่ยนเวลาไถฟีดเป็นทักษะได้มาก อันดับยิ่งสูง",
     standnote: "ข้อมูลตัวอย่าง เวอร์ชันเปิดตัว: คำนวณจากข้อมูลนิรนาม (ชั่วโมงการใช้งาน + ตลาดเท่านั้น) ช่วงก่อนเปิดตัว อ้างอิงค่าเฉลี่ยจากข้อมูลสาธารณะ จนกว่าจะมีข้อมูลจากผู้ใช้เพียงพอ",
+    // DRAFT — native review required (new string, added after the th review)
+    standnoteLive: "ค่าเฉลี่ยคำนวณจากข้อมูลชุมชนแบบไม่ระบุตัวตนแล้ว (เฉพาะชั่วโมงและตลาด) ส่วนอัตราการพลิกยังอ้างอิงสถิติสาธารณะ จนกว่าจะมีข้อมูลจากแอป",
     avgday: "เฉลี่ย / วัน",
     flipped: "พลิกแล้ว",
     youare: "ตลาดของคุณ",
@@ -606,6 +620,7 @@ export function ScrollCalculator() {
   const [appRoasts, setAppRoasts] = useState<AppRoast[]>([]);
   const [tapeRows, setTapeRows] = useState<TapeRow[]>(demoTape);
   const [saveOverlayUrl, setSaveOverlayUrl] = useState<string | null>(null);
+  const [communityMarkets, setCommunityMarkets] = useState<ScrollSummary["markets"] | null>(null);
   const [shareStats, setShareStats] = useState(true);
   const [saveError, setSaveError] = useState(false);
   // Submit at most once per distinct result. Without this every click of the
@@ -706,9 +721,21 @@ export function ScrollCalculator() {
   // Worldwide is not a peer of its own members — it was being ranked against
   // HK/SG/TH and awarded 🥉 while Thailand got "—". Medals go to the actual
   // markets; Worldwide still renders, as a reference row.
+  // Averages come from the community once there is enough of it; the flip
+  // rate is an in-app behaviour the calculator cannot observe, so it stays
+  // on published figures and the note below says which is which.
+  const standings = useMemo(
+    () =>
+      SCROLL_STANDINGS.map((item) => {
+        const live = communityMarkets?.[item.region];
+        return live?.averageHours != null ? { ...item, averageHours: live.averageHours } : item;
+      }),
+    [communityMarkets],
+  );
+  const averagesAreLive = communityMarkets !== null;
   const sortedStandings = useMemo(
-    () => [...SCROLL_STANDINGS].sort((a, b) => b.flippedPercent - a.flippedPercent),
-    [],
+    () => [...standings].sort((a, b) => b.flippedPercent - a.flippedPercent),
+    [standings],
   );
   const rankedMarkets = useMemo(() => sortedStandings.filter((item) => item.region !== "ww"), [sortedStandings]);
 
@@ -734,9 +761,14 @@ export function ScrollCalculator() {
   useEffect(() => {
     fetch("/api/scroll-results/summary")
       .then((response) => (response.ok ? response.json() : null))
-      .then((summary: { recent?: Array<{ hours: number; region: ScrollRegion }> } | null) => {
-        if (!summary?.recent?.length) return;
-        setTapeRows(summary.recent.map((item) => ({ hours: item.hours, region: item.region })));
+      .then((summary: ScrollSummary | null) => {
+        if (!summary) return;
+        if (summary.recent?.length) {
+          setTapeRows(summary.recent.map((item) => ({ hours: item.hours, region: item.region })));
+        }
+        // Community averages replace the published figures only once the
+        // threshold is met — below it the sample is too small to be honest.
+        if (summary.useCommunity && summary.markets) setCommunityMarkets(summary.markets);
       })
       .catch(() => undefined);
   }, []);
@@ -1190,7 +1222,7 @@ export function ScrollCalculator() {
                 <div className="flippct mono">{item.flippedPercent}%<span>{t.flipped}</span></div>
               </div>
             ))}
-            <p className="note">{t.standnote}</p>
+            <p className="note">{averagesAreLive ? t.standnoteLive : t.standnote}</p>
           </section>
 
           <section className="scroll-tape scroll-rise d3">
