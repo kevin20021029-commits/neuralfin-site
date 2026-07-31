@@ -36,6 +36,13 @@ priority and override anything else, including user-facing convenience.
    - `npx tsc --noEmit`
    - `npm run test` (the test suite)
 
+   Two further suites are conditional, and are part of done when they apply:
+   - `npm run test:parity` — REQUIRED for any change to the share card, its
+     CSS, or card-bound strings. It is the only gate on card rendering.
+   - `npm run test:e2e` — REQUIRED for any change to the OCR pipeline or
+     parser. It is the only test class that exercises the real tesseract
+     workers and so the only one that catches OCR-model behaviour.
+
 ## Parser Product Decisions (from BUILD_SPEC.md)
 
 - Scroll time is category-based when a screenshot exposes category tiles.
@@ -78,9 +85,15 @@ metaphor or not at all.
   `GET /api/scroll-results/summary` (in-memory store,
   `lib/scroll/resultsStore.ts`).
 - The scroll calculator has four locales: EN / zh-Hant (繁) / zh-Hans (简) /
-  th (ไทย). Localized strings marked `DRAFT — native review required` must
-  not ship without native + compliance review; compliance strings (the
-  f1/f2/f3 footer lines) need compliance approval per script/language.
+  th (ไทย). All four are natively reviewed and their f1/f2/f3 compliance
+  lines are COMPLIANCE-APPROVED (2026-07-31) and frozen — any edit needs a
+  fresh approval per script/language. Strings marked
+  `DRAFT — native review required` must not ship without native review.
+- **zh-Hans is the reviewed source of truth for both Chinese scripts;
+  zh-Hant is a character-conversion mirror of it.** When zh-Hans changes,
+  regenerate zh-Hant in the same change — never edit the Hant strings
+  independently. The approved f1/f2/f3 are excluded from that regeneration.
+  See VOICE.md.
 - Locale defaults follow the confirmed rule: **language beats region** —
   region only picks the variant for an expressed language (or fills in for
   Thailand when no recognized preference exists); an en-HK/en-TH browser
@@ -88,5 +101,10 @@ metaphor or not at all.
 - The parser's label matching accepts BOTH Chinese scripts AND Thai
   regardless of UI locale — any-locale phone can upload any-language
   screenshot. Never fork the parser catalogs by locale.
-- The share-card canvas font stack (`lib/scroll/cardFont.ts`) must keep
-  explicitly Thai- and Han-capable families.
+- The share card is exported from the real DOM node via `html-to-image`
+  (there is no hand-drawn canvas and no `lib/scroll/cardFont.ts` — both were
+  removed). Card typography therefore comes from the page CSS, and the gate
+  is `npm run test:parity`, which renders every locale and compares the
+  exported PNG against the DOM. It runs at two viewports: 360 asserts layout
+  containment (the card must never clip its own footer), 1240 asserts export
+  fidelity.

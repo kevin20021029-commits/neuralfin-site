@@ -25,6 +25,21 @@ import jsQR from "jsqr";
 const PORT = 4183;
 const BASE = `http://localhost:${PORT}/scroll`;
 const LOCALES = ["en", "zh-Hant", "zh-Hans", "th"] as const;
+
+// Both ends of the range. 1240 alone let a real bug ship: the card clipped
+// its own footer at narrow widths (brand row 41-72px BELOW the card bottom)
+// because content wraps more there, and the wide viewport never reproduced
+// it. 360 is the narrowest layout the page targets.
+//
+// The two widths check different things, deliberately. Pixel parity between
+// the DOM card and the exported PNG is only meaningful at the reference
+// width: the export always normalises to 1080px wide, while the DOM
+// screenshot uses a fixed deviceScaleFactor, so at 360 (card ~282 CSS px)
+// the two images are legitimately different sizes. The narrow pass
+// therefore asserts LAYOUT CONTAINMENT — which is exactly what the clipping
+// bug violated — and the reference pass asserts export fidelity.
+const PARITY_REFERENCE_WIDTH = 1240;
+const VIEWPORT_WIDTHS = [360, PARITY_REFERENCE_WIDTH] as const;
 // Card is 320 css px wide; 3.375 makes both captures 1080px wide.
 const SCALE = 3.375;
 const SHIFT_RADIUS = 2; // after 2x downsample => tolerates ~4 device px
@@ -151,13 +166,15 @@ test("exported PNG matches the DOM card across locales", async () => {
   }
 
   try {
-    for (const locale of LOCALES) {
+    for (const viewportWidth of VIEWPORT_WIDTHS) for (const locale of LOCALES) {
       const context = await browser.newContext({
-        viewport: { width: 1240, height: 1000 },
+        viewport: { width: viewportWidth, height: 1000 },
         deviceScaleFactor: SCALE,
         acceptDownloads: true,
       });
       const page = await context.newPage();
+      // Failures must name the viewport, not just the locale.
+      const label = `${locale}@${viewportWidth}`;
       await page.goto(`${BASE}?lang=${locale}`, { waitUntil: "networkidle" });
       // Freeze animations and hide the fixed sticky bar, which otherwise
       // overlays the card's bottom in the element screenshot.
@@ -184,12 +201,18 @@ test("exported PNG matches the DOM card across locales", async () => {
 
       // The card must GROW with content, never clip its own footer: the
       // brand row's layout box has to sit inside the card box.
-      assert.ok(regions[".brand"], `${locale}: brand row missing`);
+      assert.ok(regions[".brand"], `${label}: brand row missing`);
       assert.ok(
         regions[".brand"].y1 <= regions.__card.y1 + 1,
-        `${locale}: brand row clipped — card content overflows its box (brand bottom ${regions[".brand"].y1} vs card ${regions.__card.y1})`,
+        `${label}: brand row clipped — card content overflows its box (brand bottom ${regions[".brand"].y1} vs card ${regions.__card.y1})`,
       );
       delete regions.__card;
+
+      // Narrow pass: containment only — see VIEWPORT_WIDTHS.
+      if (viewportWidth !== PARITY_REFERENCE_WIDTH) {
+        await context.close();
+        continue;
+      }
 
       const domShot = PNG.sync.read(await card.screenshot());
       const [download] = await Promise.all([
@@ -197,13 +220,13 @@ test("exported PNG matches the DOM card across locales", async () => {
         page.locator(".scroll-download").click(),
       ]);
       const exportPath = await download.path();
-      assert.ok(exportPath, `${locale}: download produced no file`);
+      assert.ok(exportPath, `${label}: download produced no file`);
       const exported = PNG.sync.read(readFileSync(exportPath));
 
       assert.ok(
         Math.abs(domShot.width - exported.width) <= MAX_DIM_DRIFT_PX &&
           Math.abs(domShot.height - exported.height) <= MAX_DIM_DRIFT_PX,
-        `${locale}: dimensions drifted — DOM ${domShot.width}x${domShot.height} vs export ${exported.width}x${exported.height}`,
+        `${label}: dimensions drifted — DOM ${domShot.width}x${domShot.height} vs export ${exported.width}x${exported.height}`,
       );
 
       const width = Math.min(domShot.width, exported.width);
@@ -215,16 +238,16 @@ test("exported PNG matches the DOM card across locales", async () => {
       let globalBad = 0;
       for (const value of bad) globalBad += value;
       const globalRatio = globalBad / (a.width * a.height);
-      console.log(`${locale}: global diff ${(globalRatio * 100).toFixed(3)}%`);
+      console.log(`${label}: global diff ${(globalRatio * 100).toFixed(3)}%`);
       assert.ok(
         globalRatio <= MAX_GLOBAL_RATIO,
-        `${locale}: export drifted from DOM card — ${(globalRatio * 100).toFixed(2)}% of pixels differ (max ${MAX_GLOBAL_RATIO * 100}%)`,
+        `${label}: export drifted from DOM card — ${(globalRatio * 100).toFixed(2)}% of pixels differ (max ${MAX_GLOBAL_RATIO * 100}%)`,
       );
 
       // The QR is a scan target: decode it from the EXPORTED PNG so a
       // rendering regression can never silently break scannability.
       const qrRect = regions[".qr"];
-      assert.ok(qrRect, `${locale}: QR missing from the card DOM`);
+      assert.ok(qrRect, `${label}: QR missing from the card DOM`);
       {
         const pad = 6;
         const x0 = Math.max(0, Math.floor(qrRect.x0 * SCALE) - pad);
@@ -234,8 +257,8 @@ test("exported PNG matches the DOM card across locales", async () => {
         const region = new PNG({ width: x1 - x0, height: y1 - y0 });
         PNG.bitblt(exported, region, x0, y0, x1 - x0, y1 - y0, 0, 0);
         const decoded = jsQR(new Uint8ClampedArray(region.data), region.width, region.height);
-        assert.ok(decoded, `${locale}: exported QR did not decode`);
-        assert.equal(decoded.data, QR_EXPECTED, `${locale}: exported QR decodes to wrong target`);
+        assert.ok(decoded, `${label}: exported QR did not decode`);
+        assert.equal(decoded.data, QR_EXPECTED, `${label}: exported QR decodes to wrong target`);
       }
 
       for (const [selector, rect] of Object.entries(regions)) {
@@ -249,7 +272,7 @@ test("exported PNG matches the DOM card across locales", async () => {
         const ratio = regionRatio(bad, a.width, a.height, scaled);
         assert.ok(
           ratio <= MAX_REGION_RATIO,
-          `${locale}: element ${selector} drifted between DOM and export — ${(ratio * 100).toFixed(1)}% of its region differs`,
+          `${label}: element ${selector} drifted between DOM and export — ${(ratio * 100).toFixed(1)}% of its region differs`,
         );
       }
 
