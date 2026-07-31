@@ -1,0 +1,92 @@
+<!doctype html>
+<!--
+  Source template for public/assets/scroll-og.png (the /scroll OG image).
+
+  Committed so the asset is reproducible rather than a mystery binary:
+  edit here, then `npm run og:render`.
+
+  1200x630 is the OG/Twitter standard. The share card itself is 9:14.5
+  portrait, so this is a landscape composition in the same visual language
+  (card gradient, mono numerals, mint/red valence) — not a crop of it.
+
+  Deliberately generic: the OG image is static and served for every visit,
+  so it must not imply a specific user's result. The figure shown is
+  labelled as an example.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1200px; height: 630px; }
+      body {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 56px;
+        padding: 0 72px;
+        background: linear-gradient(160deg, #06100d 0%, #0a1713 55%, #07120f 100%);
+        color: #f7fbf7;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      /* Same two glow blobs the card uses, so the OG reads as the same object. */
+      .glow { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; }
+      .glow.r { width: 520px; height: 520px; top: -220px; right: -120px; background: rgba(255, 92, 108, 0.20); }
+      .glow.g { width: 560px; height: 560px; bottom: -260px; left: -160px; background: rgba(0, 230, 138, 0.16); }
+      .hairline { position: absolute; inset: 0 0 auto; height: 3px;
+        background: linear-gradient(90deg, transparent, rgba(0,230,138,0.7), rgba(145,201,255,0.5), rgba(215,183,104,0.45), transparent); }
+
+      .left { position: relative; flex: 1 1 auto; min-width: 0; }
+      .brandrow { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+      .brandrow img { width: 34px; height: 34px; border-radius: 8px; display: block; }
+      .brandrow b { font-size: 17px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(247,251,247,0.72); }
+
+      h1 { font-size: 78px; line-height: 1.02; letter-spacing: -0.04em; font-weight: 900; text-wrap: balance; }
+      h1 .pnl { color: #ff5c6c; }
+      p.sub { margin-top: 22px; max-width: 20ch; font-size: 25px; line-height: 1.35; color: rgba(247,251,247,0.72); }
+      .url { margin-top: 34px; display: flex; align-items: center; gap: 14px; font-size: 20px; font-weight: 800; }
+      .url .dot { width: 7px; height: 7px; border-radius: 50%; background: #00e68a; }
+      .url .tag { color: rgba(247,251,247,0.5); font-weight: 700; }
+
+      /* A compact echo of the share card, not a copy of it. */
+      .card { position: relative; flex: 0 0 372px; border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 26px; padding: 32px 30px; background: linear-gradient(160deg, rgba(10,23,19,0.96), rgba(7,18,15,0.96));
+        box-shadow: 0 30px 80px rgba(0,0,0,0.55); }
+      .card .eyebrow { font-size: 13px; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(247,251,247,0.55); }
+      .card .big { margin: 10px 0 4px; font-size: 62px; font-weight: 800; letter-spacing: -0.03em; color: #ff5c6c;
+        font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace; font-variant-numeric: tabular-nums; }
+      .card .example { font-size: 14px; color: rgba(247,251,247,0.5); }
+      .card .chip { display: inline-block; margin-top: 22px; padding: 9px 16px; border: 1px solid rgba(255,92,108,0.55);
+        border-radius: 999px; font-size: 15px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; color: #ff5c6c; }
+      .card .rule { margin: 24px 0 18px; border-top: 1px dashed rgba(255,255,255,0.14); }
+      .card .flip { font-size: 15px; color: rgba(247,251,247,0.62); }
+      .card .flip b { display: block; margin-top: 6px; font-size: 21px; color: #00e68a; }
+    </style>
+  </head>
+  <body>
+    <div class="hairline"></div>
+    <div class="glow r"></div>
+    <div class="glow g"></div>
+
+    <div class="left">
+      <div class="brandrow">
+        <img src="../app/icon.png" alt="" />
+        <b>NeuralFin</b>
+      </div>
+      <h1>Your scroll<br />has a <span class="pnl">P&amp;L.</span></h1>
+      <p class="sub">Audit your screen time. See where you rank. Flip it into skill.</p>
+      <div class="url"><span class="dot"></span>www.neuralfin.ai/scroll<span class="tag">#ScrollAudit</span></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Scroll P&amp;L</div>
+      <div class="big">−1,278h</div>
+      <div class="example">example · 3.5 h/day for a year</div>
+      <div class="chip">Certified Scroller</div>
+      <div class="rule"></div>
+      <div class="flip">Flipping 10 min/day →<b>2 lessons a day</b></div>
+    </div>
+  </body>
+</html>

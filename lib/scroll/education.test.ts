@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   FLIP_LESSONS_PER_DAY,
+  LESSON_MINUTES,
+  TRACKS,
   FLIP_MINUTES_PER_DAY,
   getDailyMicroTakeaway,
   getDaysToFinishTrack,
@@ -106,4 +108,35 @@ test("micro-takeaway is deterministic for fixed dates and rotates", () => {
   assert.ok(second.length > 0);
   assert.equal(first, firstAgain);
   assert.notEqual(first, second);
+});
+
+// The track names, lesson counts and the 5-minute lesson length are still
+// TODO(product) — every duration printed on the card derives from them, so
+// this locks in that a correction propagates coherently instead of leaving
+// two numbers that disagree. It deliberately asserts RELATIONSHIPS, not the
+// unconfirmed values themselves.
+test("printed durations stay coherent whatever the curriculum numbers become", () => {
+  const schedule = getLadderSchedule();
+
+  // The schedule is cumulative and strictly increasing.
+  for (let i = 1; i < schedule.length; i += 1) {
+    assert.ok(schedule[i].days > schedule[i - 1].days, "ladder rungs must advance");
+  }
+
+  // The ladder total is the last rung, and the milestone is derived from it.
+  assert.equal(getLadderTotalDays(), schedule[schedule.length - 1].days);
+  const from = new Date("2026-07-28T12:00:00Z");
+  const expected = new Date(from);
+  expected.setDate(expected.getDate() + getLadderTotalDays());
+  assert.equal(getMilestoneDate(from).toISOString(), expected.toISOString());
+
+  // Every track's duration is its own lesson count at the one shared rate —
+  // no track may be paced by a different number.
+  for (const track of TRACKS) {
+    assert.equal(
+      getDaysToFinishTrack(track.id),
+      Math.ceil((track.lessons * LESSON_MINUTES) / FLIP_MINUTES_PER_DAY),
+      `${track.id} must use the shared flip pace`,
+    );
+  }
 });

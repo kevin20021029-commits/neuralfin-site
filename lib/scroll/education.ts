@@ -2,7 +2,15 @@ import type { ScrollLocale } from "./campaign";
 
 export type ScrollEducationLang = ScrollLocale;
 
-// TODO(product): Replace track names/counts and confirm average lesson length before launch.
+// TODO(product) — BLOCKING for card accuracy, needs curriculum input:
+//   1. the real track names and per-track lesson counts, and
+//   2. the true average lesson length (LESSON_MINUTES, currently 5).
+// Every duration printed on the share card derives from these three inputs
+// via one shared rate: "N lessons/day", "in N days", and the milestone date
+// ("course done by <month year>"). If the real curriculum differs, that date
+// is a wrong factual claim on a shared artifact.
+// The relationships are locked by tests, so correcting the numbers here
+// propagates coherently — no other file needs touching.
 export const LESSON_MINUTES = 5;
 export const FLIP_MINUTES_PER_DAY = 10;
 

@@ -134,9 +134,24 @@ export function buildScrollSummary() {
     }),
   );
 
+  // Per-market averages computed from real submissions. This is the half of
+  // the standings the web side actually owns; `flippedPercent` is an in-app
+  // behaviour (did the user convert scroll minutes into lessons) that the
+  // calculator has no visibility into, so it stays out of this payload and
+  // the UI keeps citing published figures for it until the app supplies it.
+  const markets = Object.fromEntries(
+    SCROLL_REGIONS.map((region) => {
+      const rows = results.filter((result) => region === "ww" || result.region === region);
+      const averageHours = rows.length > 0 ? rows.reduce((sum, row) => sum + row.hours, 0) / rows.length : null;
+      return [region, { count: rows.length, averageHours: averageHours === null ? null : Math.round(averageHours * 10) / 10 }];
+    }),
+  );
+
   return {
     count: results.length,
     threshold: SCROLL_COMMUNITY_THRESHOLD,
+    useCommunity,
+    markets,
     percentiles,
     recent: results
       .slice(-12)
