@@ -1,0 +1,50 @@
+# Fast lane — runs on every PR and every push to main.
+#
+# main auto-deploys to production, so this is the only gate between a commit
+# and the live site. It deliberately contains no browser suites: those need a
+# Chromium download and a production build, which would make the common path
+# slow enough that people route around it. They run nightly instead
+# (.github/workflows/nightly.yml), matching BUILD_SPEC's guidance that the
+# OCR e2e lane is "intended for a nightly lane, not the per-commit suite".
+#
+# These three are CLAUDE.md's definition of done.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# A newer push to the same branch supersedes an in-flight run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: build · types · tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # package.json engines: >=22 <25
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Ordered cheapest-first so an obvious break fails fast.
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Production build
+        run: npm run build
