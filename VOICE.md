@@ -44,10 +44,11 @@ zh-Hans)`.
   used to live here — 你個名, 小注怡情, 群組貼士, 有在守紀律,
   組合：感覺派, 演算法 vs 算法 — no longer apply and have been deleted
   rather than migrated.
-- **Compliance strings are exempt from the mirror's sign-off.** Converted
-  legal text (f1/f2/f3) is marked `NEEDS-COMPLIANCE-APPROVAL` and requires
-  its own compliance review per script. Character conversion is not
-  compliance approval. See CLAUDE.md Hard Rule 3.
+- **Compliance strings need their own sign-off, separate from the mirror.**
+  Character conversion is not compliance approval. The converted zh-Hant
+  f1/f2/f3 were signed off on 2026-07-31 and are now frozen again under
+  CLAUDE.md Hard Rule 3 — any future edit, including a re-run of the
+  conversion, needs a fresh approval.
 
 When zh-Hans changes, regenerate zh-Hant from it in the same change — never
 edit the Hant strings independently, or the two scripts drift.
@@ -85,9 +86,9 @@ challenge them rather than rediscover them:
   markets. Thai month names are kept (กันยายน 2026). Reviewer may
   challenge.
 - Company name stays in English in f1 (no official Thai name); SFC rendered
-  as สำนักงาน ก.ล.ต. ฮ่องกง (SFC). f1/f2/f3 remain
-  NEEDS-COMPLIANCE-APPROVAL: native review does not cover compliance copy,
-  which needs sign-off per script/language (CLAUDE.md Hard Rule 3).
+  as สำนักงาน ก.ล.ต. ฮ่องกง (SFC). f1/f2/f3 were signed off on 2026-07-31
+  and are frozen again under CLAUDE.md Hard Rule 3 — native review does not
+  cover compliance copy, and any future edit needs a fresh approval.
 - Thai spacing and ๆ usage throughout
 - The full th tables live in `components/scroll/ScrollCalculator.tsx`,
   `lib/scroll/personality.ts`, `lib/scroll/education.ts`, and
