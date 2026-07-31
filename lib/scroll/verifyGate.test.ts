@@ -79,3 +79,26 @@ test("region comes from the locale's region subtag", () => {
   assert.equal(regionFromLocale("zh-Hant-HK"), "hk");
   assert.equal(regionFromLocale("en"), "ww");
 });
+
+// The notice must never hedge and assert at the same time, and must never
+// tell a user who uploaded a daily average to go upload a daily average.
+// This mirrors the routing in ScrollCalculator's scanNotice.
+function noticeKind(r: { verified: boolean; source: ParsedScreenTime["source"] }) {
+  if (r.verified) return "none";
+  return r.source === "day-total" ? "day-view-prompt" : "look-right";
+}
+
+test("a verified read does not also hedge", () => {
+  // The ✓ badge and the "Read: <duration>" chip assert; adding
+  // "look right?" beside them is the page contradicting itself.
+  assert.equal(noticeKind({ verified: true, source: "average" }), "none");
+  assert.equal(noticeKind({ verified: true, source: "weekly-total" }), "none");
+});
+
+test("only a day-scoped read is told to upload the week view", () => {
+  assert.equal(noticeKind({ verified: false, source: "day-total" }), "day-view-prompt");
+  // An average or weekly source already IS the week view — prompting for it
+  // told users to do the thing they had just done.
+  assert.equal(noticeKind({ verified: false, source: "average" }), "look-right");
+  assert.equal(noticeKind({ verified: false, source: "weekly-total" }), "look-right");
+});

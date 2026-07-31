@@ -64,7 +64,7 @@ type ParsedScrollStat = { scrollHours: number; totalHours: number };
 // Scan outcome stored as numbers, never formatted strings — the chip and
 // notice re-derive on every render so a language switch re-localizes them.
 type ScanResult =
-  | { kind: "read"; verified: boolean; hours: number; scrollHours: number | null; totalHours: number | null; ratioScope: "day" | "week" | null }
+  | { kind: "read"; verified: boolean; source: ParsedScreenTime["source"]; hours: number; scrollHours: number | null; totalHours: number | null; ratioScope: "day" | "week" | null }
   | { kind: "partial"; found: "apps" | "categories" }
   | { kind: "failed" };
 
@@ -696,13 +696,22 @@ export function ScrollCalculator() {
           ? t.dropReadScroll(formatDurationFromHours(scanResult.scrollHours, lang))
           : formatDurationFromHours(scanResult.hours, lang)
       : null;
+  // A verified read carries the ✓ badge and the "Read: <duration>" chip,
+  // which assert. Pairing them with "look right?" was the page hedging and
+  // asserting at once — the contradiction the badge gate was meant to end.
+  // So: verified says nothing further; the hedge belongs to unverified reads.
+  // And "that's TODAY's number — upload the Week view" is only true of a
+  // day-scoped total. It was shown for every unverified read, telling users
+  // who had just uploaded a daily average to go upload a daily average.
   const scanNotice =
     scanResult === null
       ? null
       : scanResult.kind === "read"
         ? scanResult.verified
-          ? t.dropDone.replace("{hours}", roundSliderHours(scanResult.hours).toFixed(1))
-          : t.dropDay(formatDurationFromHours(scanResult.hours, lang))
+          ? null
+          : scanResult.source === "day-total"
+            ? t.dropDay(formatDurationFromHours(scanResult.hours, lang))
+            : t.dropDone.replace("{hours}", roundSliderHours(scanResult.hours).toFixed(1))
         : scanResult.kind === "partial"
           ? scanResult.found === "apps"
             ? t.dropAppsOnly
@@ -855,7 +864,7 @@ export function ScrollCalculator() {
         setParsedScrollStat(parsed.scrollHours && parsed.totalHours ? { scrollHours: parsed.scrollHours, totalHours: parsed.totalHours } : null);
         setVerified(true);
         setUploadStatus("read");
-        setScanResult({ kind: "read", verified: true, hours: parsed.hours, scrollHours: parsed.scrollHours, totalHours: parsed.totalHours, ratioScope: parsed.ratioScope });
+        setScanResult({ kind: "read", verified: true, source: parsed.source, hours: parsed.hours, scrollHours: parsed.scrollHours, totalHours: parsed.totalHours, ratioScope: parsed.ratioScope });
         scheduleAutoFlip();
       } else if (parsed.hours) {
         // Day-scoped totals and any flagged (degraded) read land here:
@@ -867,7 +876,7 @@ export function ScrollCalculator() {
         setParsedScrollStat(parsed.scrollHours && parsed.totalHours ? { scrollHours: parsed.scrollHours, totalHours: parsed.totalHours } : null);
         setVerified(false);
         setUploadStatus("read");
-        setScanResult({ kind: "read", verified: false, hours: parsed.hours, scrollHours: parsed.scrollHours, totalHours: parsed.totalHours, ratioScope: parsed.ratioScope });
+        setScanResult({ kind: "read", verified: false, source: parsed.source, hours: parsed.hours, scrollHours: parsed.scrollHours, totalHours: parsed.totalHours, ratioScope: parsed.ratioScope });
         scheduleAutoFlip();
       } else if (parsed.apps.length > 0 || parsed.sawCategories) {
         // Partial parse: catalog-gated roasts may show (setAppRoasts above),
