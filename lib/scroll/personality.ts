@@ -10,52 +10,52 @@ export const ARCHETYPES = [
   {
     id: "saint",
     maxHours: 1.5,
-    lastReviewed: "2026-07-30",
+    lastReviewed: "2026-07-31",
     en: { title: "The Saint", subtitle: "suspicious. nobody's this disciplined" },
     "zh-Hant": { title: "聖人", subtitle: "可疑啊，這自律程度不像人類" },
     "zh-Hans": { title: "圣人", subtitle: "可疑啊，这自律程度不像人类" },
-    th: { title: "นักบุญ", subtitle: "สะอาดเกินไป น่าสงสัยว่ายังไม่เปิดพอร์ต" },
+    th: { title: "มีวินัย", subtitle: "น่าสงสัย มีวินัยเกินมนุษย์" },
   },
   {
     id: "casual",
     maxHours: 3,
-    lastReviewed: "2026-07-30",
+    lastReviewed: "2026-07-31",
     en: { title: "Casual Scroller", subtitle: "dabbling. respectable" },
     "zh-Hant": { title: "輕度滑友", subtitle: "入門水平，勉強及格" },
     "zh-Hans": { title: "轻度滑友", subtitle: "入门水平，勉强及格" },
-    th: { title: "สายเลื่อนชิลล์ ๆ", subtitle: "เล่นพอเพลิน ยังดูดีอยู่" },
+    th: { title: "นักไถสายชิล", subtitle: "ไถพอเพลิน ยังดูดีอยู่" },
   },
   {
     id: "certified",
     maxHours: 5,
-    lastReviewed: "2026-07-30",
+    lastReviewed: "2026-07-31",
     en: { title: "Certified Scroller", subtitle: "mid, and that's okay" },
     "zh-Hant": { title: "認證滑屏員", subtitle: "不上不下，但挺好" },
     "zh-Hans": { title: "认证滑屏员", subtitle: "不上不下，但挺好" },
-    th: { title: "นักเลื่อนตัวจริง", subtitle: "ถือสถานะกลาง ๆ ยังไม่หลุดมือ" },
+    th: { title: "นักไถใบเซอร์", subtitle: "สถานะกลางๆ ยังไม่เป็นไร" },
   },
   {
     id: "favorite",
     maxHours: 8,
-    lastReviewed: "2026-07-30",
+    lastReviewed: "2026-07-31",
     en: { title: "The Algorithm's Favorite", subtitle: "the feed knows your name" },
     "zh-Hant": { title: "算法的最愛", subtitle: "你的名字，算法早就記住了" },
     "zh-Hans": { title: "算法的最爱", subtitle: "你的名字，算法早就记住了" },
-    th: { title: "ลูกรักอัลกอริทึม", subtitle: "ฟีดจำชื่อคุณได้แล้ว" },
+    th: { title: "ขวัญใจอัลกอริทึม", subtitle: "ฟีดจำชื่อคุณได้" },
   },
   {
     id: "grass",
     maxHours: Number.POSITIVE_INFINITY,
-    lastReviewed: "2026-07-30",
+    lastReviewed: "2026-07-31",
     en: { title: "Touch Grass Candidate", subtitle: "the algorithm sends its regards" },
     "zh-Hant": { title: "摸草候選人", subtitle: "算法向你問好" },
     "zh-Hans": { title: "摸草候选人", subtitle: "算法向你问好" },
-    th: { title: "ผู้สมัครไปสัมผัสหญ้า", subtitle: "อัลกอริทึมฝากความคิดถึง" },
+    th: { title: "ผู้สมัครแตะหญ้า", subtitle: "อัลกอริทึมฝากความคิดถึง" },
   },
 ] as const;
 
 export const TAPE_NOTE_CONFIG = {
-  lastReviewed: "2026-07-30",
+  lastReviewed: "2026-07-31",
   en: {
     red: [
       "certified scroller",
@@ -77,13 +77,13 @@ export const TAPE_NOTE_CONFIG = {
     green: ["已翻绿 ✓", "守住纪律了 ✓"],
   },
   th: {
-    red: ["นักเลื่อนตัวจริง", "อัลกอริทึมชนะ", "ไปสัมผัสหญ้าบ้างนะ", "ดอยแล้ว", "ถือยาวแบบไม่ได้ตั้งใจ", "สมองว่าง เหลือแต่ฟีด", "พอร์ต: ใช้ความรู้สึกล้วน ๆ"],
+    red: ["นักไถใบเซอร์", "อัลกอริทึมชนะ", "ไปสัมผัสหญ้าบ้างนะ", "จมดิ่ง", "สุกแล้ว", "สมองว่าง มีแต่ฟีด", "พอร์ต: ใช้ความรู้สึกล้วน ๆ"],
     green: ["พลิกเขียวแล้ว ✓", "คุมวินัยอยู่ ✓"],
   },
 } as const;
 
 export const SCAN_STAGE_CONFIG = {
-  lastReviewed: "2026-07-30",
+  lastReviewed: "2026-07-31",
   en: {
     reading: "Reading on your device...",
     auditing: "Auditing the damage...",
@@ -103,15 +103,15 @@ export const SCAN_STAGE_CONFIG = {
     fail: "兄弟，这个盘面不太妙...",
   },
   th: {
-    reading: "กำลังอ่านบนเครื่องของคุณ...",
+    reading: "กำลังอ่านค่าบนอุปกรณ์ของคุณ...",
     auditing: "กำลังตรวจความเสียหาย...",
     success: "กำลังตีราคาตลาด...",
-    fail: "กระดานนี้ดูไม่ค่อยดีแฮะ...",
+    fail: "ท่าทางไม่ดีเลยหัวหน้า...",
   },
 } as const;
 
 export const SHARE_TEXT_VARIANTS = {
-  lastReviewed: "2026-07-30",
+  lastReviewed: "2026-07-31",
   en: [
     (loss: string, rank: string, url: string) => `I'm down ${loss} this year. ${rank} — are you down more? ${url} #ScrollAudit`,
     (loss: string, rank: string, url: string) => `I'm down ${loss} this year and the market is me. ${rank}. ${url} #ScrollAudit`,
@@ -130,7 +130,7 @@ export const SHARE_TEXT_VARIANTS = {
   th: [
     (loss: string, rank: string, url: string) => `ปีนี้เราติดลบไป ${loss} แล้ว ${rank} — คุณลบหนักกว่านี้ไหม? ${url} #ScrollAudit`,
     (loss: string, rank: string, url: string) => `ปีนี้ขาดทุนสมาธิไป ${loss} ตลาดก็คือเราเอง ${rank} ${url} #ScrollAudit`,
-    (loss: string, rank: string, url: string) => `หุ้นที่เราช็อตหนักสุดคือสมาธิของตัวเอง ${loss} ${rank} ${url} #ScrollAudit`,
+    (loss: string, rank: string, url: string) => `หุ้นที่เราลบหนักสุดคือสมาธิของตัวเอง ${loss} ${rank} ${url} #ScrollAudit`,
   ],
 } as const;
 

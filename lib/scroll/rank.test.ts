@@ -34,7 +34,7 @@ test("rank frame keeps the compliment below the median and a roast above", () =>
 test("rank frame localizes in every locale", () => {
   assert.equal(getRankFrame(63, "全球", "zh-Hant").title, "你滑得比 63% 的人多 · 全球");
   assert.equal(getRankFrame(63, "全球", "zh-Hans").title, "你滑得比 63% 的人多 · 全球");
-  assert.equal(getRankFrame(63, "ไทย", "th").title, "คุณเลื่อนมากกว่า 63% · ไทย");
+  assert.equal(getRankFrame(63, "ไทย", "th").title, "คุณไถมากกว่า 63% · ไทย");
   // zh-Hant is a character mirror of the reviewed zh-Hans copy.
   assert.equal(getRankFrame(15, "全球", "zh-Hans").subtitle, "挺好，你没被信息流“控制”");
   assert.equal(getRankFrame(15, "全球", "zh-Hant").subtitle, "挺好，你沒被信息流「控制」");
