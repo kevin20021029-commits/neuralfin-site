@@ -317,9 +317,20 @@
   font-weight: 700;
 }
 
+/* The value readout is one unit and must never fragment. In a
+   space-between row the label was winning the width contest at phone
+   widths, squeezing "3.5 h / day" onto two lines — and in Thai the orphaned
+   "วัน" collided with the slider's sub-label beneath it. The label wraps
+   instead; it already has a wrapping sub-line and can take the shrink. */
 .scroll-val {
+  flex: none;
+  white-space: nowrap;
   font-size: 16px;
   font-weight: 700;
+}
+
+.scroll-row-label label {
+  min-width: 0;
 }
 
 .scroll-range {
