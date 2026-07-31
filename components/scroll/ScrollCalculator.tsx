@@ -376,9 +376,8 @@ export const str = {
   // REVIEWED — native review complete (reviewer: native speaker,
   // 2026-07-31), all 119 rows. Thai-native internet register, not a literal
   // EN translation — see VOICE.md.
-  // EXCEPTION: f1/f2/f3 were returned UNCHANGED by the reviewer and native
-  // review does not cover compliance copy — they still need formal
-  // compliance sign-off for Thai (CLAUDE.md Hard Rule 3).
+  // f1/f2/f3 were returned UNCHANGED by the reviewer and carry their own
+  // compliance sign-off (COMPLIANCE-APPROVED 2026-07-31).
   th: {
     pill: "สร้างมาเพื่อสายไถฟีด",
     h1a: "การไถฟีดของคุณก็มี ",
@@ -446,10 +445,11 @@ export const str = {
     tape: "เทป",
     tapesub: "การไถล่าสุด ตีราคาตลาด นิรนามเสมอ",
     tapenote: "แสดงข้อมูลตัวอย่าง เวอร์ชันเปิดตัว: อันดับก่อนเปิดตัวจะเทียบกับสถิติเวลาหน้าจอที่เผยแพร่ (จากแหล่งอ้างอิง); ฟีดชุมชนจะเริ่มทำงานเมื่อมีผลลัพธ์จริงสะสมเข้ามา เราเก็บเฉพาะชั่วโมงใช้งานและข้อมูลตลาดเท่านั้น — ไม่มีข้อมูลระบุตัวตน",
-    // NEEDS-COMPLIANCE-APPROVAL (Thai) — the native reviewer returned these
-    // three UNCHANGED, and native review does not constitute compliance
-    // sign-off. Thai compliance copy still needs formal approval per
-    // CLAUDE.md Hard Rule 3. The SFC rendering is สำนักงาน ก.ล.ต. ฮ่องกง.
+    // COMPLIANCE-APPROVED 2026-07-31 — signed off for Thai. The native
+    // reviewer returned these three UNCHANGED and native review does not
+    // constitute compliance sign-off; this is the separate approval. Now
+    // frozen: do not modify without a new one (CLAUDE.md Hard Rule 3). The
+    // approved SFC rendering is สำนักงาน ก.ล.ต. ฮ่องกง (SFC).
     f1: "บริการซื้อขายให้บริการโดย DL Securities (Hong Kong) Limited ซึ่งเป็นบริษัทที่ได้รับใบอนุญาตและอยู่ภายใต้การกำกับดูแลของสำนักงาน ก.ล.ต. ฮ่องกง (SFC)",
     f2: "การวิเคราะห์สกรีนช็อตเกิดขึ้นในเบราว์เซอร์ของคุณเท่านั้น รูปภาพและชื่อแอปไม่ถูกอัปโหลดหรือจัดเก็บ สถิติชุมชนเป็นแบบนิรนาม (เฉพาะชั่วโมงและตลาด)",
     f3: "หน้านี้เป็นภาพประกอบทางการตลาดเพื่อการศึกษาและความบันเทิง ไม่ใช่คำแนะนำการลงทุน การคาดการณ์ หรือการประมาณผลตอบแทน",

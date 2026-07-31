@@ -85,10 +85,11 @@ now resolved:
   เลื่อน/นักเลื่อน forms were replaced everywhere, including the rank line.
 
 Compliance strings (f1/f2/f3) were returned UNCHANGED by the reviewer and
-remain `NEEDS-COMPLIANCE-APPROVAL`: native review does not cover compliance
-copy, which needs its own sign-off per script/language (CLAUDE.md Hard
-Rule 3). SFC is rendered สำนักงาน ก.ล.ต. ฮ่องกง (SFC); the company name
-stays in English (no official Thai name).
+signed off separately on 2026-07-31 — native review does not cover
+compliance copy, so it took its own approval. They are frozen again under
+CLAUDE.md Hard Rule 3: any future edit needs a fresh approval. SFC is
+rendered สำนักงาน ก.ล.ต. ฮ่องกง (SFC); the company name stays in English
+(no official Thai name).
 
 The full th tables live in `components/scroll/ScrollCalculator.tsx`,
 `lib/scroll/personality.ts`, `lib/scroll/education.ts`, and
