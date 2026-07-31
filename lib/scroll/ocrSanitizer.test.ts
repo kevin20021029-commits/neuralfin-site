@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { classifyParseOutcome, guessScreenTimeLayout, parseScreenTimeText, sanitizeParsedResult } from "./ocrSanitizer";
+import { classifyParseOutcome, findDurations, guessScreenTimeLayout, parseScreenTimeText, sanitizeParsedResult } from "./ocrSanitizer";
 
 test("clean app list renders canonical names and plausible minutes", () => {
   const parsed = parseScreenTimeText(
@@ -685,22 +685,34 @@ test("iOS screenshots are not mislabelled as Samsung by the Today card", () => {
   assert.equal(guessScreenTimeLayout("Screen time today\n3h 26m\nSet goal"), "samsung");
 });
 
-// PARKED (A0a) — documents the live defect rather than asserting it fixed.
-// Real tesseract output for an iOS "11h 47m" headline is "1 1 h 47m": the
-// digits are split, findDurations has no intra-number space tolerance (it
-// tolerates spaced zh unit tokens only), and resolveAnchoredTotal's leading
-// -value guard treats the orphaned "1" as <=1 char of punctuation noise.
-// The read lands at 1.78h instead of 11.78h.
-// When the tokenizer gains intra-number tolerance, flip this to assert
-// 11.783 and delete the note.
-test("PARKED A0a: OCR-split digits still under-read a two-digit headline", () => {
+// A0a: real tesseract output splits digit runs — an iOS "11h 47m" headline
+// comes back as "1 1 h 47m" and "5h 12m" as "5h 1 2m". Before the tokenizer
+// tolerated intra-number spaces these read as 1h47m and 1h52m: an 85%
+// under-read on exactly the heavy-scroller cohort the campaign targets.
+test("A0a: OCR-split digits parse to the true headline", () => {
   const split = ["Screen Time", "DAILY AVERAGE", "1 1 h 47m | 12% from last week"].join("\n");
-  const parsed = parseScreenTimeText(split, 93);
-  assert.equal(Math.round((parsed.hours ?? 0) * 60), 107); // 1h47m — the defect
-  assert.notEqual(Math.round((parsed.hours ?? 0) * 60), 707); // 11h47m — the truth
+  assert.equal(Math.round((parseScreenTimeText(split, 93).hours ?? 0) * 60), 707);
 
-  // Clean text of the same headline parses correctly, which is what proves
-  // the defect is tokenization and not the daily-vs-weekly branch.
   const clean = ["Screen Time", "DAILY AVERAGE", "11h 47m | 12% from last week"].join("\n");
   assert.equal(Math.round((parseScreenTimeText(clean, 93).hours ?? 0) * 60), 707);
+
+  // The other observed split: minutes broken instead of hours.
+  const splitMinutes = ["Screen Time", "DAILY AVERAGE", "5h 1 2m | 12% from last week"].join("\n");
+  assert.equal(Math.round((parseScreenTimeText(splitMinutes, 93).hours ?? 0) * 60), 312);
+});
+
+// The tolerance is one space between digits and the same digit-count caps as
+// before, so two adjacent numbers can never glue into a third value.
+test("A0a tolerance never glues separate numbers together", () => {
+  // Axis ticks on one line stay two distinct values, not "1012".
+  const ticks = findDurations("10h 12h", 24).filter((d) => d.hours !== null).map((d) => d.hours);
+  assert.deepEqual(ticks, [10, 12]);
+
+  // A category row keeps its own value.
+  const row = findDurations("Social 2h 41m", 24).filter((d) => d.hours !== null);
+  assert.equal(Math.round((row[0].hours ?? 0) * 60), 161);
+
+  // Three digits is still out of range for an hour field, not a glued 1+11.
+  const tooBig = findDurations("1 1 1 h", 24);
+  assert.ok(!tooBig.some((d) => d.hours === 111), "111h must never be produced");
 });

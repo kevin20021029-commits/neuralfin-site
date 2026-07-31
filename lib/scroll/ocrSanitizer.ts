@@ -322,6 +322,20 @@ function canonicalAppName(rawName: string) {
 const HOUR_UNITS = "hours|hour|hrs|hr|h|小\\s?時|小\\s?时|ชั่วโมง|ชม\\.?";
 const MINUTE_UNITS = "minutes|minute|mins|min|m|分\\s?鐘|分\\s?钟|นาที";
 
+// OCR also splits DIGIT runs, not just unit tokens: tesseract returns
+// "11h 47m" as "1 1 h 47m" and "5h 12m" as "5h 1 2m", which read as 1h47m
+// and 1h52m — an 85% under-read on exactly the heavy-scroller cohort.
+// Numbers get the same single-space tolerance the zh unit tokens already
+// have. Deliberately ONE space between digits and the same digit-count caps
+// as before, so two adjacent numbers can never glue into a third value.
+const DIGITS_2 = "\\d(?:\\s?\\d)?";
+const DIGITS_3 = "\\d(?:\\s?\\d){0,2}";
+
+// Spaces inside a matched digit run are OCR noise; strip before Number().
+function digitValue(raw: string) {
+  return Number(raw.replace(/\s+/g, "").replace(",", "."));
+}
+
 // hours === null means the span was RECOGNIZED as a duration-shaped token
 // but its value was rejected (out-of-range magnitude, or a genuinely
 // ambiguous unit). Consuming the span keeps other patterns from re-matching
@@ -360,15 +374,15 @@ export function findDurations(input: string, maxHours = 24): DurationMatch[] {
   }
 
   const hoursRe = new RegExp(
-    `(\\d{1,2}(?:[.,]\\d+)?)\\s*(?:${HOUR_UNITS})(?![a-z])(?:\\s*,?\\s*(\\d{1,3})\\s*(?:${MINUTE_UNITS})(?![a-z]))?`,
+    `(${DIGITS_2}(?:[.,]\\d+)?)\\s*(?:${HOUR_UNITS})(?![a-z])(?:\\s*,?\\s*(${DIGITS_3})\\s*(?:${MINUTE_UNITS})(?![a-z]))?`,
     "gi",
   );
   for (let m = hoursRe.exec(text); m; m = hoursRe.exec(text)) {
     const start = m.index;
     const end = m.index + m[0].length;
     if (overlapsSpan(spans, start, end)) continue;
-    const hoursPart = Number(m[1].replace(",", "."));
-    const minutesPart = m[2] ? Number(m[2]) : 0;
+    const hoursPart = digitValue(m[1]);
+    const minutesPart = m[2] ? digitValue(m[2]) : 0;
     // Magnitude guard: two ordered units mean h then m.
     if (hoursPart > maxHours || (m[2] && minutesPart > 59)) {
       push({ hours: null, index: start, end, composite: Boolean(m[2]), dropped: "invalid" });
@@ -386,13 +400,16 @@ export function findDurations(input: string, maxHours = 24): DurationMatch[] {
   // the hour). The composite "N <letter> M <minute-unit>" shape is strongly
   // h-then-m, so any single letter except m is accepted in the hour slot;
   // the minute slot stays strict and magnitude guards still apply.
-  const confusedRe = /(\d{1,2})\s*[a-ln-z\u0E17]\s*(\d{1,3})\s*(?:min|m|\u0E17)(?![a-z0-9\u0E00-\u0E7F])/gi;
+  const confusedRe = new RegExp(
+    `(${DIGITS_2})\\s*[a-ln-z\\u0E17]\\s*(${DIGITS_3})\\s*(?:min|m|\\u0E17)(?![a-z0-9\\u0E00-\\u0E7F])`,
+    "gi",
+  );
   for (let m = confusedRe.exec(text); m; m = confusedRe.exec(text)) {
     const start = m.index;
     const end = m.index + m[0].length;
     if (overlapsSpan(spans, start, end)) continue;
-    const hoursPart = Number(m[1]);
-    const minutesPart = Number(m[2]);
+    const hoursPart = digitValue(m[1]);
+    const minutesPart = digitValue(m[2]);
     if (hoursPart > maxHours || minutesPart > 59) {
       push({ hours: null, index: start, end, composite: true, dropped: "invalid" });
       continue;
@@ -403,12 +420,12 @@ export function findDurations(input: string, maxHours = 24): DurationMatch[] {
     }
   }
 
-  const minutesRe = new RegExp(`(\\d{1,3})\\s*(?:${MINUTE_UNITS})(?![a-z])`, "gi");
+  const minutesRe = new RegExp(`(${DIGITS_3})\\s*(?:${MINUTE_UNITS})(?![a-z])`, "gi");
   for (let m = minutesRe.exec(text); m; m = minutesRe.exec(text)) {
     const start = m.index;
     const end = m.index + m[0].length;
     if (overlapsSpan(spans, start, end)) continue;
-    const value = Number(m[1]) / 60;
+    const value = digitValue(m[1]) / 60;
     if (value >= 1 / 60 && value <= maxHours) {
       push({ hours: value, index: start, end, composite: false });
     }
@@ -418,12 +435,12 @@ export function findDurations(input: string, maxHours = 24): DurationMatch[] {
   // value; 25-59 can only be minutes (hours cap at 24); 1-24 could be either
   // hours or minutes -- never guess: drop the token and let the caller mark
   // the read unverified.
-  const confusedMinRe = /(\d{1,3})\s*\u0E17(?![a-z0-9\u0E00-\u0E7F])/gi;
+  const confusedMinRe = new RegExp(`(${DIGITS_3})\\s*\\u0E17(?![a-z0-9\\u0E00-\\u0E7F])`, "gi");
   for (let m = confusedMinRe.exec(text); m; m = confusedMinRe.exec(text)) {
     const start = m.index;
     const end = m.index + m[0].length;
     if (overlapsSpan(spans, start, end)) continue;
-    const value = Number(m[1]);
+    const value = digitValue(m[1]);
     if (value > Math.max(59, maxHours)) {
       push({ hours: null, index: start, end, composite: false, dropped: "invalid" });
     } else if (maxHours <= 24 && value >= 25 && value <= 59) {

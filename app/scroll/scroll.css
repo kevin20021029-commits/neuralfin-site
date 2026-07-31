@@ -789,10 +789,14 @@
 .scroll-card {
   position: relative;
   width: min(320px, 100%);
-  aspect-ratio: 9 / 14.5;
-  /* The ratio is the preferred shape, not a clip: long content (wrapped
-     roast lines + QR row) must grow the card, never cut off the footer. */
-  min-height: fit-content;
+  /* 9:14.5 is the PREFERRED shape, expressed as a floor so long content
+     (wrapped roast lines, Thai/zh line-breaking, the QR row) grows the card
+     instead of being cut off. `aspect-ratio` + `min-height: fit-content`
+     did NOT hold: at 360px it left the brand row 41-72px below the card
+     bottom, clipped by overflow:hidden — the exact failure BUILD_SPEC
+     forbids. A concrete floor plus auto height cannot regress that way. */
+  min-height: 516px;
+  height: auto;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -901,9 +905,10 @@
   color: var(--muted);
   font-size: 11px;
   font-weight: 700;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Wrap rather than ellipsise: the card grows with content, and on a share
+     card the punchline is the whole point. At 320px "suspicious. nobody's
+     this disciplined" was being silently cut. */
+  overflow-wrap: anywhere;
 }
 
 .scroll-card .roast {
@@ -1031,6 +1036,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* space-between alone leaves no gap once the row runs out of slack: at
+     320px the URL and the hashtag rendered touching
+     ("…/scroll#ScrollAudit"). */
+  gap: 8px;
+  flex-wrap: wrap;
   margin-top: 10px;
   color: var(--muted);
   font-size: 11px;
@@ -1152,11 +1162,26 @@
 }
 
 .scroll-store-button {
+  position: relative;
   display: inline-flex;
   width: 132px;
   height: 44px;
   border-radius: 9px;
   transition: transform 180ms ease, filter 180ms ease;
+}
+
+/* The badge art shrinks to 39px (inline) and 29px (sticky) on narrow
+   screens, under the >= 44px touch budget. Extend the HIT AREA instead of
+   the artwork, so the compact sticky bar keeps its layout. Anchored to the
+   button itself (position: relative above), never to the page. */
+.scroll-store-button::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: max(100%, 44px);
+  transform: translateY(-50%);
 }
 
 .scroll-store-button:hover {
