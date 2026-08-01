@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { canVerifyParse, regionFromLocale } from "@/components/scroll/ScrollCalculator";
 import type { ParsedScreenTime } from "./ocrSanitizer";
 
@@ -101,4 +103,34 @@ test("only a day-scoped read is told to upload the week view", () => {
   // told users to do the thing they had just done.
   assert.equal(noticeKind({ verified: false, source: "average" }), "look-right");
   assert.equal(noticeKind({ verified: false, source: "weekly-total" }), "look-right");
+});
+
+// The save overlay declares role="dialog" aria-modal="true" — a promise to
+// assistive tech that the rest of the page is inert. It implemented none of
+// it: focus stayed behind, Tab walked out into that supposedly-inert
+// content, Escape did nothing, the page still scrolled, and focus was
+// dropped on close. It matters more than most dialogs because in WeChat /
+// LINE / IG / FB this overlay is the ONLY way to save the card.
+//
+// The behaviour lives in a DOM effect, so this asserts the contract the
+// component must keep; the browser-level verification is in the a11y sweep.
+test("a dialog claiming aria-modal owes five behaviours", () => {
+  const required = [
+    "focus moves into the dialog on open",
+    "focus is trapped while it is open",
+    "Escape closes it",
+    "the page behind does not scroll",
+    "focus returns to the trigger on close",
+  ];
+  assert.equal(required.length, 5);
+  // Guard the markup contract the effect depends on: without the refs and
+  // the aria attributes, the effect silently does nothing.
+  const source = readFileSync(resolve(__dirname, "../../components/scroll/ScrollCalculator.tsx"), "utf8");
+  assert.match(source, /role="dialog"/, "overlay must keep its dialog role");
+  assert.match(source, /aria-modal="true"/, "overlay must keep aria-modal");
+  assert.match(source, /ref=\{saveOverlayElRef\}/, "the effect needs a ref to the dialog to trap focus");
+  assert.match(source, /ref=\{saveOverlayCloseRef\}/, "the effect needs a ref to focus on open");
+  assert.match(source, /document\.body\.style\.overflow = "hidden"/, "the page behind must be scroll-locked");
+  assert.match(source, /event\.key === "Escape"/, "Escape must close the dialog");
+  assert.match(source, /previouslyFocused\?\.focus\?\.\(\)/, "focus must return to the trigger");
 });
