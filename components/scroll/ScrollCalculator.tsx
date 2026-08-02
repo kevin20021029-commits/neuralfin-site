@@ -620,6 +620,8 @@ export function ScrollCalculator() {
   const [appRoasts, setAppRoasts] = useState<AppRoast[]>([]);
   const [tapeRows, setTapeRows] = useState<TapeRow[]>(demoTape);
   const [saveOverlayUrl, setSaveOverlayUrl] = useState<string | null>(null);
+  const saveOverlayElRef = useRef<HTMLDivElement>(null);
+  const saveOverlayCloseRef = useRef<HTMLButtonElement>(null);
   const [communityMarkets, setCommunityMarkets] = useState<ScrollSummary["markets"] | null>(null);
   const [shareStats, setShareStats] = useState(true);
   const [saveError, setSaveError] = useState(false);
@@ -920,6 +922,55 @@ export function ScrollCalculator() {
       fileRef.current?.click();
     }
   }
+
+  // The overlay declares role="dialog" aria-modal="true" but implemented
+  // none of it: focus stayed on the page behind, Tab walked out of the
+  // dialog into content a screen reader had just been told was inert,
+  // Escape did nothing, the page behind still scrolled, and focus was
+  // dropped on close. It also matters more here than most dialogs — in
+  // WeChat / LINE / IG / FB this overlay is the ONLY way to save the card.
+  useEffect(() => {
+    if (!saveOverlayUrl) return;
+    const dialog = saveOverlayElRef.current;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+
+    saveOverlayCloseRef.current?.focus();
+    document.body.style.overflow = "hidden";
+
+    // React's KeyboardEvent is imported at the top of this file and shadows
+    // the DOM one; this listener is on `document`, so it needs the DOM type.
+    function onKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeSaveOverlay();
+        return;
+      }
+      if (event.key !== "Tab" || !dialog) return;
+      const focusable = dialog.querySelectorAll<HTMLElement>('button, [href], input, [tabindex]:not([tabindex="-1"])');
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      // Wrap at both ends so focus cannot leave the dialog.
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus?.();
+    };
+    // closeSaveOverlay only touches refs and setState, so the closure
+    // captured when the overlay opened stays correct for its lifetime.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saveOverlayUrl]);
 
   function closeSaveOverlay() {
     if (saveOverlayRef.current !== null) {
@@ -1270,10 +1321,10 @@ export function ScrollCalculator() {
       </div>
 
       {saveOverlayUrl ? (
-        <div className="scroll-save-overlay" role="dialog" aria-modal="true" aria-label={t.longPressSave}>
+        <div className="scroll-save-overlay" role="dialog" aria-modal="true" aria-label={t.longPressSave} ref={saveOverlayElRef}>
           <img src={saveOverlayUrl} alt="My Scroll P&L" />
           <p>{t.longPressSave}</p>
-          <button type="button" onClick={closeSaveOverlay}>{t.overlayClose}</button>
+          <button type="button" ref={saveOverlayCloseRef} onClick={closeSaveOverlay}>{t.overlayClose}</button>
         </div>
       ) : null}
 
