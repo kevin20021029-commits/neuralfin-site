@@ -1,4 +1,5 @@
 import { content, Locale, partners } from "@/lib/content";
+import { SiteTracker } from "@/components/SiteTracker";
 import { appLinks, companyFacts, companyFactsZh, homeScreens, milestones, milestonesZh, siteNav, siteNavZh } from "@/lib/site";
 
 type Props = {
@@ -19,6 +20,7 @@ export function NeuralFinLanding({ locale }: Props) {
 
   return (
     <>
+      <SiteTracker lang={locale} />
       <nav className="site-nav" aria-label="Primary navigation">
         <div className="nav-inner">
           <a className="brand" href={`/${locale === "zh" ? "zh" : ""}`} aria-label="NeuralFin home">
@@ -61,10 +63,10 @@ export function NeuralFinLanding({ locale }: Props) {
                 ) : t.subhead}
               </p>
               <div className="hero-actions">
-                <a className="store-button" href={appLinks.appStore} aria-label={t.appStoreAlt} target="_blank" rel="noreferrer">
+                <a className="store-button" href={appLinks.appStore} aria-label={t.appStoreAlt} target="_blank" rel="noreferrer" data-track-store="appstore">
                   <img src="/assets/app-store.svg" alt={t.appStoreAlt} />
                 </a>
-                <a className="store-button" href={appLinks.googlePlay} aria-label={t.googlePlayAlt} target="_blank" rel="noreferrer">
+                <a className="store-button" href={appLinks.googlePlay} aria-label={t.googlePlayAlt} target="_blank" rel="noreferrer" data-track-store="play">
                   <img src="/assets/google-play.svg" alt={t.googlePlayAlt} />
                 </a>
                 <a className="launch-button" href={appLinks.webApp} target="_blank" rel="noreferrer">

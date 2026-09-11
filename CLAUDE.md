@@ -78,7 +78,16 @@ metaphor or not at all.
 ## Quick Facts
 
 - Next.js 14 App Router, TypeScript, npm. Dev server: `npm run dev`
-  (port 4182). Tests: `npm run test` (`tsx --test lib/scroll/*.test.ts`).
+  (port 4182). Tests: `npm run test`
+  (`tsx --test lib/scroll/*.test.ts lib/tracking/*.test.ts`).
+- Homepage tracking (`lib/tracking/siteEvents.ts`, mounted by
+  `components/SiteTracker.tsx`) posts three allowlisted events to
+  `https://nbti.neuralfin.ai/api/event` from `/` and `/zh` only. Never mount
+  it on `/scroll` — that page promises anonymity (Hard Rule 2). Transport is
+  keepalive `fetch` with `credentials: "omit"`, not `sendBeacon`: the
+  endpoint's wildcard CORS rejects credentialed beacons silently. The site
+  has no CSP today; if one is ever added, `connect-src` must include
+  `https://nbti.neuralfin.ai` or every event is lost without an error.
 - Scroll calculator lives at `/scroll`
   (`components/scroll/ScrollCalculator.tsx` + `lib/scroll/*`).
 - Results API: `POST /api/scroll-results`,
