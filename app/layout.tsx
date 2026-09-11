@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "NeuralFin | AI-Native Social Trading Platform",
   description:
     "NeuralFin is a social-media-driven, next-generation TechFin platform built for mobile financial discovery, AI learning, and regulated market action.",
-  metadataBase: new URL("https://www.neuralfintech.ai"),
+  metadataBase: new URL("https://www.neuralfin.ai"),
   openGraph: {
     title: "NeuralFin | Built for the scroll generation",
     description:
