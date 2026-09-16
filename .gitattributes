@@ -1,0 +1,5 @@
+# ★ 本件必须【逐字节】原样上线:源件是纯 CRLF 的 224843 B HTML,线上响应体的 sha256 被当作验收判据。
+# 本机 core.autocrlf=true 且仓库原先没有 .gitattributes ⇒ git add 会把 CRLF 折成 LF,提交字节 ≠ 源件字节
+# (实测:raw sha1 6e7ea2f8… ≠ filtered sha1 e1cd7993…;同尺子量纯 LF 的 vercel.json 两者相同)。
+# ⇒ 对该路径关掉一切行尾/编码转换,保证 盘上字节 == 仓库字节 == 线上字节。
+public/lubuds.html -text
