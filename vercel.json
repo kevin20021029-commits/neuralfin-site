@@ -3,6 +3,18 @@
     {
       "source": "/lubuds",
       "destination": "/lubuds.html"
+    },
+    {
+      "source": "/hksi",
+      "destination": "/hksi/notes.html"
+    },
+    {
+      "source": "/hksi/",
+      "destination": "/hksi/notes.html"
+    },
+    {
+      "source": "/notes.js",
+      "destination": "/hksi/notes.js"
     }
   ]
 }
