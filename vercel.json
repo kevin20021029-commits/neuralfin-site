@@ -3,10 +3,6 @@
     {
       "source": "/lubuds",
       "destination": "/lubuds.html"
-    },
-    {
-      "source": "/hksi/",
-      "destination": "/hksi/notes.html"
     }
   ]
 }

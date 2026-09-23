@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HKSI 卷一 · 练习系统</title>
+<style>
+:root{
+  --bg:#f6f4ef; --card:#fff; --ink:#1b1a18; --ink2:#55524c; --muted:#8a867e;
+  --line:#e4e0d8; --line2:#d0cbc1;
+  --accent:#146152; --accent-bg:#e7f1ee; --accent-ink:#0d4a3e;
+  --ok:#186b35; --ok-bg:#e6f4ea; --ok-line:#9fd4b0;
+  --no:#a83232; --no-bg:#fbeaea; --no-line:#e8a8a8;
+  --warn:#8a5a10; --warn-bg:#fdf4e0;
+  --sh:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.045);
+  --r:14px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#15151a; --card:#1d1d23; --ink:#ecebe6; --ink2:#b6b3ac; --muted:#8b8780;
+  --line:#2c2c34; --line2:#3b3b45;
+  --accent:#6fc7b0; --accent-bg:#1a2f2b; --accent-ink:#a5e0d1;
+  --ok:#7ad39a; --ok-bg:#16301f; --ok-line:#2f6b45;
+  --no:#f09090; --no-bg:#321a1a; --no-line:#7a3a3a;
+  --warn:#e2b467; --warn-bg:#332811;
+  --sh:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.28);
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font:17px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 16px 80px}
+header{
+  position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.hbar{max-width:820px;margin:0 auto;padding:11px 16px;display:flex;align-items:center;gap:10px}
+.hbar h1{font-size:16px;margin:0;font-weight:650;letter-spacing:.2px;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbar .sub{font-size:12px;color:var(--muted);font-weight:400;margin-left:8px}
+button{font-family:inherit}
+.btn{
+  border:1px solid var(--line2);background:var(--card);color:var(--ink);
+  padding:9px 15px;border-radius:10px;font-size:15px;cursor:pointer;
+  transition:.14s;font-weight:520;white-space:nowrap;
+}
+.btn:hover{border-color:var(--accent);color:var(--accent-ink)}
+.btn:active{transform:scale(.975)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{opacity:.9;color:#fff}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted);padding:9px 10px}
+.btn.ghost:hover{color:var(--accent-ink);background:var(--accent-bg)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sm{padding:6px 11px;font-size:13.5px;border-radius:8px}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--sh);padding:18px;margin-bottom:14px}
+
+/* ---- progress bar ---- */
+.bar{height:7px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .35s}
+
+/* ---- home ---- */
+.hero{text-align:center;padding:26px 18px 20px}
+.hero h2{margin:0 0 4px;font-size:23px;letter-spacing:-.3px}
+.hero p{margin:0;color:var(--muted);font-size:14px}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.stats3>div{background:var(--card);padding:15px 8px;text-align:center}
+.stats3 b{display:block;font-size:24px;font-weight:680;letter-spacing:-.5px;line-height:1.25}
+.stats3 span{font-size:12.5px;color:var(--muted)}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:8px}
+@media(max-width:560px){.modes{grid-template-columns:1fr}}
+.mode{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:17px;
+  cursor:pointer;transition:.15s;text-align:left;box-shadow:var(--sh);display:block;width:100%;
+}
+.mode:hover{border-color:var(--accent);transform:translateY(-1px)}
+.mode .ic{font-size:19px;margin-bottom:5px;display:block;line-height:1}
+.mode b{display:block;font-size:16.5px;margin-bottom:3px;font-weight:620}
+.mode small{color:var(--muted);font-size:13px;line-height:1.55;display:block}
+
+.chgrid{display:grid;gap:7px}
+.chrow{display:flex;align-items:center;gap:12px;padding:11px 13px;background:var(--card);
+  border:1px solid var(--line);border-radius:11px;cursor:pointer;transition:.14s;text-align:left;width:100%}
+.chrow:hover{border-color:var(--accent);background:var(--accent-bg)}
+.chrow .n{width:27px;height:27px;border-radius:8px;background:var(--accent-bg);
+  color:var(--accent-ink);display:grid;place-items:center;font-size:13.5px;font-weight:680;flex:none}
+.chrow .t{flex:1;min-width:0;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chrow .p{font-size:12.5px;color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
+.chrow .p.good{color:var(--ok);font-weight:600}
+.chrow .p.bad{color:var(--no);font-weight:600}
+
+/* ---- question ---- */
+.qmeta{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.chip{font-size:12px;padding:3px 9px;border-radius:99px;background:var(--accent-bg);
+  color:var(--accent-ink);font-weight:560;white-space:nowrap}
+.chip.gray{background:var(--line);color:var(--ink2)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.qtext{font-size:18.5px;line-height:1.72;font-weight:520;margin:0 0 18px;letter-spacing:.1px;white-space:pre-wrap}
+.opts{display:grid;gap:9px}
+.opt{
+  display:flex;gap:12px;align-items:flex-start;padding:13px 15px;background:var(--card);
+  border:1.5px solid var(--line2);border-radius:11px;cursor:pointer;transition:.13s;
+  text-align:left;width:100%;font-size:16px;line-height:1.65;color:var(--ink);font-weight:400;
+}
+.opt:hover:not(:disabled){border-color:var(--accent);background:var(--accent-bg)}
+.opt:disabled{cursor:default}
+.opt .k{
+  width:25px;height:25px;border-radius:7px;border:1.5px solid var(--line2);flex:none;
+  display:grid;place-items:center;font-size:13px;font-weight:680;color:var(--ink2);
+  background:var(--bg);transition:.13s;margin-top:1px;
+}
+.opt .txt{flex:1;min-width:0;padding-top:1px}
+.opt.sel{border-color:var(--accent);background:var(--accent-bg)}
+.opt.sel .k{background:var(--accent);border-color:var(--accent);color:#fff}
+.opt.right{border-color:var(--ok-line);background:var(--ok-bg)}
+.opt.right .k{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--no-line);background:var(--no-bg)}
+.opt.wrong .k{background:var(--no);border-color:var(--no);color:#fff}
+.opt .mark{font-size:13px;font-weight:650;flex:none;padding-top:3px}
+.opt.right .mark{color:var(--ok)}
+.opt.wrong .mark{color:var(--no)}
+
+.exp{margin-top:14px;padding:14px 16px;border-radius:11px;font-size:15px;line-height:1.75;
+  border-left:3.5px solid var(--accent);background:var(--accent-bg);color:var(--ink);
+  animation:fade .22s ease}
+.exp b{color:var(--accent-ink)}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.exp .hdl{font-size:12.5px;font-weight:680;color:var(--accent-ink);letter-spacing:.6px;
+  text-transform:uppercase;margin-bottom:5px;display:block}
+
+/* ---- footer nav ---- */
+.qnav{position:fixed;left:0;right:0;bottom:0;z-index:40;
+  background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+.qnav .in{max-width:820px;margin:0 auto;display:flex;align-items:center;gap:9px}
+.qnav .cnt{flex:1;text-align:center;font-size:13.5px;color:var(--muted);
+  font-variant-numeric:tabular-nums}
+.qnav .cnt b{color:var(--ink);font-weight:650}
+
+/* ---- exam ---- */
+.timer{font-variant-numeric:tabular-nums;font-weight:660;font-size:15px;
+  padding:5px 12px;border-radius:9px;background:var(--accent-bg);color:var(--accent-ink)}
+.timer.low{background:var(--no-bg);color:var(--no);animation:pulse 1.1s infinite}
+@keyframes pulse{50%{opacity:.55}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:6px;margin-top:8px}
+.gb{aspect-ratio:1;border-radius:8px;border:1.5px solid var(--line2);background:var(--card);
+  font-size:13px;font-weight:600;cursor:pointer;color:var(--ink2);transition:.12s;
+  display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.gb:hover{border-color:var(--accent)}
+.gb.done{background:var(--accent);border-color:var(--accent);color:#fff}
+.gb.cur{outline:2.5px solid var(--accent);outline-offset:1.5px}
+.gb.r{background:var(--ok);border-color:var(--ok);color:#fff}
+.gb.w{background:var(--no);border-color:var(--no);color:#fff}
+
+/* ---- result ---- */
+.score{text-align:center;padding:30px 18px}
+.score .num{font-size:58px;font-weight:720;letter-spacing:-2px;line-height:1;font-variant-numeric:tabular-nums}
+.score .lbl{font-size:14px;color:var(--muted);margin-top:9px}
+.pass{color:var(--ok)} .fail{color:var(--no)}
+.banner{display:inline-block;padding:6px 18px;border-radius:99px;font-size:14.5px;
+  font-weight:650;margin-top:13px}
+.banner.p{background:var(--ok-bg);color:var(--ok)}
+.banner.f{background:var(--no-bg);color:var(--no)}
+
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-size:12.5px;color:var(--muted);font-weight:620;text-transform:uppercase;letter-spacing:.5px}
+td:last-child,th:last-child{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+
+.empty{text-align:center;padding:52px 20px;color:var(--muted)}
+.empty .ic{font-size:36px;margin-bottom:10px;opacity:.5;display:block}
+
+.sec-h{font-size:13px;font-weight:680;color:var(--muted);letter-spacing:.9px;
+  text-transform:uppercase;margin:24px 0 10px;padding-left:2px}
+.hint{font-size:12.5px;color:var(--muted);margin-top:9px;line-height:1.6}
+kbd{font:600 11.5px/1 inherit;padding:2px 5px;border:1px solid var(--line2);border-bottom-width:2px;
+  border-radius:5px;background:var(--card);color:var(--ink2)}
+.gloss{font-size:14.5px}
+.gloss td:last-child{text-align:left;color:var(--muted);font-size:13px}
+.gloss .tr{color:var(--accent-ink);font-weight:560}
+.star{cursor:pointer;font-size:19px;line-height:1;border:none;background:none;padding:2px 4px;
+  color:var(--line2);transition:.12s}
+.star.on{color:#e0a520}
+.star:hover{transform:scale(1.15)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hbar">
+    <button class="btn ghost sm" id="back" style="display:none">← 返回</button>
+    <h1 id="htitle">HKSI 卷一 · 练习系统<span class="sub" id="hsub">基本证券及期货规例</span></h1>
+    <span id="hright"></span>
+  </div>
+</header>
+
+<div class="wrap" id="app"></div>
+<div class="qnav" id="qnav" style="display:none"><div class="in" id="qnavin"></div></div>
+
+<script src="questions.js"></script>
+<script>
+/* ============================================================
+   HKSI 卷一 练习系统
+   ============================================================ */
+const BANK = (window.HKSI_BANK || []).slice();
+const LS = 'hksi_p1_rec_v1';
+const EXAM_N = 60, EXAM_MIN = 90, PASS = 0.7;
+
+/* 章节名（简 / 繁） */
+const CH_NAME = {
+  1:'香港金融业监管概览', 2:'相关香港法例及《公司条例》', 3:'《证券及期货条例》',
+  4:'发牌及注册与附属法例', 5:'业务操守与客户关系', 6:'业务运作与常规',
+  7:'在香港交易所的参与', 8:'取得公开资本', 9:'市场失当行为及不当交易手法'
+};
+const CH_NAME_T = {
+  1:'香港金融業監管概覽', 2:'相關香港法例及《公司條例》', 3:'《證券及期貨條例》',
+  4:'發牌及註冊與附屬法例', 5:'業務操守與客戶關係', 6:'業務運作與常規',
+  7:'在香港交易所的參與', 8:'取得公開資本', 9:'市場失當行為及不當交易手法'
+};
+
+/* ---------- 繁简切换 ----------
+   题目内容由 build.py 用 OpenCC 按完整上下文预转（字段 _t），切换零误差。
+   界面文字用下表。                                            */
+let tradOn = localStorage.getItem('hksi_trad') === '1';
+
+const UI_T = {
+  'HKSI 卷一 · 练习系统':'HKSI 卷一 · 練習系統',
+  '基本证券及期货规例 · 温习手册 3.5 版':'基本證券及期貨規例 · 溫習手冊 3.5 版',
+  '题库总题数':'題庫總題數','已做过':'已做過','正确率':'正確率','进度':'進度',
+  '开始练习':'開始練習','各章进度':'各章進度','学习统计':'學習統計',
+  '章节练习':'章節練習','随机练习':'隨機練習','错题重做':'錯題重做','模拟考试':'模擬考試',
+  '按章逐题做，答完立刻看解析':'按章逐題做，答完立刻看解析',
+  '全库乱序抽题，防止记位置':'全庫亂序抽題，防止記位置',
+  '答题卡':'答題卡','已作答':'已作答','交卷':'交卷','章节':'章節','题':'題',
+  '答对':'答對','用时':'用時','合格':'合格','各章表现':'各章表現','错题':'錯題',
+  '对/做过/总':'對/做過/總','解析':'解析','跳到未做':'跳到未做',
+  '时间到，已自动交卷':'時間到，已自動交卷',
+  '后面没有未做的了':'後面沒有未做的了','本轮完成':'本輪完成',
+  '← 上一题':'← 上一題','下一题 →':'下一題 →','完成 →':'完成 →',
+  '← 返回首页':'← 返回首頁','✕ 放弃':'✕ 放棄',
+  '确定放弃本次模拟考试？':'確定放棄本次模擬考試？',
+  '★ 收藏夹':'★ 收藏夾','📇 术语对照表':'📇 術語對照表',
+  '考试常用术语对照（简 / 繁 / EN）':'考試常用術語對照（簡 / 繁 / EN）',
+  '键盘：<kbd>1</kbd>–<kbd>4</kbd> 选答案 · <kbd>Enter</kbd> 下一题 · <kbd>←</kbd><kbd>→</kbd> 翻题':
+  '鍵盤：<kbd>1</kbd>–<kbd>4</kbd> 選答案 · <kbd>Enter</kbd> 下一題 · <kbd>←</kbd><kbd>→</kbd> 翻題'
+};
+function L(s){
+  return (tradOn && UI_T[s]) ? UI_T[s] : s;
+}
+/* 带动态内容的界面文字：直接给简/繁两份，套不进 UI_T 字典时用这个 */
+function LT(s, t){ return tradOn ? t : s; }
+/* 取题目字段（自动按语言切换） */
+function F(q, f, i){
+  if(tradOn && q[f + '_t'] !== undefined){
+    const v = q[f + '_t'];
+    return (i === undefined) ? v : v[i];
+  }
+  const v = q[f];
+  return (i === undefined) ? v : v[i];
+}
+function CH(c){ return tradOn ? (CH_NAME_T[c] || CH_NAME[c]) : (CH_NAME[c] || ('第'+c+'章')); }
+
+/* ---------- 记录 ---------- */
+let rec = {};
+try { rec = JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch(e){ rec = {}; }
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(rec)); }catch(e){} }
+function R(id){ return rec[id] || (rec[id] = {r:0,w:0,last:'',star:false}); }
+function mark(q, ok){
+  const x = R(q.id);
+  if(ok){ x.r++; x.last='r'; } else { x.w++; x.last='w'; }
+  save();
+}
+function isMastered(q){ const x=rec[q.id]; return x && x.last==='r'; }
+function wrongList(){ return BANK.filter(q => rec[q.id] && rec[q.id].last==='w'); }
+function starredList(){ return BANK.filter(q => rec[q.id] && rec[q.id].star); }
+
+/* ---------- 工具 ---------- */
+const $ = s => document.querySelector(s);
+const el = (t,c,h) => { const n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const KEYS = ['A','B','C','D','E','F'];
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function pad(n){ return String(n).padStart(2,'0'); }
+function fmtTime(ms){
+  if(ms<0) ms=0;
+  const s = Math.floor(ms/1000);
+  return pad(Math.floor(s/60)) + ':' + pad(s%60);
+}
+
+/* ---------- 会话状态 ---------- */
+let S = { view:'home', mode:null, list:[], idx:0, picked:null, revealed:false,
+          exam:null, lastResult:null, chapFilter:null };
+
+/* ============================================================
+   渲染
+   ============================================================ */
+/* 繁简开关：常驻页头，任何一页都能切 */
+function tradBtn(hr){
+  const b = el('button','btn sm', tradOn ? '繁 ✓' : '繁/简');
+  b.title = '切换简体／繁体显示（题目与界面同时切换）';
+  b.onclick = ()=>{ tradOn=!tradOn; localStorage.setItem('hksi_trad', tradOn?'1':'0'); render(); };
+  hr.appendChild(b);
+}
+
+function render(){
+  const app = $('#app'), nav = $('#qnav'), back = $('#back'), hr = $('#hright');
+  app.innerHTML=''; nav.style.display='none'; hr.innerHTML=''; back.style.display='none';
+  window.scrollTo(0,0);
+  tradBtn(hr);
+
+  if(S.view==='home'){ renderHome(app, hr, back); }
+  else if(S.view==='practice'){ renderQ(app, hr, back); }
+  else if(S.view==='exam'){ renderExam(app, hr, back, nav); }
+  else if(S.view==='result'){ renderResult(app, back); }
+  else if(S.view==='stats'){ renderStats(app, back); }
+  else if(S.view==='glossary'){ renderGlossary(app, back, hr); }
+}
+
+/* ---------------- 首页 ---------------- */
+function renderHome(app, hr, back){
+  const total = BANK.length;
+  const seen = BANK.filter(q=>rec[q.id]).length;
+  const right = BANK.filter(q=>rec[q.id] && rec[q.id].last==='r').length;
+  const wrong = wrongList().length;
+
+  const hero = el('div','hero');
+  hero.innerHTML = `<h2>${esc(L('HKSI 卷一 · 练习系统'))}</h2>
+    <p>${esc(L('基本证券及期货规例 · 温习手册 3.5 版'))}</p>`;
+  app.appendChild(hero);
+
+  const st = el('div','stats3');
+  st.innerHTML = `
+    <div><b>${total}</b><span>${esc(L('题库总题数'))}</span></div>
+    <div><b>${seen}</b><span>${esc(L('已做过'))}</span></div>
+    <div><b class="${right/Math.max(seen,1)>=PASS?'':'fail'}">${seen?Math.round(right/seen*100)+'%':'—'}</b>
+      <span>${esc(L('正确率'))}</span></div>`;
+  app.appendChild(st);
+
+  const pb = el('div','card');
+  const pct = total? Math.round(seen/total*100):0;
+  pb.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:8px">
+      <span>${esc(L('进度'))}</span><span style="color:var(--muted)">${seen} / ${total}</span></div>
+    <div class="bar"><i style="width:${pct}%"></i></div>`;
+  app.appendChild(pb);
+
+  app.appendChild(el('div','sec-h', esc(L('开始练习'))));
+  const modes = el('div','modes');
+
+  const mk = (ic, title, desc, fn) => {
+    const b = el('button','mode');
+    b.innerHTML = `<span class="ic">${ic}</span><b>${esc(L(title))}</b><small>${esc(L(desc))}</small>`;
+    b.onclick = fn; return b;
+  };
+
+  modes.appendChild(mk('📖','章节练习','按章逐题做，答完立刻看解析',()=>pickChapter()));
+  modes.appendChild(mk('🎲','随机练习','全库乱序抽题，防止记位置',()=>startRandom()));
+  modes.appendChild(mk('🔁','错题重做',
+      wrong ? LT(`当前 ${wrong} 道待攻克`, `當前 ${wrong} 道待攻克`) : LT('暂无错题，先去做题吧','暫無錯題，先去做題吧'),
+      ()=>{ if(!wrong) return toast(LT('还没有错题','還沒有錯題')); startWrong(); }));
+  modes.appendChild(mk('⏱️','模拟考试',
+      LT(`${EXAM_N} 题 / ${EXAM_MIN} 分钟 / 交卷才给分`,
+         `${EXAM_N} 題 / ${EXAM_MIN} 分鐘 / 交卷才給分`),()=>startExam()));
+  app.appendChild(modes);
+
+  const row = el('div'); row.style.cssText='display:flex;gap:9px;margin-top:11px';
+  const bs = el('button','btn sm', L('★ 收藏夹'));
+  bs.onclick = ()=>startStarred();
+  const bg = el('button','btn sm', L('📇 术语对照表'));
+  bg.onclick = ()=>{ S.view='glossary'; render(); };
+  row.appendChild(bs); row.appendChild(bg); app.appendChild(row);
+
+  app.appendChild(el('div','sec-h', esc(L('各章进度'))));
+  const grid = el('div','chgrid');
+  const byCh = {};
+  BANK.forEach(q => (byCh[q.ch] = byCh[q.ch]||[]).push(q));
+  Object.keys(byCh).sort((a,b)=>a-b).forEach(c=>{
+    const arr = byCh[c];
+    const dn = arr.filter(q=>rec[q.id]).length;
+    const rr = arr.filter(q=>rec[q.id] && rec[q.id].last==='r').length;
+    const p = dn? Math.round(rr/dn*100) : null;
+    const b = el('button','chrow');
+    b.innerHTML = `<span class="n">${c}</span>
+      <span class="t">${esc(CH(c))}</span>
+      <span class="p ${p===null?'':(p>=PASS?'good':'bad')}">${dn? p+'% · ' : ''}${dn}/${arr.length}</span>`;
+    b.onclick = ()=>startChapter(+c);
+    grid.appendChild(b);
+  });
+  app.appendChild(grid);
+
+  const tip = el('div','hint');
+  tip.innerHTML = L('键盘：<kbd>1</kbd>–<kbd>4</kbd> 选答案 · <kbd>Enter</kbd> 下一题 · <kbd>←</kbd><kbd>→</kbd> 翻题');
+  app.appendChild(tip);
+}
+
+/* ---------------- 选章 ---------------- */
+function pickChapter(){
+  const nums = [...new Set(BANK.map(q=>q.ch))].sort((a,b)=>a-b);
+  if(!nums.length) return toast('题库为空');
+  const s = prompt('输入章节编号（1-9）：\n\n' + nums.map(n=>`${n}. ${CH_NAME[n]}`).join('\n'));
+  if(s===null) return;
+  const n = parseInt(s.trim(),10);
+  if(nums.includes(n)) startChapter(n); else toast('没有这一章');
+}
+
+/* ---------------- 启动各种模式 ---------------- */
+function startChapter(c){
+  S.mode='practice'; S.chapFilter=c;
+  S.list = shuffle(BANK.filter(q=>q.ch===c));
+  beginList();
+}
+function startRandom(){
+  S.mode='practice'; S.chapFilter=null;
+  S.list = shuffle(BANK);
+  beginList();
+}
+function startWrong(){
+  S.mode='practice';
+  S.list = shuffle(wrongList());
+  beginList();
+}
+function startStarred(){
+  const l = shuffle(starredList());
+  if(!l.length) return toast('还没有收藏题目');
+  S.mode='practice'; S.list=l; beginList();
+}
+function beginList(){
+  if(!S.list.length) return toast('没有题目');
+  S.idx=0; S.picked=null; S.revealed=false; S.view='practice'; render();
+}
+
+/* ---------------- 练习视图 ---------------- */
+function renderQ(app, hr, back){
+  back.style.display='';
+  back.textContent = '← 返回';
+  back.onclick = ()=>{ S.view='home'; render(); };
+
+  const total = S.list.length;
+  const q = S.list[S.idx];
+  if(!q){ S.view='home'; return render(); }
+
+  const done = S.mode==='exam' ? 0 : 0;
+  hr.innerHTML = `<span style="font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums">${S.idx+1} / ${total}</span>`;
+
+  const bar = el('div','card'); bar.style.padding='13px 16px';
+  bar.innerHTML = `<div class="bar"><i style="width:${(S.idx)/total*100}%"></i></div>`;
+  app.appendChild(bar);
+
+  const c = el('div','card');
+  const x = rec[q.id];
+  const meta = el('div','qmeta');
+  meta.innerHTML = `
+    <span class="chip">${esc(CH(q.ch))}</span>
+    ${q.tag?`<span class="chip gray">${esc(F(q,'tag'))}</span>`:''}
+    ${x&&x.w?`<span class="chip warn">${esc(tradOn?`曾答錯 ${x.w} 次`:`曾答错 ${x.w} 次`)}</span>`:''}
+    <button class="star ${x&&x.star?'on':''}" title="收藏">★</button>`;
+  meta.querySelector('.star').onclick = (e)=>{
+    const y = R(q.id); y.star = !y.star; save(); e.target.classList.toggle('on', y.star);
+  };
+  c.appendChild(meta);
+
+  c.appendChild(el('div','qtext', esc(F(q,'q'))));
+
+  const opts = el('div','opts');
+  q.opts.forEach((o,i)=>{
+    const b = el('button','opt');
+    b.innerHTML = `<span class="k">${KEYS[i]}</span><span class="txt">${esc(F(q,'opts',i))}</span>`;
+    if(S.revealed){
+      b.disabled = true;
+      if(i===q.ans){ b.classList.add('right'); b.insertAdjacentHTML('beforeend',`<span class="mark">${LT('✓ 正确','✓ 正確')}</span>`); }
+      else if(i===S.picked){ b.classList.add('wrong'); b.insertAdjacentHTML('beforeend',`<span class="mark">${LT('✗ 你的选择','✗ 你的選擇')}</span>`); }
+    } else {
+      b.onclick = ()=>answer(i);
+    }
+    opts.appendChild(b);
+  });
+  c.appendChild(opts);
+
+  if(S.revealed){
+    const e = el('div','exp');
+    const hd = S.picked===q.ans ? LT('✓ 答对','✓ 答對') : LT('✗ 答错','✗ 答錯');
+    e.innerHTML = `<span class="hdl">${hd} · ${L('解析')}</span>${esc(F(q,'exp'))}`;
+    c.appendChild(e);
+  }
+  app.appendChild(c);
+
+  // 底部导航
+  const nav = el('div','card'); nav.style.cssText='display:flex;gap:9px;align-items:center';
+  const prev = el('button','btn', L('← 上一题')); prev.disabled = S.idx===0;
+  prev.onclick = ()=>{ S.idx--; S.picked=null; S.revealed=false; render(); };
+  const next = el('button','btn primary', S.idx===total-1 ? L('完成 →') : L('下一题 →'));
+  next.onclick = ()=>{
+    if(S.idx===total-1){ S.view='home'; render(); toast(L('本轮完成')); }
+    else { S.idx++; S.picked=null; S.revealed=false; render(); }
+  };
+  nav.appendChild(prev); nav.appendChild(next);
+  if(S.revealed){
+    const j = el('button','btn ghost sm', L('跳到未做'));
+    j.onclick = ()=>{ const n = S.list.findIndex((x,i)=> i>S.idx && !rec[x.id]); if(n<0) return toast(L('后面没有未做的了')); S.idx=n; S.picked=null; S.revealed=false; render(); };
+    nav.appendChild(j);
+  }
+  app.appendChild(nav);
+}
+
+function answer(i){
+  const q = S.list[S.idx];
+  S.picked = i;
+  S.revealed = true;
+  if(S.mode!=='exam') mark(q, i===q.ans);
+  render();
+}
+
+/* ---------------- 模拟考试 ---------------- */
+function startExam(){
+  if(BANK.length < 10) return toast('题库太小，无法模拟考试');
+  const n = Math.min(EXAM_N, BANK.length);
+  S.exam = {
+    list: shuffle(BANK).slice(0,n),
+    ans: {}, idx:0,
+    endAt: Date.now() + EXAM_MIN*60*1000,
+    timer: null
+  };
+  S.view='exam';
+  render();
+  S.exam.timer = setInterval(tick, 1000);
+}
+function tick(){
+  if(!S.exam) return clearInterval();
+  const left = S.exam.endAt - Date.now();
+  const t = $('#timer');
+  if(t){
+    t.textContent = fmtTime(left);
+    t.classList.toggle('low', left < 5*60*1000);
+  }
+  if(left <= 0){ clearInterval(S.exam.timer); submitExam(true); }
+}
+
+function renderExam(app, hr, back, nav){
+  const E = S.exam;
+  if(!E) { S.view='home'; return render(); }
+  back.style.display=''; back.textContent = L('✕ 放弃');
+  back.onclick = ()=>{ if(confirm(L('确定放弃本次模拟考试？'))){ clearInterval(E.timer); S.exam=null; S.view='home'; render(); } };
+
+  hr.innerHTML = `<span class="timer" id="timer">${fmtTime(E.endAt-Date.now())}</span>`;
+
+  const q = E.list[E.idx];
+  const answeredN = Object.keys(E.ans).length;
+
+  const bar = el('div','card'); bar.style.padding='13px 16px';
+  bar.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
+      <span>${esc(L('已作答'))} ${answeredN} / ${E.list.length}</span>
+      <span style="color:var(--muted)">${esc(LT('合格线 70% → 答对 '+Math.ceil(E.list.length*PASS)+' 题',
+                                                    '合格線 70% → 答對 '+Math.ceil(E.list.length*PASS)+' 題'))}</span>
+    </div><div class="bar"><i style="width:${answeredN/E.list.length*100}%"></i></div>`;
+  app.appendChild(bar);
+
+  const c = el('div','card');
+  const meta = el('div','qmeta');
+  meta.innerHTML = `<span class="chip">${esc(CH(q.ch))}</span>
+    <span class="chip gray">${esc(LT('第 '+(E.idx+1)+' 题','第 '+(E.idx+1)+' 題'))}</span>`;
+  c.appendChild(meta);
+  c.appendChild(el('div','qtext', esc(F(q,'q'))));
+
+  const opts = el('div','opts');
+  q.opts.forEach((o,i)=>{
+    const b = el('button','opt');
+    b.innerHTML = `<span class="k">${KEYS[i]}</span><span class="txt">${esc(F(q,'opts',i))}</span>`;
+    if(E.ans[q.id]===i) b.classList.add('sel');
+    b.onclick = ()=>{ E.ans[q.id]=i; render(); };
+    opts.appendChild(b);
+  });
+  c.appendChild(opts);
+  app.appendChild(c);
+
+  const nb = el('div','card');
+  nb.appendChild(el('div','sec-h', esc(L('答题卡'))));
+  nb.querySelector('.sec-h').style.marginTop='0';
+  const g = el('div','grid');
+  E.list.forEach((x,i)=>{
+    const b = el('button','gb', String(i+1));
+    b.classList.toggle('done', E.ans[x.id]!=null);
+    b.classList.toggle('cur', i===E.idx);
+    b.onclick = ()=>{ E.idx=i; render(); };
+    g.appendChild(b);
+  });
+  nb.appendChild(g);
+  app.appendChild(nb);
+
+  nav.style.display='';
+  const inn = $('#qnavin'); inn.innerHTML='';
+  const prev = el('button','btn','←'); prev.disabled = E.idx===0;
+  prev.onclick = ()=>{ E.idx--; render(); };
+  const 下 = el('button','btn','→'); 下.disabled = E.idx===E.list.length-1;
+  下.onclick = ()=>{ E.idx++; render(); };
+  const sp = el('span','cnt', `<b>${E.idx+1}</b> / ${E.list.length}`);
+  const sub = el('button','btn primary', esc(L('交卷')));
+  sub.onclick = ()=>{
+    const un = E.list.length - Object.keys(E.ans).length;
+    if(un && !confirm(LT(`还有 ${un} 题未作答，确定交卷？`, `還有 ${un} 題未作答，確定交卷？`))) return;
+    submitExam(false);
+  };
+  inn.appendChild(prev); inn.appendChild(sp); inn.appendChild(下); inn.appendChild(sub);
+}
+
+function submitExam(timeUp){
+  const E = S.exam;
+  clearInterval(E.timer);
+  let right=0; const detail=[];
+  E.list.forEach(q=>{
+    const a = E.ans[q.id];
+    const ok = a===q.ans;
+    if(ok) right++;
+    mark(q, ok);
+    detail.push({q, a, ok});
+  });
+  S.lastResult = { n:E.list.length, right, timeUp, detail,
+                   used: EXAM_MIN*60*1000 - Math.max(0, E.endAt-Date.now()) };
+  S.exam = null;
+  S.view='result';
+  render();
+}
+
+function renderResult(app, back){
+  const LR = S.lastResult;              // 注意：不能叫 L —— 会遮蔽全局 L()
+  if(!LR){ S.view='home'; return render(); }
+  back.style.display=''; back.textContent = L('← 返回首页');
+  back.onclick = ()=>{ S.view='home'; render(); };
+
+  const pct = Math.round(LR.right/LR.n*100);
+  const pass = LR.right/LR.n >= PASS;
+  const s = el('div','card score');
+  s.innerHTML = `<div class="num ${pass?'pass':'fail'}">${pct}%</div>
+    <div class="lbl">${esc(L('答对'))} ${LR.right} / ${LR.n} ${esc(L('题'))} · ${esc(L('用时'))} ${fmtTime(LR.used)}</div>
+    <div class="banner ${pass?'p':'f'}">${pass ? '✓ '+L('合格') : '✗ '+LT('未达合格线 70%','未達合格線 70%')}</div>
+    ${LR.timeUp?`<div class="lbl" style="margin-top:10px;color:var(--warn)">${esc(L('时间到，已自动交卷'))}</div>`:''}`;
+  app.appendChild(s);
+
+  const byCh = {};
+  LR.detail.forEach(d=>{
+    const c = d.q.ch; byCh[c] = byCh[c] || {n:0,r:0};
+    byCh[c].n++; if(d.ok) byCh[c].r++;
+  });
+  const t = el('div','card');
+  t.innerHTML = `<div class="sec-h" style="margin-top:0">${esc(L('各章表现'))}</div>
+    <table><thead><tr><th>${esc(L('章节'))}</th><th>${esc(L('答对'))}</th><th>${esc(L('正确率'))}</th></tr></thead>
+    <tbody>${Object.keys(byCh).sort((a,b)=>a-b).map(c=>{
+      const v=byCh[c], p=Math.round(v.r/v.n*100);
+      // 「第N章」三个字简繁同形，不用切；只有章名需要按语言取
+      const cname = tradOn ? (CH_NAME_T[c] || CH_NAME[c] || '') : (CH_NAME[c] || '');
+      return `<tr><td>第${c}章 <span style="color:var(--muted);font-size:13px">${esc(cname)}</span></td>
+        <td>${v.r}/${v.n}</td>
+        <td class="${p>=PASS?'pass':'fail'}" style="font-weight:620">${p}%</td></tr>`;
+    }).join('')}</tbody></table>`;
+  app.appendChild(t);
+
+  const w = LR.detail.filter(d=>!d.ok);
+  app.appendChild(el('div','sec-h', esc(LT('错题回顾 · '+w.length+' 题','錯題回顧 · '+w.length+' 題'))));
+  if(!w.length){ app.appendChild(el('div','card empty','<span class="ic">🎉</span>'+LT('全部答对！','全部答對！'))); }
+  w.forEach(d=>app.appendChild(expCard(d.q, d.a)));
+}
+
+function expCard(q, chosen){
+  const c = el('div','card');
+  c.appendChild(el('div','qmeta',
+    `<span class="chip">${esc(CH(q.ch))}</span>${q.tag?`<span class="chip gray">${esc(F(q,'tag'))}</span>`:''}`));
+  c.appendChild(el('div','qtext', esc(F(q,'q'))));
+  const o = el('div','opts');
+  q.opts.forEach((t,i)=>{
+    const b = el('div','opt');
+    b.innerHTML = `<span class="k">${KEYS[i]}</span><span class="txt">${esc(F(q,'opts',i))}</span>`;
+    if(i===q.ans){ b.classList.add('right'); b.insertAdjacentHTML('beforeend','<span class="mark">✓</span>'); }
+    else if(i===chosen){ b.classList.add('wrong'); b.insertAdjacentHTML('beforeend',`<span class="mark">${LT('✗ 你选','✗ 你選')}</span>`); }
+    o.appendChild(b);
+  });
+  c.appendChild(o);
+  c.appendChild(el('div','exp',`<span class="hdl">${L('解析')}</span>`+esc(F(q,'exp'))));
+  return c;
+}
+
+/* ---------------- 统计 ---------------- */
+function renderStats(app, back){
+  back.style.display=''; back.textContent = L('← 返回首页');
+  back.onclick=()=>{ S.view='home'; render(); };
+  app.appendChild(el('div','sec-h', esc(L('学习统计'))));
+  const c = el('div','card');
+  const rows = [...new Set(BANK.map(q=>q.ch))].sort((a,b)=>a-b).map(ch=>{
+    const arr = BANK.filter(q=>q.ch===ch);
+    const seen = arr.filter(q=>rec[q.id]).length;
+    const r = arr.filter(q=>rec[q.id]&&rec[q.id].last==='r').length;
+    const w = arr.filter(q=>rec[q.id]&&rec[q.id].last==='w').length;
+    const p = seen? Math.round(r/seen*100):0;
+    return `<tr><td>${esc(CH(ch))}</td><td>${r}/${seen}/${arr.length}</td>
+      <td class="${p>=PASS?'pass':(seen?'fail':'')}" style="font-weight:620">${seen?p+'%':'—'}</td>
+      <td class="fail">${w||''}</td></tr>`;
+  }).join('');
+  c.innerHTML = `<table><thead><tr>
+      <th>${esc(L('章节'))}</th><th>${esc(L('对/做过/总'))}</th>
+      <th>${esc(L('正确率'))}</th><th>${esc(L('错题'))}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  app.appendChild(c);
+}
+
+/* ---------------- 术语对照表 ---------------- */
+const GLOSS = [
+  ['证券及期货条例','證券及期貨條例','Securities and Futures Ordinance (SFO)'],
+  ['证监会','證監會','Securities and Futures Commission (SFC)'],
+  ['香港交易及结算所有限公司','香港交易及結算所有限公司','Hong Kong Exchanges and Clearing Limited (HKEX)'],
+  ['香港联合交易所有限公司','香港聯合交易所有限公司','The Stock Exchange of Hong Kong Limited (SEHK)'],
+  ['香港金融管理局','香港金融管理局','Hong Kong Monetary Authority (HKMA)'],
+  ['保险业监管局','保險業監管局','Insurance Authority (IA)'],
+  ['强制性公积金计划管理局','強制性公積金計劃管理局','Mandatory Provident Fund Schemes Authority (MPFA)'],
+  ['国际证券事务监察委员会组织','國際證券事務監察委員會組織','International Organization of Securities Commissions (IOSCO)'],
+  ['持牌法团','持牌法團','Licensed corporation'],
+  ['注册机构','註冊機構','Registered institution'],
+  ['持牌代表','持牌代表','Licensed representative'],
+  ['负责人员','負責人員','Responsible officer (RO)'],
+  ['受规管活动','受規管活動','Regulated activity'],
+  ['适当人选','適當人選','Fit and proper'],
+  ['大股东','大股東','Substantial shareholder'],
+  ['速动资金','速動資金','Liquid capital'],
+  ['规定速动资金','規定速動資金','Required liquid capital'],
+  ['客户款项','客戶款項','Client money'],
+  ['客户证券','客戶證券','Client securities'],
+  ['成交单据','成交單據','Contract note'],
+  ['户口结单','戶口結單','Statement of account'],
+  ['备存纪录','備存紀錄','Record keeping'],
+  ['操守准则','操守準則','Code of Conduct'],
+  ['客户协议','客戶協議','Client agreement'],
+  ['认识你的客户','認識你的客戶','Know Your Client (KYC)'],
+  ['合适性','合適性','Suitability'],
+  ['利益冲突','利益衝突','Conflict of interest'],
+  ['非金钱利益','非金錢利益','Soft dollars'],
+  ['委托帐户／全权委托帐户','委託帳戶／全權委託帳戶','Discretionary account'],
+  ['专业投资者','專業投資者','Professional investor (PI)'],
+  ['打击洗钱','打擊洗錢','Anti-money laundering (AML)'],
+  ['恐怖分子资金筹集','恐怖分子資金籌集','Terrorist financing (TF)'],
+  ['客户尽职审查','客戶盡職審查','Customer due diligence (CDD)'],
+  ['政治人物','政治人物','Politically exposed person (PEP)'],
+  ['洗钱报告主任','洗錢報告主任','Money laundering reporting officer (MLRO)'],
+  ['个人资料（私隐）条例','個人資料（私隱）條例','Personal Data (Privacy) Ordinance'],
+  ['保障资料原则','保障資料原則','Data protection principles'],
+  ['另类交易平台','另類交易平台','Alternative trading platform'],
+  ['直达市场安排','直達市場安排','Direct market access (DMA)'],
+  ['前端监控','前端監控','Pre-trade check'],
+  ['市场失当行为','市場失當行為','Market misconduct'],
+  ['内幕交易','內幕交易','Insider dealing'],
+  ['虚假交易','虛假交易','False trading'],
+  ['操控价格','操控價格','Price rigging'],
+  ['披露虚假或具误导性的资料','披露虛假或具誤導性的資料','Disclosure of false or misleading information'],
+  ['市场失当行为审裁处','市場失當行為審裁處','Market Misconduct Tribunal (MMT)'],
+  ['证券及期货事务上诉审裁处','證券及期貨事務上訴審裁處','Securities and Futures Appeals Tribunal (SFAT)'],
+  ['未获邀约的造访','未獲邀約的造訪','Unsolicited call'],
+  ['高压推销证券的活动','高壓推銷證券的活動','Boiler room activities'],
+  ['权益披露','權益披露','Disclosure of interests'],
+  ['披露内幕消息','披露內幕消息','Disclosure of inside information'],
+  ['集体投资计划','集體投資計劃','Collective investment scheme (CIS)'],
+  ['开放式基金型公司','開放式基金型公司','Open-ended fund company (OFC)'],
+  ['股份回购','股份回購','Share buy-backs'],
+  ['收购及合并','收購及合併','Takeovers and mergers'],
+  ['须予公布的交易','須予公佈的交易','Notifiable transaction'],
+  ['关连交易','關連交易','Connected transaction'],
+  ['库存股份','庫存股份','Treasury shares'],
+  ['不同投票权','不同投票權','Weighted voting rights (WVR)'],
+  ['特专科技公司','特專科技公司','Specialist technology companies'],
+  ['特殊目的收购公司','特殊目的收購公司','Special purpose acquisition company (SPAC)'],
+  ['虚拟资产','虛擬資產','Virtual asset'],
+  ['虚拟资产交易平台','虛擬資產交易平台','Virtual asset trading platform (VATP)'],
+  ['代币化证券','代幣化證券','Tokenised securities'],
+  ['场外衍生工具','場外衍生工具','Over-the-counter (OTC) derivatives'],
+  ['持仓限额','持倉限額','Position limit'],
+  ['淡仓申报','淡倉申報','Short position reporting'],
+  ['收市竞价','收市競價','Closing auction'],
+  ['市场波动调节机制','市場波動調節機制','Volatility control mechanism (VCM)'],
+  ['交易所买卖期权','交易所買賣期權','Exchange-traded options'],
+  ['庄家','莊家','Market maker'],
+  ['约务更替／责务变更','約務更替／責務變更','Novation'],
+  ['按市价计值','按市價計值','Mark-to-market'],
+  ['保荐人','保薦人','Sponsor'],
+  ['招股章程','招股章程','Prospectus'],
+  ['核心职能主管','核心職能主管','Manager-in-charge of core functions (MIC)'],
+  ['风险管理','風險管理','Risk management'],
+  ['气候相关风险','氣候相關風險','Climate-related risks'],
+  ['众筹','眾籌','Crowdfunding'],
+  ['披露受禁交易的资料','披露受禁交易的資料','Disclosure of information about prohibited transactions'],
+];
+
+function renderGlossary(app, back, hr){
+  back.style.display=''; back.textContent = L('← 返回首页');
+  back.onclick=()=>{ S.view='home'; render(); };
+  app.appendChild(el('div','sec-h', esc(L('考试常用术语对照（简 / 繁 / EN）'))));
+  const c = el('div','card');
+  c.innerHTML = `<table class="gloss"><tbody>${GLOSS.map(([s,t,e])=>
+    `<tr><td>${esc(s)}</td><td class="tr">${esc(t)}</td><td>${esc(e)}</td></tr>`).join('')}</tbody></table>`;
+  app.appendChild(c);
+}
+
+/* ---------------- toast ---------------- */
+let toastT=null;
+function toast(msg){
+  let n = document.getElementById('toast');
+  if(!n){ n = el('div'); n.id='toast';
+    n.style.cssText='position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:99;'+
+      'background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:11px;font-size:14.5px;'+
+      'box-shadow:0 6px 24px rgba(0,0,0,.22);opacity:0;transition:.22s;pointer-events:none;max-width:80vw;text-align:center';
+    document.body.appendChild(n); }
+  n.textContent = msg;
+  requestAnimationFrame(()=>{ n.style.opacity='1'; n.style.transform='translateX(-50%) translateY(-6px)'; });
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>{ n.style.opacity='0'; n.style.transform='translateX(-50%)'; }, 1700);
+}
+
+/* ---------------- 键盘 ---------------- */
+document.addEventListener('keydown', e=>{
+  if(['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+  const n = parseInt(e.key,10);
+  if(S.view==='practice'){
+    if(n>=1 && n<=S.list[S.idx].opts.length && !S.revealed){ answer(n-1); e.preventDefault(); return; }
+    if(e.key==='Enter' || e.key===' '){
+      const nx = document.querySelector('.btn.primary');
+      if(nx){ nx.click(); e.preventDefault(); }
+      return;
+    }
+    if(e.key==='ArrowLeft'  && S.idx>0){ S.idx--; S.picked=null; S.revealed=false; render(); }
+    if(e.key==='ArrowRight' && S.idx<S.list.length-1){ S.idx++; S.picked=null; S.revealed=false; render(); }
+  }
+  if(S.view==='exam'){
+    if(n>=1 && n<=S.exam.list[S.exam.idx].opts.length){ S.exam.ans[S.exam.list[S.exam.idx].id]=n-1; render(); e.preventDefault(); return; }
+    if(e.key==='ArrowLeft'  && S.exam.idx>0){ S.exam.idx--; render(); }
+    if(e.key==='ArrowRight' && S.exam.idx<S.exam.list.length-1){ S.exam.idx++; render(); }
+  }
+});
+
+render();
+if(!BANK.length){
+  $('#app').innerHTML = `<div class="card empty"><span class="ic">📦</span>
+    题库为空。<br>请先运行 <code>python build.py</code> 生成 questions.js。</div>`;
+}
+</script>
+</body>
+</html>
