@@ -3,3 +3,11 @@
 # (实测:raw sha1 6e7ea2f8… ≠ filtered sha1 e1cd7993…;同尺子量纯 LF 的 vercel.json 两者相同)。
 # ⇒ 对该路径关掉一切行尾/编码转换,保证 盘上字节 == 仓库字节 == 线上字节。
 public/lubuds.html -text
+# ★ 同口径(HKSI 讲义 + 题库四件):notes.js / index.html / questions.js 源件为纯 CRLF,
+# notes.html 源件为纯 LF。默认 core.autocrlf=true 只会折 CRLF 的那三件 ⇒ 逐条关掉转换,
+# 保证「盘上字节 == 仓库字节 == 线上响应体字节」。
+# (实测 raw sha1 vs filtered sha1:三件不同 / notes.html 相同。)
+public/hksi/notes.html -text
+public/hksi/notes.js -text
+public/hksi/index.html -text
+public/hksi/questions.js -text

@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>HKSI 卷一 · 精讲笔记</title>
+<style>
+:root{
+  --bg:#f6f4ef; --card:#fff; --ink:#1b1a18; --ink2:#55524c; --muted:#8a867e;
+  --line:#e4e0d8; --line2:#d0cbc1;
+  --accent:#146152; --accent-bg:#e7f1ee; --accent-ink:#0d4a3e;
+  --ok:#186b35; --ok-bg:#e6f4ea; --ok-line:#9fd4b0;
+  --no:#a83232; --no-bg:#fbeaea; --no-line:#e8a8a8;
+  --warn:#8a5a10; --warn-bg:#fdf4e0; --warn-line:#e8d3a4;
+  --sh:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.045);
+  --r:14px; --hdrh:56px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#15151a; --card:#1d1d23; --ink:#ecebe6; --ink2:#b6b3ac; --muted:#8b8780;
+  --line:#2c2c34; --line2:#3b3b45;
+  --accent:#6fc7b0; --accent-bg:#1a2f2b; --accent-ink:#a5e0d1;
+  --ok:#7ad39a; --ok-bg:#16301f; --ok-line:#2f6b45;
+  --no:#f09090; --no-bg:#321a1a; --no-line:#7a3a3a;
+  --warn:#e2b467; --warn-bg:#332811; --warn-line:#5c4718;
+  --sh:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.28);
+}}
+*{box-sizing:border-box}
+html{font-size:17px;-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:400 1rem/1.78 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  overflow-wrap:break-word;
+}
+h1,h2,h3{margin:0;line-height:1.35;font-weight:650}
+a{color:var(--accent-ink);text-decoration:none}
+button{font:inherit;color:inherit;cursor:pointer}
+
+/* ---------- 页头 ---------- */
+header{
+  position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:8px;
+  min-height:var(--hdrh);
+  padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top));
+  background:var(--bg);border-bottom:1px solid var(--line);
+}
+#hTitle{flex:1 1 auto;min-width:0;font-weight:650;font-size:.95rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hRight{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.btn{
+  border:1px solid var(--line2);background:var(--card);border-radius:9px;
+  padding:5px 10px;font-size:.8rem;color:var(--ink2);white-space:nowrap;
+}
+.btn:hover{border-color:var(--accent);color:var(--accent-ink)}
+.btn.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent-ink)}
+.btn.icon{padding:5px 9px}
+#menuBtn{display:none}
+
+/* ---------- 布局 ---------- */
+#wrap{display:flex;align-items:flex-start;max-width:1220px;margin:0 auto}
+#toc{
+  flex:0 0 268px;width:268px;padding:16px 8px 60px;
+  position:sticky;top:var(--hdrh);max-height:calc(100vh - var(--hdrh));overflow-y:auto;
+}
+#main{flex:1 1 auto;min-width:0;max-width:840px;padding:16px 16px calc(90px + env(safe-area-inset-bottom))}
+#scrim{display:none}
+
+@media(max-width:880px){
+  #menuBtn{display:inline-block}
+  #toc{
+    position:fixed;left:0;top:0;bottom:0;z-index:50;width:84vw;max-width:330px;
+    flex:none;max-height:none;background:var(--card);border-right:1px solid var(--line);
+    padding:calc(16px + env(safe-area-inset-top)) 10px calc(30px + env(safe-area-inset-bottom));
+    transform:translateX(-102%);transition:transform .22s ease;
+    overflow-y:auto;box-shadow:var(--sh);
+  }
+  body.nav #toc{transform:none}
+  body.nav #scrim{display:block;position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.34)}
+  #main{padding:14px 13px calc(80px + env(safe-area-inset-bottom))}
+}
+
+/* ---------- 目录 ---------- */
+.toc-h{font-size:.72rem;letter-spacing:.09em;color:var(--muted);
+  text-transform:uppercase;padding:6px 10px 8px;font-weight:600}
+.toc-i{
+  display:flex;align-items:flex-start;gap:9px;width:100%;text-align:left;
+  border:1px solid transparent;background:none;border-radius:10px;
+  padding:8px 10px;margin-bottom:2px;font-size:.85rem;line-height:1.5;color:var(--ink2);
+}
+.toc-i:hover{background:var(--accent-bg)}
+.toc-i.cur{background:var(--accent-bg);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.toc-n{flex:0 0 22px;height:22px;border-radius:6px;background:var(--line);
+  display:grid;place-items:center;font-size:.72rem;font-weight:700;color:var(--ink2);margin-top:1px}
+.toc-i.cur .toc-n{background:var(--accent);color:#fff}
+.toc-t{flex:1 1 auto;min-width:0}
+.toc-s{display:block;font-size:.7rem;color:var(--muted);font-weight:400;margin-top:1px}
+.toc-i.cur .toc-s{color:var(--accent-ink);opacity:.8}
+
+/* ---------- 首页 ---------- */
+.home-h{padding:8px 2px 16px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.home-h h1{font-size:1.45rem;margin-bottom:6px}
+.home-h p{margin:0;color:var(--ink2);font-size:.86rem;line-height:1.7}
+.chcard{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:13px 15px;margin-bottom:9px;box-shadow:var(--sh);
+}
+.chcard:hover{border-color:var(--accent)}
+.chcard.cur{border-color:var(--accent)}
+.cc-n{flex:0 0 34px;height:34px;border-radius:10px;background:var(--accent-bg);
+  color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:.95rem}
+/* flex-basis 必须是 0，不能是 auto：
+   basis:auto 时每张卡的起步宽度按各自标题内容算，grow 只会把「剩余」空间
+   平均加回去，基础宽度不同 → 各卡最终的进度条长短还是不一样。
+   basis:0 让所有卡从同一宽度起算，进度条才能对齐。 */
+.cc-m{flex:1 1 0;min-width:0}
+.cc-t{display:block;font-weight:600;font-size:.95rem;margin-bottom:2px}
+.cc-s{display:block;font-size:.75rem;color:var(--muted)}
+.cc-done{flex:0 0 auto;font-size:.72rem;color:var(--ok);border:1px solid var(--ok-line);
+  background:var(--ok-bg);border-radius:20px;padding:2px 9px;white-space:nowrap}
+/* 读到一半时的进度徽章：着色比「读完」淡，一眼能分出两种状态 */
+.cc-pct{flex:0 0 auto;font-size:.72rem;color:var(--muted);border:1px solid var(--line);
+  background:var(--bg);border-radius:20px;padding:2px 9px;white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+/* 进度条 + 徽章同一行 */
+.cc-foot{display:flex;align-items:center;gap:8px;margin-top:7px}
+/* display:block 不能省：.bar 是 span，默认 inline，
+   而 height / background / overflow 对 inline 元素都不生效——
+   少了这行，灰色轨道量出来是 0×0，完全看不见。 */
+.bar{flex:1 1 auto;min-width:0;display:block;height:5px;background:var(--line);
+  border-radius:9px;overflow:hidden}
+
+/* ---------- 考前速览 ---------- */
+.cram-cta{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  background:var(--accent-bg);border:1px solid var(--accent);border-radius:var(--r);
+  padding:12px 15px;margin-bottom:14px}
+.cta-ic{flex:0 0 auto;font-size:1.05rem;color:var(--accent-ink)}
+.cta-m{flex:1 1 0;min-width:0}
+.cta-t{display:block;font-weight:650;font-size:.95rem;color:var(--accent-ink)}
+.cta-s{display:block;font-size:.75rem;color:var(--muted);margin-top:2px}
+
+.cram-ch{margin-bottom:26px}
+.cram-h{display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:10px 14px;margin-bottom:12px;box-shadow:var(--sh)}
+.cram-h:hover{border-color:var(--accent)}
+.cram-n{flex:0 0 30px;height:30px;border-radius:9px;background:var(--accent-bg);
+  color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:.9rem}
+.cram-t{flex:1 1 0;min-width:0;font-weight:600;font-size:.92rem}
+.cram-c{flex:0 0 auto;font-size:.72rem;color:var(--muted);white-space:nowrap}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:9px;
+  transition:width .25s ease}
+
+/* ---------- 章内 ---------- */
+.chhead{padding:4px 2px 16px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.kicker{font-size:.74rem;letter-spacing:.09em;color:var(--accent);font-weight:700;margin-bottom:5px}
+.chhead h1{font-size:1.42rem;margin-bottom:8px}
+.meta{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-size:.71rem;color:var(--ink2);background:var(--card);border:1px solid var(--line);
+  border-radius:20px;padding:2px 9px}
+.chip.s{color:var(--warn);border-color:var(--warn-line);background:var(--warn-bg)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:15px 17px;box-shadow:var(--sh);margin-bottom:18px}
+.card p{margin:0 0 .6em;font-size:.9rem;color:var(--ink2)}
+.card p:last-child{margin-bottom:0}
+
+.sec{margin-bottom:22px}
+.sec-h{display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  background:none;border:none;padding:6px 2px 10px;border-bottom:2px solid var(--line);margin-bottom:12px}
+.sec-h h2{font-size:1.04rem;flex:1 1 auto;min-width:0}
+.sec-h .ref{font-size:.7rem;color:var(--muted);font-weight:400;white-space:nowrap;flex:0 0 auto}
+.chev{flex:0 0 auto;color:var(--muted);transition:transform .18s;font-size:.8rem}
+.sec.fold .chev{transform:rotate(-90deg)}
+.sec.fold .sec-body{display:none}
+
+.item{border-left:3px solid var(--line2);padding:2px 0 2px 13px;margin-bottom:17px}
+.item.star{border-left-color:var(--warn)}
+.it-h{font-weight:600;font-size:.93rem;margin-bottom:5px;display:flex;
+  flex-wrap:wrap;align-items:baseline;gap:7px}
+.it-d{font-size:.87rem;color:var(--ink2);line-height:1.8;white-space:pre-wrap}
+.bdg{font-size:.66rem;font-weight:700;border-radius:5px;padding:1px 6px;white-space:nowrap;
+  background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-line)}
+.ref-t{font-size:.68rem;color:var(--muted);font-weight:400;white-space:nowrap}
+
+.tbl-w{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:12px 0 18px;
+  border:1px solid var(--line);border-radius:11px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.81rem;min-width:380px}
+caption{caption-side:top;text-align:left;font-size:.78rem;font-weight:600;color:var(--ink2);
+  padding:10px 13px 9px;border-bottom:1px solid var(--line)}
+th,td{border-bottom:1px solid var(--line);padding:8px 13px;text-align:left;vertical-align:top;line-height:1.65}
+th{background:var(--accent-bg);color:var(--accent-ink);font-weight:650;font-size:.78rem;
+  position:sticky;top:0;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--accent-bg)}
+
+.blocks{margin-top:20px}
+.blk{border:1px solid var(--line);border-radius:var(--r);background:var(--card);
+  padding:14px 17px;margin-bottom:16px;box-shadow:var(--sh)}
+.blk.warn{border-color:var(--warn-line);background:var(--warn-bg)}
+.blk h3{font-size:.92rem;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.blk.warn h3{color:var(--warn)}
+.blk ol,.blk ul{margin:0;padding-left:1.25em}
+.blk li{font-size:.85rem;line-height:1.78;color:var(--ink2);margin-bottom:7px}
+.blk li:last-child{margin-bottom:0}
+.blk.warn li{color:var(--ink)}
+
+.pager{display:flex;gap:9px;margin-top:24px;flex-wrap:wrap}
+.pager .btn{flex:1 1 auto;text-align:center;padding:11px 14px;font-size:.86rem}
+.pager .btn[disabled]{opacity:.4;cursor:default}
+.pager .btn[disabled]:hover{border-color:var(--line2);color:var(--ink2)}
+
+/* ---------- 搜索 ---------- */
+#qBox{display:flex;gap:7px;margin-bottom:16px}
+#q{flex:1 1 auto;min-width:0;font:inherit;font-size:.9rem;color:var(--ink);
+  background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:9px 13px}
+#q:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.hit{background:var(--card);border:1px solid var(--line);border-radius:11px;
+  padding:11px 14px;margin-bottom:8px;display:block;width:100%;text-align:left;box-shadow:var(--sh)}
+.hit:hover{border-color:var(--accent)}
+.hit-t{font-size:.87rem;font-weight:600;margin-bottom:3px}
+.hit-s{font-size:.78rem;color:var(--ink2);line-height:1.65}
+.hit-m{font-size:.7rem;color:var(--muted);margin-top:5px}
+mark{background:var(--warn-bg);color:var(--warn);border-radius:3px;padding:0 2px;font-weight:600}
+.xhint{font-size:.78rem;line-height:1.6;color:var(--warn);background:var(--warn-bg);
+  border:1px solid var(--warn-line);border-radius:9px;padding:8px 12px;margin-bottom:12px}
+.empty{color:var(--muted);font-size:.87rem;padding:26px 4px;text-align:center}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="btn icon" id="menuBtn" aria-label="目录">☰</button>
+  <div id="hTitle">HKSI 卷一 · 精讲笔记</div>
+  <div id="hRight"></div>
+</header>
+
+<div id="wrap">
+  <nav id="toc"></nav>
+  <main id="main"></main>
+</div>
+<div id="scrim"></div>
+
+<script src="notes.js"></script>
+<script>
+'use strict';
+const NOTES = (window.HKSI_NOTES || []).slice().sort((a,b)=>a.ch-b.ch);
+const $ = s => document.querySelector(s);
+const hdr = document.querySelector('header');
+
+/* ---------- 界面文字的繁体版 ---------- */
+/* 笔记正文的繁简由 build_notes.py 预生成的 _t 镜像整棵替换；
+   这里只管页面上那些不属于笔记内容的按钮与提示。 */
+const UI_T = {
+  '精讲笔记':'精講筆記','目录':'目錄','搜索':'搜尋','搜尋':'搜尋',
+  '必背':'必背','考点':'考點','易错点':'易錯點','必背数字':'必背數字','章节概览':'章節概覽',
+  '上一章':'上一章','下一章':'下一章','标记为已读':'標記為已讀','已读':'已讀',
+  '本章考点':'本章考點','全部章节':'全部章節','回到首页':'回到首頁',
+  '搜索全部笔记':'搜尋全部筆記','输入关键词，例如「专业投资者」「6 个月」「披露」':'輸入關鍵詞，例如「專業投資者」「6 個月」「披露」',
+  '没有匹配的内容':'沒有匹配的內容','试试别的词，或换个说法':'試試別的詞，或換個說法',
+  '章':'章','个考点':'個考點','张表':'張表','条易错':'條易錯','个数字':'個數字',
+  '读完':'讀完','开始':'開始','继续':'繼續','找到':'找到','条结果':'條結果','清除':'清除',
+  '考点':'考點','讲座':'章節','小节':'小節','当前':'當前'
+};
+function L(s){ return trad && UI_T[s] ? UI_T[s] : s; }
+/* 带动态内容的界面文字：直接给简/繁两份，套不进 UI_T 字典时用这个。
+   （index.html 里也有同名的 LT，但两边是各自独立的文件，不能省。） */
+function LT(s, t){ return trad ? t : s; }
+
+/* ---------- 状态 ---------- */
+let trad  = localStorage.getItem('hksi_notes_trad') === '1';
+let fsi   = Math.min(2, Math.max(0, +(localStorage.getItem('hksi_notes_fs') || 1)));
+const FS  = [15, 17, 19.5];
+
+function pick(n){ return (trad && n._t) ? n._t : n; }
+function esc(s){ return String(s==null?'':s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;'); }
+
+function applyFS(){
+  document.documentElement.style.fontSize = FS[fsi] + 'px';
+  localStorage.setItem('hksi_notes_fs', fsi);
+}
+function syncHdr(){ document.documentElement.style.setProperty('--hdrh', hdr.offsetHeight + 'px'); }
+
+/* ---------- 读到哪了 ----------
+   第 4 章有 288 个考点，一天读一小时根本读不完。如果每次进来都从第一屏开始，
+   就得靠脑子记「上次读到哪个标题」——所以这里按章记住滚动位置，回来直接接上。
+   顺便用滚动比例当作阅读进度：比「点开就算读完」诚实得多。 */
+let curCh = null;       // 当前正在读的章（null = 不在章视图，不记录）
+let scrollT = null;
+let pendingY = 0;       // 本次渲染后要滚到的位置
+
+const DONE_P = 0.92;    // 滚到九成以上才算读完；留一点余量，页面底部本来就有空白
+
+function posKey(ch){ return 'hksi_pos_' + ch; }
+function loadPos(ch){
+  try{ return JSON.parse(localStorage.getItem(posKey(ch)) || 'null'); }catch(e){ return null; }
+}
+function savePos(ch){
+  if(ch == null) return;
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  const y = Math.round(window.scrollY);
+  // 内容比一屏还短时算读完了，否则按滚动比例
+  const p = h > 40 ? Math.min(1, y / h) : 1;
+  try{ localStorage.setItem(posKey(ch), JSON.stringify({y, p})); }catch(e){}
+}
+function progOf(ch){ const p = loadPos(ch); return p ? (p.p || 0) : 0; }
+
+window.addEventListener('scroll', ()=>{
+  if(curCh == null) return;
+  const ch = curCh;   // 必须在这里捕获：若等防抖触发时才读 curCh，
+                      // 用户在 250ms 内切了章，上一章的位置就会记到新章头上。
+  clearTimeout(scrollT);
+  scrollT = setTimeout(()=> savePos(ch), 250);
+}, {passive:true});
+
+/* ---------- 搜索索引 ---------- */
+/* 简繁两版都进索引：考生打简体或繁体都应该搜得到同一处内容。 */
+let INDEX = null;
+function buildIndex(){
+  INDEX = [];
+  for(const n of NOTES){
+    const b = n._t || n;
+    const A = n.sections || [], B = b.sections || [];
+    A.forEach((s, si)=>{
+      const sB = B[si] || s;
+      const ia = s.items || [], ib = sB.items || [];
+      ia.forEach((it, ii)=>{
+        const j = ib[ii] || it;
+        INDEX.push({ch:n.ch, kind:'i', star:!!it.star,
+          sec:s.h, secT:sB.h, t:it.t, tT:j.t, d:it.d, dT:j.d});
+      });
+    });
+    (n.traps || []).forEach((x, i)=>{
+      const y = (b.traps || [])[i] || x;
+      INDEX.push({ch:n.ch, kind:'p', sec:'易错点', secT:'易錯點', t:x, tT:y, d:'', dT:''});
+    });
+    (n.numbers || []).forEach((x, i)=>{
+      const y = (b.numbers || [])[i] || x;
+      INDEX.push({ch:n.ch, kind:'n', sec:'必背数字', secT:'必背數字',
+        t:x[0], tT:y[0], d:x.join(' · '), dT:y.join(' · ')});
+    });
+  }
+}
+
+function clip(s, q, n){
+  s = String(s || '');
+  const i = s.toLowerCase().indexOf(q);
+  if(i < 0) return s.slice(0, n) + (s.length > n ? '…' : '');
+  const a = Math.max(0, i - Math.floor(n/3));
+  const b = Math.min(s.length, i + q.length + n);
+  return (a ? '…' : '') + s.slice(a, b) + (b < s.length ? '…' : '');
+}
+function hl(s, q){
+  const t = esc(s);
+  if(!q) return t;
+  const i = t.toLowerCase().indexOf(esc(q).toLowerCase());
+  return i < 0 ? t : t.slice(0,i) + '<mark>' + t.slice(i, i+q.length) + '</mark>' + t.slice(i+q.length);
+}
+function doSearch(q){
+  const Q = q.trim().toLowerCase();
+  if(!Q) return [];
+  const out = [];
+  for(const e of INDEX){
+    const body = [e.t, e.d, e.sec].concat(trad ? [e.tT, e.dT, e.secT] : [e.tT, e.dT, e.secT])
+      .join(' ').toLowerCase();
+    if(body.indexOf(Q) >= 0) out.push(e);
+    if(out.length >= 120) break;
+  }
+  return out;
+}
+
+/* 查询词在当前显示语言里一个都匹配不上，但换另一套字形就能匹配上。
+   本工具的用户正是「打简体、读繁体」，这会经常发生：结果是对的，
+   只是显示的文字里没有可高亮的字，不加说明会让人以为搜索坏了。 */
+function crossScriptOnly(q){
+  const Q = q.trim().toLowerCase();
+  if(!Q) return false;
+  const has = other => INDEX.some(e => {
+    const s = other ? [e.tT, e.dT, e.secT] : [e.t, e.d, e.sec];
+    return s.join(' ').toLowerCase().indexOf(Q) >= 0;
+  });
+  return !has(trad) && has(!trad);
+}
+
+/* ---------- 路由 ---------- */
+function route(){
+  const h = decodeURIComponent((location.hash || '#/').slice(1));
+  if(h.indexOf('/c/') === 0) return {v:'ch', ch:parseInt(h.slice(3), 10)};
+  if(h.indexOf('/s/') === 0) return {v:'search', q:h.slice(3)};
+  if(h.indexOf('/cram') === 0) return {v:'cram'};
+  return {v:'home'};
+}
+function go(h){ location.hash = h; }
+
+/* ---------- 渲染：页头按钮 ---------- */
+function renderHdr(view){
+  const r = $('#hRight'); r.innerHTML = '';
+
+  const b = document.createElement('button');
+  b.className = 'btn' + (trad ? ' on' : '');
+  b.textContent = trad ? '繁 ✓' : '繁/简';
+  b.title = '切换简体／繁体显示';
+  b.onclick = ()=>{ trad = !trad; localStorage.setItem('hksi_notes_trad', trad?'1':'0');
+                    document.documentElement.lang = trad ? 'zh-Hant' : 'zh-Hans'; render(); };
+  r.appendChild(b);
+
+  const minus = document.createElement('button');
+  minus.className = 'btn icon'; minus.textContent = 'A−'; minus.title = '缩小字号';
+  minus.onclick = ()=>{ fsi = Math.max(0, fsi-1); applyFS(); };
+  r.appendChild(minus);
+
+  const plus = document.createElement('button');
+  plus.className = 'btn icon'; plus.textContent = 'A+'; plus.title = '放大字号';
+  plus.onclick = ()=>{ fsi = Math.min(FS.length-1, fsi+1); applyFS(); };
+  r.appendChild(plus);
+}
+
+/* ---------- 渲染：目录 ---------- */
+function renderToc(view){
+  const t = $('#toc'); t.innerHTML = '';
+
+  const home = document.createElement('button');
+  home.className = 'toc-i' + (view.v === 'home' ? ' cur' : '');
+  home.innerHTML = '<span class="toc-n">⌂</span><span class="toc-t">' + esc(L('全部章节')) + '</span>';
+  home.onclick = ()=>{ go('#/'); closeNav(); };
+  t.appendChild(home);
+
+  const lb = document.createElement('div');
+  lb.className = 'toc-h'; lb.textContent = L('章');
+  t.appendChild(lb);
+
+  for(const n of NOTES){
+    const d = pick(n);
+    let items = 0, star = 0;
+    for(const s of (d.sections||[])) for(const it of (s.items||[])){ items++; if(it.star) star++; }
+    const cur = view.v === 'ch' && view.ch === n.ch;
+
+    const b = document.createElement('button');
+    b.className = 'toc-i' + (cur ? ' cur' : '');
+    b.innerHTML = '<span class="toc-n">' + n.ch + '</span>'
+      + '<span class="toc-t">' + esc(d.name.replace(/^第\s*\d+\s*章\s*/, ''))
+      + (progOf(n.ch) >= DONE_P ? ' <span style="color:var(--ok)">✓</span>' : '')
+      + '<span class="toc-s">' + items + ' ' + esc(L('个考点'))
+      + (star ? ' · ' + star + ' ' + esc(L('必背')) : '') + '</span></span>';
+    b.onclick = ()=>{ go('#/c/' + n.ch); closeNav(); };
+    t.appendChild(b);
+  }
+
+  const sl = document.createElement('div');
+  sl.className = 'toc-h'; sl.style.marginTop = '10px'; sl.textContent = L('搜索');
+  t.appendChild(sl);
+
+  const cb = document.createElement('button');
+  cb.className = 'toc-i' + (view.v === 'cram' ? ' cur' : '');
+  cb.innerHTML = '<span class="toc-n">★</span><span class="toc-t">'
+    + esc(LT('考前速览（只看必背）', '考前速覽（只看必背）')) + '</span>';
+  cb.onclick = ()=>{ go('#/cram'); closeNav(); };
+  t.appendChild(cb);
+
+  const sb = document.createElement('button');
+  sb.className = 'toc-i' + (view.v === 'search' ? ' cur' : '');
+  sb.innerHTML = '<span class="toc-n">⌕</span><span class="toc-t">' + esc(L('搜索全部笔记')) + '</span>';
+  sb.onclick = ()=>{ go('#/s/'); closeNav(); };
+  t.appendChild(sb);
+}
+
+function closeNav(){ document.body.classList.remove('nav'); }
+
+/* ---------- 渲染：首页 ---------- */
+function renderHome(main){
+  let items = 0, star = 0, tab = 0, trap = 0, num = 0;
+  for(const n of NOTES){
+    const d = pick(n);
+    for(const s of (d.sections||[])){
+      tab += (s.tables||[]).length;
+      for(const it of (s.items||[])){ items++; if(it.star) star++; }
+    }
+    trap += (d.traps||[]).length; num += (d.numbers||[]).length;
+  }
+  const done = NOTES.filter(n=> progOf(n.ch) >= DONE_P).length;
+
+  let html = '<div class="home-h"><h1>' + esc(L('精讲笔记')) + '</h1><p>'
+    + esc(trad
+        ? '依《HKSI 卷一温习手册》3.5 版逐章整理，每个考点都注明手册节号，可翻回原文查证。'
+        : '依《HKSI 卷一温习手册》3.5 版逐章整理，每个考点都注明手册节号，可翻回原文查证。')
+    + '<br>' + NOTES.length + ' ' + esc(L('章')) + ' · ' + items + ' ' + esc(L('个考点'))
+    + '（' + star + ' ' + esc(L('必背')) + '） · ' + tab + ' ' + esc(L('张表'))
+    + ' · ' + trap + ' ' + esc(L('条易错')) + ' · ' + num + ' ' + esc(L('个数字'))
+    + '　—　' + esc(L('读完')) + ' ' + done + '/' + NOTES.length + '</p></div>';
+
+  // 考前速览入口放最前面：时间不够时，这是最短路径
+  html += '<button class="cram-cta">'
+    + '<span class="cta-ic">★</span><span class="cta-m">'
+    + '<span class="cta-t">' + esc(LT('考前速览 · 只看必背', '考前速覽 · 只看必背')) + '</span>'
+    + '<span class="cta-s">' + esc(LT('全部必背考点 + 必背数字，跨章汇总，跳着看',
+                                      '全部必背考點 + 必背數字，跨章匯總，跳着看')) + '</span>'
+    + '</span></button>';
+
+  for(const n of NOTES){
+    const d = pick(n);
+    let it = 0, st = 0;
+    for(const s of (d.sections||[])) for(const x of (s.items||[])){ it++; if(x.star) st++; }
+    const pct  = Math.round(progOf(n.ch) * 100);
+    const done = pct >= DONE_P * 100;
+    // 读到一半的显示百分比，比只给「读过／没读过」有用——
+    // 第 4 章 288 个考点，知道读到 60% 和知道「打开过」是两回事。
+    const badge = done ? '<span class="cc-done">' + esc(LT('读完', '讀完')) + '</span>'
+                       : (pct > 0 ? '<span class="cc-pct">' + pct + '%</span>' : '');
+    html += '<button class="chcard' + (done ? ' cur' : '') + '" data-ch="' + n.ch + '">'
+      + '<span class="cc-n">' + n.ch + '</span><span class="cc-m">'
+      // 左边已有章号徽章，标题里重复的「第N章」去掉
+      + '<span class="cc-t">' + esc(d.name.replace(/^第\s*\d+\s*章\s*/, '')) + '</span>'
+      + '<span class="cc-s">' + it + ' ' + esc(L('个考点')) + ' · ' + st + ' ' + esc(L('必背'))
+      + ' · ' + (d.numbers||[]).length + ' ' + esc(L('个数字')) + '</span>'
+      // 进度条和徽章放同一行：徽章若占掉整行的右侧，会把进度条挤短，
+      // 结果就是「有进度的章条子短、没进度的章条子长」，一眼看去很乱。
+      + '<span class="cc-foot"><span class="bar"><i style="width:' + pct + '%"></i></span>'
+      + badge + '</span>'
+      + '</span>'
+      + '</button>';
+  }
+  main.innerHTML = html;
+  main.querySelectorAll('.chcard').forEach(el=>{
+    el.onclick = ()=> go('#/c/' + el.dataset.ch);
+  });
+  const cta = main.querySelector('.cram-cta');
+  if(cta) cta.onclick = ()=> go('#/cram');
+}
+
+/* ---------- 渲染：章 ---------- */
+function renderChapter(main, ch){
+  const note = NOTES.find(n=>n.ch===ch);
+  if(!note){ main.innerHTML = '<div class="empty">找不到第 ' + ch + ' 章</div>'; return; }
+  const d = pick(note);
+
+  let it = 0, st = 0, tab = 0;
+  for(const s of (d.sections||[])){
+    tab += (s.tables||[]).length;
+    for(const x of (s.items||[])){ it++; if(x.star) st++; }
+  }
+
+  let html = '<div class="chhead">'
+    + '<div class="kicker">' + esc(trad ? '第 ' + ch + ' 章' : '第 ' + ch + ' 章') + '</div>'
+    + '<h1>' + esc(d.name.replace(/^第\s*\d+\s*章\s*/, '')) + '</h1>'
+    + '<div class="meta">'
+    + '<span class="chip">' + it + ' ' + esc(L('个考点')) + '</span>'
+    + '<span class="chip s">' + st + ' ' + esc(L('必背')) + '</span>'
+    + (tab ? '<span class="chip">' + tab + ' ' + esc(L('张表')) + '</span>' : '')
+    + '<span class="chip">' + (d.traps||[]).length + ' ' + esc(L('条易错')) + '</span>'
+    + '</div></div>';
+
+  if(d.overview) html += '<div class="card"><p>' + esc(d.overview) + '</p></div>';
+
+  // 必背数字放在正文之前 —— 数字是最该先扫一遍、也最容易记混的东西
+  if((d.numbers||[]).length){
+    html += '<div class="blk"><h3>📌 ' + esc(L('必背数字')) + '</h3><div class="tbl-w" style="margin:0">'
+      + '<table><thead><tr><th>' + esc(trad ? '項目' : '项目') + '</th><th>'
+      + esc(trad ? '數值' : '数值') + '</th><th>' + esc(trad ? '手冊節號' : '手册节号') + '</th></tr></thead><tbody>';
+    for(const r of d.numbers){
+      html += '<tr><td>' + esc(r[0]) + '</td><td><b>' + esc(r[1]) + '</b></td>'
+        + '<td style="color:var(--muted);white-space:nowrap">' + esc(r[2]) + '</td></tr>';
+    }
+    html += '</tbody></table></div></div>';
+  }
+
+  for(const s of (d.sections||[])){
+    html += '<section class="sec"><button class="sec-h"><span class="chev">▾</span>'
+      + '<h2>' + esc(s.h) + '</h2><span class="ref">' + esc(s.ref || '') + '</span></button>'
+      + '<div class="sec-body">';
+    for(const x of (s.items||[])){
+      html += '<div class="item' + (x.star ? ' star' : '') + '">'
+        + '<div class="it-h">' + (x.star ? '<span class="bdg">' + esc(L('必背')) + '</span>' : '')
+        + '<span>' + esc(x.t) + '</span>'
+        + (x.ref ? '<span class="ref-t">' + esc(x.ref) + '</span>' : '') + '</div>'
+        + '<div class="it-d">' + esc(x.d) + '</div></div>';
+    }
+    for(const tb of (s.tables||[])){
+      html += '<div class="tbl-w"><table>'
+        + (tb.cap ? '<caption>' + esc(tb.cap) + '</caption>' : '')
+        + '<thead><tr>' + tb.head.map(h=>'<th>' + esc(h) + '</th>').join('') + '</tr></thead><tbody>';
+      for(const r of (tb.rows||[])){
+        html += '<tr>' + r.map(c=>'<td>' + esc(c) + '</td>').join('') + '</tr>';
+      }
+      html += '</tbody></table></div>';
+    }
+    html += '</div></section>';
+  }
+
+  if((d.traps||[]).length){
+    html += '<div class="blk warn"><h3>⚠ ' + esc(L('易错点')) + '</h3><ol>';
+    for(const t of d.traps) html += '<li>' + esc(t) + '</li>';
+    html += '</ol></div>';
+  }
+
+  const prev = NOTES.find(n=>n.ch === ch-1), next = NOTES.find(n=>n.ch === ch+1);
+  html += '<div class="pager">'
+    + '<button class="btn" id="pPrev"' + (prev ? '' : ' disabled') + '>‹ '
+    + (prev ? esc(pick(prev).name.replace(/^第\s*\d+\s*章\s*/,'')) : esc(L('上一章'))) + '</button>'
+    + '<button class="btn" id="pNext"' + (next ? '' : ' disabled') + '>'
+    + (next ? esc(pick(next).name.replace(/^第\s*\d+\s*章\s*/,'')) : esc(L('下一章'))) + ' ›</button>'
+    + '</div>';
+
+  main.innerHTML = html;
+
+  main.querySelectorAll('.sec-h').forEach(b=>{
+    b.onclick = ()=> b.parentElement.classList.toggle('fold');
+  });
+  const pp = $('#pPrev'), pn = $('#pNext');
+  if(pp && prev) pp.onclick = ()=> go('#/c/' + prev.ch);
+  if(pn && next) pn.onclick = ()=> go('#/c/' + next.ch);
+  // 这里不再标「已读」——点开一章不等于读完一章。
+  // 阅读进度改由滚动位置推算（见上面的 progOf），第 4 章 288 个考点尤其需要。
+}
+
+/* ---------- 渲染：考前速览 ----------
+   把各章的「必背」考点和必背数字汇到一起。
+
+   为什么要有这一页：第 4 章单独就是 288 个考点、七万像素高，九章合计上千个考点。
+   考前两三天不可能再从头翻一遍——这一页只走重点，是给「还剩几天」准备的。 */
+function renderCram(main){
+  const starOf = d => {
+    const out = [];
+    for(const s of (d.sections||[])) for(const x of (s.items||[])) if(x.star) out.push(x);
+    return out;
+  };
+
+  let nS = 0, nN = 0;
+  for(const n of NOTES){ const d = pick(n); nS += starOf(d).length; nN += (d.numbers||[]).length; }
+
+  let html = '<div class="chhead"><div class="kicker">' + esc(LT('考前速览', '考前速覽')) + '</div>'
+    + '<h1>' + esc(LT('只看必背', '只看必背')) + '</h1>'
+    + '<p style="color:var(--ink2);font-size:.86rem;margin:8px 0 0">'
+    + esc(LT('全部必背考点和必背数字，跨章汇总。这是时间不够时的最短路径——',
+             '全部必背考點和必背數字，跨章匯總。這是時間不夠時的最短路徑——'))
+    + '<b>' + nS + '</b> ' + esc(LT('个考点', '個考點')) + ' + <b>' + nN + '</b> '
+    + esc(LT('个数字', '個數字'))
+    + '。' + esc(LT('点章名可跳回该章看全文。', '點章名可跳回該章看全文。')) + '</p></div>';
+
+  for(const n of NOTES){
+    const d = pick(n);
+    const its = starOf(d), nums = d.numbers || [];
+    if(!its.length && !nums.length) continue;
+
+    html += '<section class="cram-ch">'
+      + '<button class="cram-h" data-ch="' + n.ch + '">'
+      + '<span class="cram-n">' + n.ch + '</span>'
+      + '<span class="cram-t">' + esc(d.name.replace(/^第\s*\d+\s*章\s*/, '')) + '</span>'
+      + '<span class="cram-c">' + its.length + ' ' + esc(L('必背')) + ' · ' + nums.length
+      + ' ' + esc(L('数字')) + '</span>'
+      + '</button>';
+
+    for(const x of its){
+      html += '<div class="item star"><div class="it-h"><span class="bdg">' + esc(L('必背')) + '</span>'
+        + '<span>' + esc(x.t) + '</span>'
+        + (x.ref ? '<span class="ref-t">' + esc(x.ref) + '</span>' : '') + '</div>'
+        + '<div class="it-d">' + esc(x.d) + '</div></div>';
+    }
+    if(nums.length){
+      html += '<div class="tbl-w" style="margin-top:10px"><table>'
+        + '<thead><tr><th>' + esc(L('项目')) + '</th><th>' + esc(L('数值')) + '</th>'
+        + '<th>' + esc(L('节号')) + '</th></tr></thead><tbody>';
+      for(const r of nums){
+        html += '<tr><td>' + esc(r[0]) + '</td><td><b>' + esc(r[1]) + '</b></td>'
+          + '<td style="color:var(--muted);white-space:nowrap">' + esc(r[2]) + '</td></tr>';
+      }
+      html += '</tbody></table></div>';
+    }
+    html += '</section>';
+  }
+
+  main.innerHTML = html;
+  main.querySelectorAll('.cram-h').forEach(b=>{
+    b.onclick = ()=> go('#/c/' + b.dataset.ch);
+  });
+}
+
+/* ---------- 渲染：搜索 ---------- */
+function renderSearch(main, q){
+  const hits = doSearch(q);
+  const Q = q.trim();
+
+  let html = '<div class="home-h" style="border:none;margin-bottom:10px">'
+    + '<h1>' + esc(L('搜索')) + '</h1></div>'
+    + '<div id="qBox"><input id="q" type="search" autocomplete="off" '
+    + 'placeholder="' + esc(L('输入关键词，例如「专业投资者」「6 个月」「披露」')) + '" value="' + esc(Q) + '">'
+    + '<button class="btn" id="qGo">' + esc(L('搜索')) + '</button></div>';
+
+  if(!Q){
+    html += '<div class="empty">' + esc(L('搜索全部笔记')) + '</div>';
+  } else if(!hits.length){
+    html += '<div class="empty">' + esc(L('没有匹配的内容')) + '<br>' + esc(L('试试别的词，或换个说法')) + '</div>';
+  } else {
+    const KIND = {i:'', p:L('易错点'), n:L('必背数字')};
+    html += '<div style="font-size:.78rem;color:var(--muted);margin-bottom:10px">'
+      + esc(L('找到')) + ' ' + hits.length + ' ' + esc(L('条结果')) + '</div>';
+    if(crossScriptOnly(Q)){
+      // 方向必须跟着当前显示语言走，不能写死一种说法。
+      // 交叉搜索有两个方向：看着繁体打简体，和看着简体打繁体。
+      // 写死「你打的是简体」的话，后一种情况会把人带偏——而那才是最常见的
+      // （用户是打简体的人、读繁体卷，两种情形他都会碰上）。
+      html += '<div class="xhint">' + esc(trad
+        ? '你打的是簡體，正文顯示的是繁體 —— 結果是對的，只是沒法加高亮。'
+        : '你打的是繁体，正文显示的是简体 —— 结果是对的，只是没法加高亮。') + '</div>';
+    }
+    for(const e of hits){
+      const title  = trad ? e.tT : e.t;
+      const body   = trad ? e.dT : e.d;
+      const sect   = trad ? e.secT : e.sec;
+      const label  = e.kind === 'i' ? sect : (e.kind === 'p' ? L('易错点') : L('必背数字'));
+      html += '<button class="hit" data-ch="' + e.ch + '">'
+        + '<div class="hit-t">' + (e.star ? '<span class="bdg">' + esc(L('必背')) + '</span> ' : '')
+        + hl(title, Q) + '</div>'
+        + (body ? '<div class="hit-s">' + hl(clip(body, Q.toLowerCase(), 90), Q) + '</div>' : '')
+        + '<div class="hit-m">第 ' + e.ch + ' ' + esc(L('章')) + ' · ' + esc(label) + '</div>'
+        + '</button>';
+    }
+  }
+  main.innerHTML = html;
+
+  const box = $('#q');
+  if(box){
+    box.oninput = ()=>{
+      clearTimeout(box._t);
+      box._t = setTimeout(()=>{
+        const cur = route();
+        const q = box.value;
+        if(cur.v === 'search') history.replaceState(null, '', '#/s/' + encodeURIComponent(q));
+        renderSearch(main, q);
+        const nb = $('#q'); if(nb){ nb.focus(); nb.setSelectionRange(q.length, q.length); }
+      }, 180);
+    };
+    box.onkeydown = e=>{ if(e.key === 'Enter'){ box.oninput(); } };
+    if(!Q) box.focus();
+  }
+  const g = $('#qGo'); if(g) g.onclick = ()=>{ const b=$('#q'); if(b) b.oninput(); };
+  main.querySelectorAll('.hit').forEach(el=>{
+    el.onclick = ()=>{ sessionStorage.setItem('hksi_notes_to', el.dataset.ch); go('#/c/' + el.dataset.ch); };
+  });
+}
+
+/* ---------- 主渲染 ---------- */
+let lastKey = null;   // 上次渲染的视图标识，用来分辨「换了页」和「只是切了繁简」
+
+function render(){
+  const view = route();
+  applyFS();
+
+  const key = view.v === 'ch'     ? 'c' + view.ch
+            : view.v === 'search' ? 's' + (view.q || '')
+            : view.v === 'cram'   ? 'cram'
+            : 'home';
+  const samePage = key === lastKey;
+  lastKey = key;
+
+  // 离开一章前先把位置落盘：别指望那个 250ms 的防抖定时器还来得及。
+  if(curCh != null && !(view.v === 'ch' && view.ch === curCh)) savePos(curCh);
+  curCh = view.v === 'ch' ? view.ch : null;
+
+  if(samePage){
+    // 只是切繁简、重绘同一页：留在原地，别把人弹回上次存的位置
+    pendingY = Math.round(window.scrollY);
+  } else if(view.v === 'ch'){
+    const pos = loadPos(view.ch);
+    pendingY = (pos && pos.y > 40) ? pos.y : 0;
+  } else {
+    pendingY = 0;
+  }
+
+  const main = $('#main');
+  try {
+    renderHdr(view);
+    renderToc(view);
+    main.innerHTML = '';               // 先清空：出错时宁可白屏也不要留旧内容
+    if(view.v === 'ch')          renderChapter(main, view.ch);
+    else if(view.v === 'search') renderSearch(main, view.q || '');
+    else if(view.v === 'cram')   renderCram(main);
+    else                         renderHome(main);
+
+    $('#hTitle').textContent = view.v === 'ch'
+      ? L('精讲笔记') + ' · 第 ' + view.ch + ' ' + L('章')
+      : view.v === 'search' ? L('搜索')
+      : view.v === 'cram'   ? L('考前速览')
+      : 'HKSI 卷一 · ' + L('精讲笔记');
+  } catch(e){
+    // 出错时如果把上一页的内容留在屏幕上，看起来就像「点了没反应」——
+    // 而这个页面多半是在手机上打开、没法开控制台，根本查不出发生了什么。
+    // 所以直接把错误摊在页面上。
+    console.error(e);
+    main.innerHTML = '<div class="blk warn" style="margin-top:20px"><h3>⚠ 页面出错</h3>'
+      + '<p style="font-size:.85rem;line-height:1.7;margin:0">' + esc(e && e.message || String(e)) + '</p>'
+      + '<p style="font-size:.78rem;color:var(--muted);margin:8px 0 0">'
+      + '请把这一行截图发给老师。若刚更新过 notes.js，先确认文件已完整上传。</p></div>';
+  }
+  applyFS();
+  syncHdr();
+
+  // 等两帧再滚：第一帧让浏览器完成布局，第二帧确保 scrollHeight 已经算出来。
+  // 只等一帧的话手机上偶尔会滚不到底——内容还没排完，量到的高度是旧的。
+  requestAnimationFrame(()=> requestAnimationFrame(()=>{
+    const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    window.scrollTo(0, Math.min(pendingY, max));   // 笔记重 build 过会变短，这里夹一下
+  }));
+}
+
+/* ---------- 事件 ---------- */
+// 滚动位置由 render() 里的 pendingY 决定，这里不能再无脑 scrollTo(0,0)——
+// 否则「回到上次读到的地方」每次都被它顶掉。
+window.addEventListener('hashchange', render);
+document.addEventListener('keydown', e=>{
+  if(e.target.tagName === 'INPUT') return;
+  const v = route();
+  if(v.v === 'ch'){
+    if(e.key === 'ArrowLeft'){ const p = NOTES.find(n=>n.ch===v.ch-1); if(p) go('#/c/'+p.ch); }
+    if(e.key === 'ArrowRight'){ const n = NOTES.find(n=>n.ch===v.ch+1); if(n) go('#/c/'+n.ch); }
+  }
+  if(e.key === '/'){ e.preventDefault(); go('#/s/'); }
+});
+document.getElementById('menuBtn').onclick = ()=> document.body.classList.toggle('nav');
+document.getElementById('scrim').onclick = closeNav;
+window.addEventListener('resize', syncHdr);
+
+/* 启动 */
+if(!window.HKSI_NOTES || !NOTES.length){
+  document.getElementById('main').innerHTML =
+    '<div class="empty">notes.js 尚未生成。<br>先在命令行跑 <b>python build_notes.py</b>。</div>';
+} else {
+  if(!location.hash) location.hash = '#/';
+  buildIndex();
+  render();
+  syncHdr();
+}
+</script>
+</body>
+</html>
