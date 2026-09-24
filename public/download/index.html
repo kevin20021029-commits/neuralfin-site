@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="zh-CN" class="no-js">
+<head>
+<script>document.documentElement.className="js";</script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>下载 NeuralFin — 财富源于认知</title>
+<meta name="description" content="NeuralFin:投资社区、财经播客、AI 研报、极速行情。香港 SFC 持牌券商,中央编号 AZN279。" />
+<meta name="theme-color" content="#0A0806" />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="下载 NeuralFin — 财富源于认知" />
+<meta property="og:description" content="投资社区 · 财经播客 · AI 研报 · 极速行情" />
+<meta property="og:image" content="assets/app-icon-512.webp" />
+
+<link rel="icon" type="image/webp" href="assets/app-icon-64.webp" />
+<link rel="apple-touch-icon" href="assets/app-icon-180.webp" />
+<link rel="preload" as="image" href="assets/wordmark.webp" />
+
+<style>
+:root{
+  --bg:#0A0806;
+  --card:#14110C;
+  --gold-1:#F2DCA6;
+  --gold-2:#D4B36A;
+  --gold-3:#A8873F;
+  --text:#F5F1E8;
+  --muted:#8C8474;
+  --line:rgba(212,179,106,.14);
+  --line-hi:rgba(212,179,106,.34);
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* ---------- 背景:金色辉光 + 细颗粒 ---------- */
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg::before{
+  content:"";position:absolute;top:-28vw;left:50%;transform:translateX(-50%);
+  width:110vw;height:80vw;max-width:1500px;
+  background:radial-gradient(ellipse at center,rgba(212,179,106,.16),rgba(212,179,106,.05) 42%,transparent 68%);
+  filter:blur(20px);
+}
+.bg::after{
+  content:"";position:absolute;inset:0;opacity:.04;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.wrap{position:relative;z-index:1}
+.container{width:100%;max-width:1180px;margin:0 auto;padding:0 24px}
+
+/* ---------- 顶部导航 ---------- */
+header{
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  background:rgba(10,8,6,.62);
+  border-bottom:1px solid transparent;
+  transition:border-color .3s var(--ease),background .3s var(--ease);
+}
+header.stuck{border-bottom-color:var(--line);background:rgba(10,8,6,.88)}
+.nav{display:flex;align-items:center;height:66px}
+.nav img{height:26px;width:auto;display:block;opacity:.95}
+
+/* ---------- Hero ---------- */
+.hero{padding:clamp(56px,9vw,104px) 0 clamp(48px,7vw,80px);text-align:center}
+.hero-logo{
+  width:clamp(268px,58vw,410px);height:auto;display:block;margin:0 auto clamp(28px,4vw,42px);
+  filter:drop-shadow(0 6px 34px rgba(212,179,106,.22));
+  animation:rise .9s var(--ease) both;
+}
+h1{
+  font-size:clamp(32px,6.4vw,58px);
+  line-height:1.14;letter-spacing:-.015em;
+  margin:0 0 20px;font-weight:700;
+  color:var(--gold-2);              /* 不支持渐变文字时的回退色 */
+  animation:rise .9s .08s var(--ease) both;
+}
+.lede{
+  font-size:clamp(14.5px,2.1vw,17px);color:var(--muted);
+  margin:0 auto 40px;max-width:560px;line-height:1.75;
+  animation:rise .9s .16s var(--ease) both;
+}
+.lede b{color:#C9BFA9;font-weight:500}
+
+/* ---------- 按钮 ---------- */
+.actions{
+  display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+  animation:rise .9s .24s var(--ease) both;
+}
+.btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:15px 30px;border-radius:13px;
+  font-size:15.5px;font-weight:600;letter-spacing:.01em;
+  text-decoration:none;white-space:nowrap;
+  position:relative;overflow:hidden;
+  transition:transform .28s var(--ease),box-shadow .28s var(--ease),border-color .28s var(--ease);
+}
+.btn svg{width:19px;height:19px;flex:none}
+.btn-gold{
+  color:#1C1508;
+  background:linear-gradient(158deg,#F4E0AE 0%,var(--gold-2) 44%,#B08E45 100%);
+  box-shadow:0 1px 0 rgba(255,255,255,.42) inset,0 8px 26px -8px rgba(212,179,106,.5);
+}
+.btn-gold::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(115deg,transparent 28%,rgba(255,255,255,.55) 48%,transparent 68%);
+  transform:translateX(-130%);transition:transform .8s var(--ease);
+}
+.btn-gold:hover::after{transform:translateX(130%)}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 14px 34px -8px rgba(212,179,106,.62)}
+.btn-ghost{
+  color:var(--text);background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.1);
+}
+.btn-ghost:hover{transform:translateY(-2px);border-color:var(--line-hi);background:rgba(212,179,106,.08)}
+
+/* ---------- 功能区 ---------- */
+/* 上内边距故意留小:Hero 底部已有一层内边距,信任条删掉后两段之间不该再有空档 */
+.features{padding:clamp(28px,4vw,44px) 0 clamp(56px,8vw,88px)}
+.sec-head{text-align:center;margin-bottom:clamp(40px,6vw,64px)}
+.sec-head h2{
+  font-size:clamp(24px,4.2vw,36px);margin:0 0 14px;font-weight:700;letter-spacing:-.01em;
+  color:var(--gold-2);
+}
+
+/* 金色渐变文字:不支持 background-clip:text 的浏览器回退为纯金色 */
+@supports(-webkit-background-clip:text) or (background-clip:text){
+  h1,.sec-head h2{
+    background:linear-gradient(168deg,var(--gold-1) 8%,var(--gold-2) 48%,var(--gold-3) 96%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+}
+.sec-head p{margin:0;color:var(--muted);font-size:15px}
+
+/* ---------- 功能图:横向滚动轨道 ----------
+   注意:overflow-x:auto 会让 overflow-y 也算成 auto,卡片悬停的位移和阴影
+   会被裁掉,所以轨道上下留够 padding,且阴影用紧凑值。 */
+.rail-outer{position:relative}
+
+.rail{
+  display:flex;gap:clamp(14px,2vw,20px);
+  overflow-x:auto;overscroll-behavior-x:contain;
+  scroll-snap-type:x mandatory;
+  padding-block:20px;
+  padding-inline:24px;scroll-padding-inline:24px;
+  cursor:grab;
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+.rail::-webkit-scrollbar{display:none}
+.rail:focus-visible{outline:2px solid var(--line-hi);outline-offset:-4px;border-radius:14px}
+@media(min-width:1228px){
+  /* 首尾卡片与正文容器的边缘对齐 */
+  .rail{padding-inline:calc((100% - 1132px)/2);scroll-padding-inline:calc((100% - 1132px)/2)}
+}
+.rail.dragging{scroll-snap-type:none;cursor:grabbing}
+.rail.dragging .card{pointer-events:none}
+
+.card{
+  margin:0;flex:0 0 auto;
+  width:clamp(200px,62vw,282px);
+  scroll-snap-align:start;
+  border-radius:16px;overflow:hidden;position:relative;
+  border:1px solid rgba(255,255,255,.065);
+  background:var(--card);
+  transition:transform .42s var(--ease),border-color .42s var(--ease),box-shadow .42s var(--ease);
+}
+.card img{width:100%;height:auto;display:block;transition:transform .6s var(--ease)}
+.card::after{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:16px;
+  background:linear-gradient(180deg,transparent 58%,rgba(212,179,106,.07));
+  opacity:0;transition:opacity .42s var(--ease);
+}
+.card:hover{transform:translateY(-5px);border-color:var(--line-hi);box-shadow:0 14px 30px -14px rgba(212,179,106,.42)}
+.card:hover img{transform:scale(1.035)}
+.card:hover::after{opacity:1}
+
+/* 两侧渐隐,提示还有内容可以往右滚 */
+.rail-outer::before,.rail-outer::after{
+  content:"";position:absolute;top:0;bottom:0;width:72px;
+  pointer-events:none;z-index:2;opacity:0;transition:opacity .3s var(--ease);
+}
+.rail-outer::before{left:0;background:linear-gradient(90deg,var(--bg) 14%,transparent)}
+.rail-outer::after{right:0;background:linear-gradient(270deg,var(--bg) 14%,transparent)}
+.rail-outer.can-prev::before{opacity:1}
+.rail-outer.can-next::after{opacity:1}
+
+.rail-btn{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:46px;height:46px;padding:0;border-radius:50%;z-index:3;
+  display:none;align-items:center;justify-content:center;cursor:pointer;
+  background:rgba(16,13,9,.92);border:1px solid var(--line-hi);color:var(--gold-1);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  transition:background .25s var(--ease),border-color .25s var(--ease),opacity .25s var(--ease);
+}
+@media(min-width:900px){.rail-btn{display:flex}}
+.rail-btn svg{width:20px;height:20px}
+.rail-btn.prev{left:20px}
+.rail-btn.next{right:20px}
+.rail-btn:hover{background:rgba(212,179,106,.22);border-color:var(--gold-2)}
+.rail-btn:disabled{opacity:.22;pointer-events:none}
+
+/* 分页点:窄屏没有箭头,靠它提示「还能往右滑」。
+   宽屏有箭头和露出 4 张卡,再加点就是噪音,所以在 900px 以上隐藏。 */
+.rail-dots{display:flex;justify-content:center}
+@media(min-width:900px){.rail-dots{display:none}}
+.dot{
+  width:20px;height:20px;padding:0;border:0;background:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+/* 按钮本身 20px 保证手指点得到,可见的圆点只有 7px */
+.dot::before{
+  content:"";display:block;width:7px;height:7px;border-radius:100px;
+  background:rgba(212,179,106,.24);
+  transition:background .3s var(--ease),width .3s var(--ease);
+}
+.dot.on::before{background:var(--gold-2);width:18px}
+
+/* ---------- 页脚 ---------- */
+footer{border-top:1px solid rgba(255,255,255,.055);padding:40px 0 52px}
+footer .inner{font-size:12.5px;color:#5F5949;line-height:1.85}
+footer .inner p{margin:0}
+/* ICP 备案页脚:底部中央,备案号链接备案管理系统(《非经营性互联网信息服务备案管理办法》第十三条)。
+   配色取本页自身的 --muted 令牌 —— 本页是深色底 #0A0806,照抄 lubuds 的浅色底配色会看不见。
+   ★ 选择器写到 `footer .inner p.icp-line` 是为压过上面的 `footer .inner p{margin:0}`。 */
+footer .inner p.icp-line{margin:14px 0 0;text-align:center;font-size:12.5px;color:var(--muted)}
+footer .inner p.icp-line a{color:var(--muted);text-decoration:underline;text-underline-offset:2px;margin-left:6px}
+footer .inner p.icp-line a:hover{color:var(--gold-2)}
+
+/* ---------- 动画 ---------- */
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+/* 注意:仅在 JS 可用时才隐藏(.js 由 <head> 内联脚本设置)。
+   否则 JS 挂了会导致整页功能区和下载按钮不可见。 */
+.js .reveal{opacity:0;transform:translateY(26px);transition:opacity .75s var(--ease),transform .75s var(--ease)}
+.js .reveal.in{opacity:1;transform:none}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+  .js .reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<div class="bg" aria-hidden="true"></div>
+
+<div class="wrap">
+
+  <header id="hdr">
+    <div class="container nav">
+      <img src="assets/wordmark.webp" alt="NeuralFin" />
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ============ Hero ============ -->
+    <section class="hero">
+      <div class="container">
+        <img class="hero-logo" src="assets/wordmark.webp" alt="NeuralFin" />
+        <h1>财富源于认知</h1>
+        <p class="lede">
+          投资社区 · 财经播客 · AI 研报 · 极速行情<br />
+          <b>一个 App,读懂全球市场</b>
+        </p>
+
+        <div class="actions">
+          <a class="btn btn-gold" href="https://cn-assets.neuralfin.dl-holdings.cn/prod/app/OFFICIAL_H5_CN.apk" download>
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.14-.52.38.38 0 0 0-.52.14l-1.86 3.22a11.4 11.4 0 0 0-4.92-1.06c-1.77 0-3.44.38-4.92 1.06L5.22 5.92a.38.38 0 0 0-.52-.14.38.38 0 0 0-.14.52L6.4 9.48A10.8 10.8 0 0 0 .94 18h22.12A10.8 10.8 0 0 0 17.6 9.48M7 15.25a1.06 1.06 0 1 1 0-2.12 1.06 1.06 0 0 1 0 2.12m10 0a1.06 1.06 0 1 1 0-2.12 1.06 1.06 0 0 1 0 2.12"/>
+            </svg>
+            下载 Android 版
+          </a>
+          <a class="btn btn-ghost" href="https://apps.apple.com/hk/app/neuralfin/id6751037382" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M17.05 12.54c-.02-2.3 1.88-3.4 1.96-3.46-1.07-1.56-2.73-1.78-3.32-1.8-1.41-.14-2.76.83-3.48.83-.72 0-1.83-.81-3-.79-1.55.02-2.97.9-3.77 2.28-1.6 2.79-.41 6.92 1.15 9.19.76 1.11 1.67 2.35 2.87 2.31 1.15-.05 1.58-.74 2.97-.74s1.78.74 3 .72c1.24-.02 2.02-1.13 2.78-2.24.87-1.29 1.23-2.54 1.25-2.6-.03-.01-2.4-.92-2.42-3.66M14.9 5.7c.63-.77 1.06-1.84.94-2.9-.91.04-2.01.61-2.66 1.37-.58.68-1.09 1.76-.95 2.8 1.01.08 2.04-.52 2.67-1.27"/>
+            </svg>
+            下载 iOS 版
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ 功能 ============ -->
+    <section class="features">
+      <div class="container">
+        <div class="sec-head reveal">
+          <h2>一个 App,读懂全球市场</h2>
+          <p>从社区洞察到 AI 研报,从实时行情到财经播客</p>
+        </div>
+
+      </div>
+
+      <div class="rail-outer reveal">
+        <div class="rail" id="rail" tabindex="0" role="region" aria-label="功能展示,可左右滚动">
+          <figure class="card"><img src="assets/feature-1.webp" width="800" height="1422" loading="lazy" decoding="async" alt="投资社区 — 动态随性,分享投资心得与市场观点" /></figure>
+          <figure class="card"><img src="assets/feature-2.webp" width="800" height="1422" loading="lazy" decoding="async" alt="财经播客 — 声量投研,随时随地收听市场解读" /></figure>
+          <figure class="card"><img src="assets/feature-3.webp" width="800" height="1422" loading="lazy" decoding="async" alt="精选专栏 — 专业洞察,深度拆解产业逻辑" /></figure>
+          <figure class="card"><img src="assets/feature-4.webp" width="800" height="1422" loading="lazy" decoding="async" alt="AI 研报 — 投顾问答,智能解答投资疑问" /></figure>
+          <figure class="card"><img src="assets/feature-5.webp" width="800" height="1422" loading="lazy" decoding="async" alt="全球快讯 — 深度解析,7×24 小时财经资讯" /></figure>
+          <figure class="card"><img src="assets/feature-6.webp" width="800" height="1422" loading="lazy" decoding="async" alt="香港 SFC 持牌券商 — 中央编号 AZN279" /></figure>
+          <figure class="card"><img src="assets/feature-7.webp" width="800" height="1422" loading="lazy" decoding="async" alt="极速行情 — 快人一步,港美股实时报价" /></figure>
+          <figure class="card"><img src="assets/feature-8.webp" width="800" height="1422" loading="lazy" decoding="async" alt="自选股与智能提醒 — 关注标的实时追踪" /></figure>
+        </div>
+
+        <button class="rail-btn prev" id="railPrev" type="button" aria-label="向左滚动">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="rail-btn next" id="railNext" type="button" aria-label="向右滚动">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+
+        <div class="rail-dots" id="railDots" role="group" aria-label="功能图分页"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container inner">
+      <p>
+        本页面仅提供官方安装包下载,不构成任何投资建议。<br />
+        投资有风险,入市需谨慎。
+      </p>
+      <p class="icp-line">© 2026 上海突触智享科技有限公司 版权所有<a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer">沪ICP备2026046201号-1</a></p>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- 顶栏滚动态 ---------- */
+  var hdr = document.getElementById("hdr");
+  var onScroll = function () {
+    hdr.classList.toggle("stuck", window.scrollY > 12);
+  };
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
+
+  /* ---------- 功能图横向滚动 ---------- */
+  var rail = document.getElementById("rail");
+  if (rail) {
+    var outer = rail.parentElement;
+    var prev = document.getElementById("railPrev");
+    var next = document.getElementById("railNext");
+    var cards = rail.querySelectorAll(".card");
+
+    // 一次滚动一张卡片的宽度(含间距)
+    function step() {
+      var c = rail.querySelector(".card");
+      if (!c) return 300;
+      var gap = parseFloat(getComputedStyle(rail).columnGap) || 20;
+      return c.getBoundingClientRect().width + gap;
+    }
+
+    // 分页点(宽屏由 CSS 隐藏,那里用箭头)
+    var dotsBox = document.getElementById("railDots");
+    var dots = [];
+    Array.prototype.forEach.call(cards, function (_, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "dot";
+      b.setAttribute("aria-label", "跳到第 " + (i + 1) + " 张");
+      b.addEventListener("click", function () {
+        rail.scrollTo({ left: i * step(), behavior: "smooth" });
+      });
+      dotsBox.appendChild(b);
+      dots.push(b);
+    });
+
+    function sync() {
+      var max = rail.scrollWidth - rail.clientWidth;
+      var x = rail.scrollLeft;
+      outer.classList.toggle("can-prev", x > 4);
+      outer.classList.toggle("can-next", x < max - 4);
+      prev.disabled = x <= 4;
+      next.disabled = x >= max - 4;
+
+      var cur = Math.max(0, Math.min(dots.length - 1, Math.round(x / step())));
+      dots.forEach(function (d, i) { d.classList.toggle("on", i === cur); });
+    }
+
+    prev.addEventListener("click", function () { rail.scrollBy({ left: -step(), behavior: "smooth" }); });
+    next.addEventListener("click", function () { rail.scrollBy({ left: step(), behavior: "smooth" }); });
+    rail.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("resize", sync);
+    window.addEventListener("load", sync);
+    sync();
+
+    // 鼠标按住拖动;触屏和触控板走原生滚动,不接管
+    var down = false, sx = 0, sl = 0, moved = false;
+    rail.addEventListener("pointerdown", function (e) {
+      if (e.pointerType !== "mouse") return;
+      down = true; moved = false; sx = e.clientX; sl = rail.scrollLeft;
+      try { rail.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    rail.addEventListener("pointermove", function (e) {
+      if (!down) return;
+      var dx = e.clientX - sx;
+      if (!moved && Math.abs(dx) > 4) { moved = true; rail.classList.add("dragging"); }
+      if (moved) rail.scrollLeft = sl - dx;
+    });
+    function endDrag(e) {
+      if (!down) return;
+      down = false;
+      rail.classList.remove("dragging");   // 移除后浏览器重新接管 scroll-snap,吸附到最近一张
+      try { rail.releasePointerCapture(e.pointerId); } catch (_) {}
+    }
+    rail.addEventListener("pointerup", endDrag);
+    rail.addEventListener("pointercancel", endDrag);
+  }
+
+  /* ---------- 滚动淡入 ---------- */
+  var items = document.querySelectorAll(".reveal");
+  if (!("IntersectionObserver" in window)) {
+    items.forEach(function (el) { el.classList.add("in"); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      e.target.classList.add("in");
+      io.unobserve(e.target);
+    });
+  }, { rootMargin: "0px 0px -12% 0px", threshold: 0.06 });
+
+  items.forEach(function (el, i) {
+    el.style.transitionDelay = Math.min(i, 3) * 70 + "ms";
+    io.observe(el);
+  });
+})();
+</script>
+
+</body>
+</html>
