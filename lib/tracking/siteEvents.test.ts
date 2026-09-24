@@ -2,11 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   dwellSeconds,
+  isStorePlatform,
   newVisitId,
   readRefParams,
   sessionStore,
   startSiteTracking,
   STORAGE_KEYS,
+  STORE_PLATFORMS,
+  trackStoreAttribute,
   type KeyValueStore,
   type SitePayload,
   type TrackerEnv,
@@ -69,6 +72,43 @@ test("store clicks: lowercase platform, literal placement, no duration, one reco
     assert.equal("duration_s" in click.params, false);
     assert.equal("ref" in click.params, false, "ref is omitted when there are no ad params");
   }
+});
+
+test("every allowlisted platform value reaches the transport, apk included", () => {
+  // The whole value domain is pinned, not just the new entry: dropping a value
+  // or adding one without re-checking the backend contract fails here.
+  assert.deepEqual([...STORE_PLATFORMS], ["appstore", "play", "apk"]);
+
+  const { env, sent } = harness();
+  const tracker = startSiteTracking("en", env);
+  for (const platform of STORE_PLATFORMS) {
+    assert.equal(trackStoreAttribute(platform, tracker), true, `${platform} must be reported`);
+  }
+
+  const clicks = sent.filter((p) => p.event_name === "website_click_store");
+  assert.deepEqual(clicks.map((c) => c.params.platform), ["appstore", "play", "apk"]);
+  assert.equal(clicks[clicks.length - 1].params.placement, "website");
+});
+
+test("a data-track-store value outside the allowlist never reaches the transport", () => {
+  // Negative control for the test above: the same call must refuse a value it
+  // was never taught, otherwise "apk reports" would be vacuously green.
+  // "APK" is uppercase on purpose — the dashboard drops non-lowercase values,
+  // so the client must not forward one and imply it was counted.
+  const rejected: (string | null)[] = ["neuralfin", "APK", "appstore ", " apk", "apk=1", "", null];
+
+  const { env, sent } = harness();
+  const tracker = startSiteTracking("en", env);
+  for (const value of rejected) {
+    assert.equal(isStorePlatform(value), false, `${JSON.stringify(value)} must not pass the allowlist`);
+    assert.equal(trackStoreAttribute(value, tracker), false, `${JSON.stringify(value)} must not be reported`);
+  }
+
+  assert.deepEqual(
+    sent.map((p) => p.event_name),
+    ["website_page_view"],
+    "not one click event may escape",
+  );
 });
 
 test("leave fires exactly once, with integer duration and no platform", () => {

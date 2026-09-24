@@ -5,8 +5,8 @@ import {
   fetchTransport,
   sessionStore,
   startSiteTracking,
+  trackStoreAttribute,
   type SiteLang,
-  type StorePlatform,
 } from "@/lib/tracking/siteEvents";
 
 function safeSessionStorage(): Storage | undefined {
@@ -18,9 +18,10 @@ function safeSessionStorage(): Storage | undefined {
 }
 
 /**
- * Homepage-only tracking. Store buttons opt in with
- * `data-track-store="appstore" | "play"`; clicks are picked up by one
- * delegated listener, so the landing page stays a server component.
+ * Homepage-only tracking. Store buttons opt in with a `data-track-store`
+ * attribute holding one of STORE_PLATFORMS (appstore / play / apk); clicks are
+ * picked up by one delegated listener, so the landing page stays a server
+ * component.
  */
 export function SiteTracker({ lang }: { lang: SiteLang }) {
   useEffect(() => {
@@ -40,8 +41,7 @@ export function SiteTracker({ lang }: { lang: SiteLang }) {
 
     const onClick = (event: MouseEvent) => {
       const target = event.target instanceof Element ? event.target.closest("[data-track-store]") : null;
-      const platform = target?.getAttribute("data-track-store");
-      if (platform === "appstore" || platform === "play") tracker.trackStoreClick(platform satisfies StorePlatform);
+      trackStoreAttribute(target?.getAttribute("data-track-store") ?? null, tracker);
     };
     const onVisibility = () => {
       if (document.visibilityState === "hidden") tracker.trackLeave();

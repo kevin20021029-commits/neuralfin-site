@@ -1,9 +1,10 @@
 // Homepage behavioural tracking for the nbti dashboard's "Download" panel.
 //
 // Three events, all POSTed to the nbti backend: one page view per browser
-// session, one record per App Store / Google Play click, and one dwell-time
-// sample when the session first leaves. Mounted from the homepage only ("/"
-// and "/zh") — never from /scroll, whose results are promised anonymous.
+// session, one record per store-button click (App Store / Google Play / APK),
+// and one dwell-time sample when the session first leaves. Mounted from the
+// homepage only ("/" and "/zh") — never from /scroll, whose results are
+// promised anonymous.
 //
 // Event names, payload keys and value formats are a contract with the
 // backend: event names outside the allowlist return 400, platform values
@@ -20,7 +21,18 @@ export const SITE_EVENTS = {
 
 export type SiteEventName = (typeof SITE_EVENTS)[keyof typeof SITE_EVENTS];
 export type SiteLang = "en" | "zh";
-export type StorePlatform = "appstore" | "play";
+
+// Single source of truth for platform values: the type, the click allowlist in
+// SiteTracker, and the payload contract below all derive from this one list.
+// The dashboard drops a value it doesn't recognise, so a value that is missing
+// here is silently lost at the far end — add it here and nowhere else.
+export const STORE_PLATFORMS = ["appstore", "play", "apk"] as const;
+export type StorePlatform = (typeof STORE_PLATFORMS)[number];
+
+/** Narrows a raw data-track-store attribute to a value the contract accepts. */
+export function isStorePlatform(value: string | null): value is StorePlatform {
+  return value !== null && (STORE_PLATFORMS as readonly string[]).includes(value);
+}
 
 // Ad-attribution params copied from the landing URL into params.ref under
 // their original names. "placement" is kept here, inside ref only; it never
@@ -206,6 +218,18 @@ export type SiteTracker = {
   trackStoreClick(platform: StorePlatform): void;
   trackLeave(): void;
 };
+
+/**
+ * Routes one delegated click to the tracker. Narrowing and sending live here
+ * rather than in the component, so the allowlist can be exercised on its own
+ * and cannot drift from the call it guards. Returns whether a click event was
+ * sent: false for an unknown, empty or missing data-track-store value.
+ */
+export function trackStoreAttribute(attr: string | null, tracker: SiteTracker): boolean {
+  if (!isStorePlatform(attr)) return false;
+  tracker.trackStoreClick(attr);
+  return true;
+}
 
 /**
  * Establishes the session, captures ad params, and fires the page view if
