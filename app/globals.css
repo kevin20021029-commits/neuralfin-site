@@ -2569,8 +2569,8 @@ footer {
     min-height: auto;
     align-items: center;
     flex-direction: column;
-    gap: 10px;
-    padding: 12px 14px 10px;
+    gap: 0;
+    padding: 0 14px;
     text-align: center;
   }
   .brand img { max-width: 190px; width: 48vw; }
@@ -2581,9 +2581,9 @@ footer {
     grid-template-columns: repeat(6, minmax(0, 1fr));
     align-items: center;
     justify-content: stretch;
-    gap: 4px 8px;
+    gap: 0 8px;
     overflow: visible;
-    padding-bottom: 2px;
+    padding-bottom: 0;
   }
   .nav-links::-webkit-scrollbar { display: none; }
   .nav-link {
@@ -2604,7 +2604,7 @@ footer {
     min-height: 30px;
   }
   .mobile-break { display: block; }
-  .hero { padding: 26px 18px 42px; min-height: auto; }
+  .hero { padding: 0 18px 42px; min-height: auto; }
   h1 {
     font-size: clamp(38px, 11.2vw, 54px);
     letter-spacing: -0.035em;
@@ -2612,15 +2612,22 @@ footer {
     text-wrap: wrap;
     overflow-wrap: anywhere;
   }
+  /* 矮屏档 3（卡 01a0d142）：把 APK 行拉回折叠线。
+     ★ 下面 4 条【只存在于基规则】（.eyebrow 的 margin-bottom/padding、h1 的 padding-bottom、
+       .title-line 的 padding-bottom）。直接改基规则会连 760px 以上一起改，而桌面未测，
+       故一律在此新增覆盖。前 3 条按规格只压上/下，左右内边距原样保留。 */
+  .eyebrow { margin-bottom: 0; padding: 0 12px; }
+  h1 { padding-bottom: 0; }
+  .title-line { padding: 0 0.05em 0 0; }
   .hero-sub {
-    margin-top: 14px;
+    margin-top: 0;
     font-size: 15px;
     line-height: 1.48;
     max-width: min(100%, 330px);
   }
   .hero-actions {
-    margin-top: 18px;
-    gap: 8px;
+    margin-top: 0;
+    gap: 0 8px;
     max-width: 280px;
   }
   .store-button {
