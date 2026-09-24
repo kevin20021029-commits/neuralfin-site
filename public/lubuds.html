@@ -157,6 +157,9 @@
   .d4 { animation-delay: .38s; } .d5 { animation-delay: .5s; } .d6 { animation-delay: .62s; }
 
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } .rise { opacity: 1; transform: none; } }
+  /* ICP 备案页脚：底部中央，备案号链接备案管理系统（《非经营性互联网信息服务备案管理办法》第十三条）。字体/字距显式覆盖上面的 footer a（.34em 字距 + serif 是给 LUBUDS.COM 那个拉丁标题用的）。 */
+  footer .icp-line { margin: 18px 0 0; font-family: var(--sans); font-size: 12px; letter-spacing: 0; color: var(--faint); }
+  footer .icp-line a { font-family: var(--sans); font-size: 12px; letter-spacing: 0; color: var(--faint); text-decoration: underline; border-bottom: 0; padding-bottom: 0; margin-left: 8px; }
 </style>
 </head>
 <body>
@@ -243,6 +246,7 @@
   <footer>
     <a href="https://lubuds.com" target="_blank" rel="noopener">LUBUDS.COM</a>
     <p class="foot-note" data-i18n="footNote"></p>
+    <p class="icp-line">© 2026 上海突触智享科技有限公司 版权所有<a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer">沪ICP备2026046201号-1</a></p>
   </footer>
 
 </div>

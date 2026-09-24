@@ -2466,6 +2466,35 @@ footer {
   line-height: 1.55;
 }
 
+/* ★ ICP 备案页脚行 —— 只在大陆站(.cn)渲染，渲染与否由 app/layout.tsx 决定。
+   依据《非经营性互联网信息服务备案管理办法》第十三条：页面底部【中央】标明
+   备案编号 + 版权所有，备案编号链接备案管理系统。配色/字号照抄上面 footer 那一档。
+   ★ 用类选择器不用元素选择器：上面那条 `footer {}` 是元素选择器，会外溢到本行。 */
+.icp-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px 10px;
+  width: min(var(--max), calc(100% - 48px));
+  margin: 0 auto;
+  padding: 8px 0 32px;
+  color: rgba(247,251,247,0.46);
+  font-size: 12px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.icp-footer a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.icp-footer a:hover {
+  color: rgba(247,251,247,0.78);
+}
+
 @keyframes dataGrid { from { transform: translateY(0); } to { transform: translateY(84px); } }
 @keyframes riseIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes shimmerText { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
