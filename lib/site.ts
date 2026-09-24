@@ -27,6 +27,7 @@ export const contactZh = {
 export const appLinks = {
   appStore: "https://apps.apple.com/cn/app/neuralfin/id6751037382",
   googlePlay: "https://play.google.com/store/apps/details?id=com.dlzq.rongmai",
+  apk: "https://global-assets.neuralfin.dl-holdings.cn/prod/app/Neuralfin-OFFICIAL_H5_HK.apk",
   webApp: "http://web.neuralfin.ai/",
 } as const;
 

@@ -14,6 +14,7 @@ export const content = {
       "NeuralFin is a social-media-driven, next-generation TechFin platform designed to transform daily mobile habits into powerful opportunities for growth and wealth accumulation.",
     appStoreAlt: "Download on the App Store",
     googlePlayAlt: "Get it on Google Play",
+    apkAlt: "Download APK",
     launchApp: "Launch App",
     stats: [
       ["Consumer fintech", "Designed around daily mobile attention and social discovery."],
@@ -90,6 +91,7 @@ export const content = {
       "NeuralFin 是面向下一代用户的社交媒体驱动型 TechFin 平台，旨在将日常移动端使用习惯转化为增长、学习与财富积累的机会。",
     appStoreAlt: "在 App Store 下载",
     googlePlayAlt: "在 Google Play 获取",
+    apkAlt: "直接下载 APK",
     launchApp: "启动应用",
     stats: [
       ["消费金融科技", "围绕移动端注意力与社交发现重新设计。"],
