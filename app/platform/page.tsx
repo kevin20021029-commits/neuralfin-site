@@ -3,20 +3,18 @@ import { homeScreens, marketScreens } from "@/lib/site";
 
 export const metadata = {
   title: "Platform | NeuralFin",
-  description: "The NeuralFin platform connects social discovery, AI learning, community context, and trading-ready action.",
+  description: "The NeuralFin platform connects social discovery, AI learning, and community context.",
 };
 
 const pillars = [
   ["Content-first investing", "Follow peers, professionals and institutions. Absorb high-signal insights efficiently."],
   ["Community-powered learning", "Investing becomes collaborative, not isolated."],
-  ["Seamless transition to action", "When users are ready, they can move from learning to execution without friction."],
 ] as const;
 
 const journeys = [
   ["Scroll", "Daily mobile attention becomes a financial learning surface."],
   ["Learn", "AI-enabled tools compress market content into usable education."],
   ["Discuss", "Community context helps investors compare ideas and understand risk."],
-  ["Act", "Integrated regulated trading infrastructure closes the loop."],
 ] as const;
 
 export default function PlatformPage() {
@@ -33,7 +31,7 @@ export default function PlatformPage() {
           <div className="section-head">
             <div>
               <div className="section-label">Product surface</div>
-              <h2>One AI-native mobile loop for discovery, education, and market action.</h2>
+              <h2>One AI-native mobile loop for discovery and education.</h2>
             </div>
             <p className="section-copy">The platform is designed around the behavior users already have: scrolling, following, discussing, saving, and acting when conviction forms.</p>
           </div>

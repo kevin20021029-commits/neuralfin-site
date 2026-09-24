@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { aiLearningScreens, appLinks, communityScreens, contact, contactZh, homeScreens, marketScreens, siteNav, siteNavZh } from "@/lib/site";
+import { aiLearningScreens, appLinks, communityScreens, contact, contactZh, homeScreens, siteNav, siteNavZh } from "@/lib/site";
 
 type Props = {
   children: ReactNode;
@@ -11,25 +11,22 @@ type Props = {
   hideVisual?: boolean;
   langHref?: string;
   locale?: "en" | "zh";
-  visual?: "home" | "community" | "market";
+  visual?: "home" | "community";
 };
 
 const visualScreens = {
   home: [homeScreens[0], homeScreens[1], homeScreens[2], aiLearningScreens[0]],
   community: [communityScreens[0], communityScreens[1], communityScreens[2], "point-system.jpg"],
-  market: [marketScreens[0], marketScreens[1], marketScreens[3], marketScreens[6]],
 } as const;
 
 const visualLabels = {
   home: ["Founder analysis", "AI summary", "attention to action"],
   community: ["Creator thread", "AI learning", "community signal"],
-  market: ["Watchlist pulse", "Risk reviewed", "regulated action"],
 } as const;
 
 const visualLabelsZh = {
   home: ["创始人分析", "AI 摘要", "注意力到行动"],
   community: ["创作者内容", "AI 学习", "社区信号"],
-  market: ["自选股脉冲", "风险已审阅", "受监管行动"],
 } as const;
 
 export function SiteChrome({ children, eyebrow, title, intro, compact = false, hideContact = false, hideVisual = false, langHref, locale = "en", visual = "home" }: Props) {

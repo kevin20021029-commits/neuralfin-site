@@ -1,14 +1,12 @@
 export const siteNav = [
   ["Platform", "/platform"],
   ["SocialFi", "/socialfi"],
-  ["Trading", "/trading"],
   ["Investor Relations", "/investor-relations"],
 ] as const;
 
 export const siteNavZh = [
   ["平台", "/zh/platform"],
   ["SocialFi", "/zh/socialfi"],
-  ["交易", "/zh/trading"],
   ["投资者关系", "/zh/investor-relations"],
 ] as const;
 
@@ -60,7 +58,6 @@ export const behaviorLoop = [
   ["Scroll", "Daily market attention enters the feed."],
   ["Learn", "AI compresses content into financial intelligence."],
   ["Discuss", "Community turns investing from isolated to collaborative."],
-  ["Act", "Trading-ready infrastructure closes the loop."],
   ["Compound", "Every interaction strengthens insight, confidence, and signal."],
 ] as const;
 
@@ -68,22 +65,17 @@ export const behaviorLoopZh = [
   ["刷屏", "日常市场注意力进入信息流。"],
   ["学习", "AI 将内容压缩为金融智能。"],
   ["讨论", "社区让投资从孤立行为走向协作学习。"],
-  ["行动", "交易就绪的基础设施完成闭环。"],
   ["复利", "每一次互动都在强化洞察、信心与信号。"],
 ] as const;
 
 export const companyFacts = [
-  ["Platform", "AI-native social trading"],
   ["Market", "Hong Kong and global investors"],
-  ["Infrastructure", "DL Securities integration"],
-  ["Model", "Content, community, AI, execution"],
+  ["Model", "Content, community, AI"],
 ] as const;
 
 export const companyFactsZh = [
-  ["平台", "AI 原生社交交易"],
   ["市场", "香港及全球投资者"],
-  ["基础设施", "接入德林证券"],
-  ["模式", "内容、社区、AI、执行"],
+  ["模式", "内容、社区、AI"],
 ] as const;
 
 export const homeScreens = [
@@ -130,14 +122,13 @@ export const pressReleases = [
       "From product testing to full market rollout, NeuralFin is deepening its commitment to AI-driven social fintech.",
       "HONG KONG — NeuralFin, an AI-powered fintech social platform, today announced its official launch in the Hong Kong market, marking the platform's transition from the testing phase to full public availability.",
       "Official Launch: From Testing to Full Rollout",
-      "NeuralFin was formerly known as DLiFO (DL DIGITAL FAMILY OFFICE (HK) LIMITED), and was rebranded and spun off as an independent operating entity in February 2025. The platform is positioned as a TechFin platform that integrates social discovery, financial education, AI-powered financial tools, and compliant securities trading.",
-      "The project has completed two rounds of financing, Series A and Series B, raising tens of millions of Hong Kong dollars in total. In December 2025, NeuralFin completed a soft launch for product testing, and starting in February 2026, it began offering virtual asset trading services in collaboration with its affiliate, DL Securities.",
+      "NeuralFin was formerly known as DLiFO (DL DIGITAL FAMILY OFFICE (HK) LIMITED), and was rebranded and spun off as an independent operating entity in February 2025. The platform is positioned as a TechFin platform that integrates social discovery, financial education, and AI-powered financial tools.",
+      "The project has completed two rounds of financing, Series A and Series B, raising tens of millions of Hong Kong dollars in total. In December 2025, NeuralFin completed a soft launch for product testing.",
       "Following the official launch, users will be able to follow financial content creators, watch AI-generated research video summaries, and leverage tools such as AI-powered analysis and interpretation and the Global Capital Radar to gain investment insights.",
-      "Through a seamless integration with DL Securities, users can execute one-click trades across Hong Kong, U.S., and Japanese equities, ETFs, and virtual assets, creating a fully connected experience spanning market data, community-based financial education, market research, and securities trading.",
       "Future Outlook",
       "This official launch marks NeuralFin's transition from the product testing phase to full market availability, laying the technological foundation for continued investment in AI research and product iteration. It further reinforces the company's commitment to building a financial ecosystem defined by technology empowerment, data-driven insights, and inclusive access.",
       "About NeuralFin Technology",
-      "NeuralFin is an AI-driven fintech platform incubated by DL Holdings Group (1709.HK). Licensed and affiliated entities under the NeuralFin group hold licenses issued by the Hong Kong Securities and Futures Commission (SFC), authorizing them to conduct Type 1, Type 4, Type 6, and Type 9 regulated activities. For more information, please visit www.neuralfin.ai.",
+      "NeuralFin is an AI-driven fintech platform incubated by DL Holdings Group (1709.HK). For more information, please visit www.neuralfin.ai.",
     ],
   },
   {
@@ -176,20 +167,6 @@ export const pressReleases = [
       "High-Quality Cross-Industry Collaboration: NeuralFin Technology Strengthens Its Multi-Dimensional Position in the AI Content Space",
       "Backed by the long-term investment experience of its founding shareholder, DL Holdings, at the intersection of AI and fintech, NeuralFin Technology has demonstrated not only solid technological capabilities and a mature product ecosystem, but also an ability to rapidly adapt across use cases and regions.",
       "The strategic partnership with Leader Education, and the clarity of its collaborative direction, marks a pivotal evolution for NeuralFin Technology, from a content tool provider to an industry enabler. Looking ahead, NeuralFin Technology will continue to leverage its AI capabilities as a lever to unlock the vast market potential at the intersection of financial literacy, education innovation, and mass-market engagement.",
-    ],
-  },
-  {
-    slug: "neuralfin-enables-the-commercial-launch-of-regulated-virtual-asset-trading",
-    date: "February 20, 2026",
-    location: "Hong Kong",
-    title: "NeuralFin Enables the Commercial Launch of Regulated Virtual Asset Trading",
-    excerpt:
-      "NeuralFin announced that it now enables eligible clients to access regulated virtual asset trading, marking the commercial launch of the service provided through DL Securities (Hong Kong) Limited, a Hong Kong licensed securities broker.",
-    body: [
-      "NeuralFin announced that it now enables eligible clients to access regulated virtual asset trading, marking the commercial launch of the service provided through DL Securities (Hong Kong) Limited (DL Securities), a Hong Kong licensed securities broker.",
-      "Based on publicly disclosed information, clients who have opened securities accounts with DL Securities and completed professional investor certification may use the same securities account through NeuralFin to trade a range of mainstream digital assets.",
-      "Order handling, clearing, custody, and compliance monitoring are conducted within the regulatory framework of the Securities and Futures Commission (SFC) of Hong Kong.",
-      "NeuralFin will continue to deepen product experience and digital service collaboration with licensed partners, while expanding digital asset trading and related service capabilities for eligible clients under compliant operating principles.",
     ],
   },
   {
@@ -237,13 +214,13 @@ export const pressReleasesZh = [
       "从产品测试到全面开放，NeuralFin 持续加码深化 AI 社交金融科技布局。",
       "香港——人工智能金融科技社交平台突触科技（NeuralFin）今日宣布正式上线香港市场，标志着产品从测试阶段迈向全面开放。",
       "正式上线：从测试到全面开放",
-      "NeuralFin 前身为德林数字家族办公室（DLiFO），2025 年 2 月更名独立运营，定位为融合社交发现、金融教育、AI 金融工具与合规证券交易的科技金融（TechFin）平台。",
-      "项目历经 A、B 两轮融资，融资数千万港币，2025 年 12 月完成产品测试软发布上线，2026 年 2 月起与关联公司德林证券协同开放虚拟资产交易服务。",
-      "正式上线后，用户可关注财经创作者、观看 AI 研报短视频，并借助 AI 咨询解读、全球资本雷达等工具获取投资洞见，再经德林证券一键交易港股、美股、日股、ETF 及虚拟资产，实现行情、社区金融教育、行情检索与证券交易的无缝衔接。",
+      "NeuralFin 前身为德林数字家族办公室（DLiFO），2025 年 2 月更名独立运营，定位为融合社交发现、金融教育、AI 金融工具的科技金融（TechFin）平台。",
+      "项目历经 A、B 两轮融资，融资数千万港币，2025 年 12 月完成产品测试软发布上线。",
+      "正式上线后，用户可关注财经创作者、观看 AI 研报短视频，并借助 AI 咨询解读、全球资本雷达等工具获取投资洞见。",
       "展望",
       "此次正式上线，标志着 NeuralFin 从产品测试阶段迈向全面开放，为未来持续投入 AI 技术研发与产品迭代奠定技术路线，深化科技赋能、数据驱动、普惠共享的金融生态布局。",
       "关于突触科技（NeuralFin）",
-      "NeuralFin 是一家人工智能金融科技平台，孵化自德林控股集团（1709.HK）。NeuralFin 集团公司旗下持牌主体及关联持牌主体，持有香港证监会（SFC）牌照，可从事第 1 类、第 4 类、第 6 类及第 9 类受规管活动。更多信息请访问 www.neuralfin.ai。",
+      "NeuralFin 是一家人工智能金融科技平台，孵化自德林控股集团（1709.HK）。更多信息请访问 www.neuralfin.ai。",
     ],
   },
   {
@@ -282,20 +259,6 @@ export const pressReleasesZh = [
       "优质的跨行业合作，突触科技多维度卡位 AI 内容新赛道",
       "受益于创始股东德林控股在 AI 与金融科技交叉领域的长期投资经验，突触科技不仅具备扎实的技术能力与产品体系，更展现出跨场景、跨区域的快速进化能力。",
       "与立德教育的战略合作及其清晰的合作方向，标志着突触科技从内容工具迈向产业赋能的关键跃升。未来，突触科技将持续以 AI 能力为支点，撬动财经认知、教育升级与大众趣味之间的巨大市场空间。",
-    ],
-  },
-  {
-    slug: "neuralfin-enables-the-commercial-launch-of-regulated-virtual-asset-trading",
-    date: "2026年2月20日",
-    location: "香港",
-    title: "NeuralFin 推动受监管虚拟资产交易商业化上线",
-    excerpt:
-      "NeuralFin 宣布，其现已支持合资格客户通过德林证券（香港）有限公司接入受监管虚拟资产交易，标志着相关服务进入商业化上线阶段。",
-    body: [
-      "NeuralFin 宣布，其现已支持合资格客户通过德林证券（香港）有限公司（“德林证券”）接入受监管虚拟资产交易。德林证券为香港持牌证券经纪商。",
-      "根据公开披露资料，已于德林证券开立证券账户并完成专业投资者认证的客户，可通过 NeuralFin 使用同一证券账户交易一系列主流数字资产。",
-      "订单处理、结算、托管及合规监控均在香港证券及期货事务监察委员会（SFC）的监管框架内进行。",
-      "NeuralFin 将继续深化与持牌合作伙伴在产品体验及数字服务方面的协同，并在审慎合规的运营原则下，拓展面向合资格客户的数字资产交易及相关服务能力。",
     ],
   },
   {

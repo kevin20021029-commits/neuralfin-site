@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Technology | NeuralFin",
-  description: "NeuralFin combines AI-enabled tools, community intelligence, market data, and regulated trading infrastructure.",
+  description: "NeuralFin combines AI-enabled tools, community intelligence, and market data.",
 };
 
 export default function TechnologyPage() {

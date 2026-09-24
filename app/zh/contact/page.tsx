@@ -22,7 +22,7 @@ export default function ContactZhPage() {
       hideContact
       eyebrow="联系"
       title="与我们一起构建下一代金融界面。"
-      intro="适用于 NeuralFin AI 原生社交交易平台相关的平台、合作、投资者关系及公司咨询。"
+      intro="适用于 NeuralFin AI 原生平台相关的平台、合作、投资者关系及公司咨询。"
     >
       <section className="section paper">
         <div className="section-inner contact-page-grid">

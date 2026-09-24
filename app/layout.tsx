@@ -3,9 +3,9 @@ import "./globals.css";
 import { ICP_COPYRIGHT_YEAR, ICP_HOLDER, ICP_LINK, ICP_SITE_NUMBER } from "@/lib/icp";
 
 export const metadata: Metadata = {
-  title: "NeuralFin | AI-Native Social Trading Platform",
+  title: "NeuralFin | AI-Native Platform",
   description:
-    "NeuralFin is a social-media-driven, next-generation TechFin platform built for mobile financial discovery, AI learning, and regulated market action.",
+    "NeuralFin is a social-media-driven, next-generation TechFin platform built for mobile financial discovery and AI learning.",
   // 站点自指基址:相对 OG/图片 URL 都从它派生。
   // 默认值 = 改动前原值(.ai)。只有显式传 SITE_ORIGIN 时才变 ——
   // .cn 的静态包必须自称 .cn,否则全站元数据仍指 .ai,搜索引擎把 .cn 判成副本、
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "NeuralFin | Built for the scroll generation",
     description:
-      "A next-generation TechFin platform turning mobile attention into financial learning, community intelligence, and trading-ready action.",
+      "A next-generation TechFin platform turning mobile attention into financial learning and community intelligence.",
     images: ["/assets/neuralfin-logo-transparent-cropped.png"],
   },
 };

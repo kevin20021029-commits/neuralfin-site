@@ -25,7 +25,6 @@ const flywheel = [
   ["更多用户", "更多日常金融注意力进入网络。"],
   ["更多内容", "创作者与机构持续贡献市场洞察。"],
   ["更多学习", "AI 将信息流压缩为可用的金融洞察。"],
-  ["更多行动", "信心提升后，用户更容易走向受监管参与。"],
 ] as const;
 
 export default function SocialFiZhPage() {
@@ -35,7 +34,7 @@ export default function SocialFiZhPage() {
       langHref="/socialfi"
       eyebrow="SocialFi"
       title="当社交发现转化为市场参与。"
-      intro={<>NeuralFin 是为<span className="accent-inline prose">刷屏一代</span>设计的金融网络：内容、社区、AI 学习与交易就绪的行动在同一复利闭环内运转。</>}
+      intro={<>NeuralFin 是为<span className="accent-inline prose">刷屏一代</span>设计的金融网络：内容、社区、AI 学习在同一复利闭环内运转。</>}
       visual="community"
       hideContact
     >
@@ -55,10 +54,10 @@ export default function SocialFiZhPage() {
           </div>
           <div>
             <div className="section-label">网络效应</div>
-            <h2>更多用户带来更多内容、学习与交易信心。</h2>
+            <h2>更多用户带来更多内容与学习。</h2>
             <p className="large-copy">NeuralFin 将专业人士、机构、创作者与个人投资者连接在一个移动优先的金融社区中。</p>
             <div className="loop-equation">
-              {["内容", "社区", "AI", "市场数据", "受监管行动"].map((item) => <span key={item}>{item}</span>)}
+              {["内容", "社区", "AI", "市场数据"].map((item) => <span key={item}>{item}</span>)}
             </div>
           </div>
         </div>

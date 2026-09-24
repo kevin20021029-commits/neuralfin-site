@@ -18,7 +18,7 @@ export default function SocialFiPage() {
     <SiteChrome
       eyebrow="SocialFi"
       title={<>Where social<br className="mobile-break" /> discovery<br className="mobile-break" /> becomes market participation.</>}
-      intro={<>NeuralFin is designed as a financial network for the <span className="accent-inline prose">scroll generation</span>: content, community, AI learning, and trading-ready action operating inside one compounding loop.</>}
+      intro={<>NeuralFin is designed as a financial network for the <span className="accent-inline prose">scroll generation</span>: content, community, AI learning operating inside one compounding loop.</>}
       langHref="/zh/socialfi"
       visual="community"
       hideContact
@@ -34,7 +34,6 @@ export default function SocialFiPage() {
               ["More users", "More daily financial attention enters the network."],
               ["More content", "Creators and institutions add market context."],
               ["More learning", "AI compresses the feed into usable intelligence."],
-              ["More action", "Confidence moves users toward regulated participation."],
             ].map(([title, tag], index) => (
               <div className={`flywheel-node flywheel-${index}`} key={title}>
                 <strong>{title}</strong>

@@ -10,13 +10,13 @@ export function NeuralFinLanding({ locale }: Props) {
   const t = content[locale];
   const facts = locale === "zh" ? companyFactsZh : companyFacts;
   const timelineItems = locale === "zh" ? milestonesZh : milestones;
-  const partnerRolesZh = ["生态合作伙伴", "生态合作伙伴", "生态合作伙伴", "交易合作伙伴"];
+  const partnerRolesZh = ["生态合作伙伴", "生态合作伙伴", "生态合作伙伴"];
   const feedLabels = locale === "zh"
     ? ["ETF 脉冲", "创始人分析", "中资银行观察", "AI 摘要", "市场扫描"]
     : ["ETF pulse", "Founder analysis", "China bank watch", "AI summary", "Market scan"];
   const pulseLabels = locale === "zh"
-    ? ["社区智能", "受监管执行", "注意力到行动"]
-    : ["community intelligence", "regulated execution", "attention to action"];
+    ? ["社区智能", "注意力到行动"]
+    : ["community intelligence", "attention to action"];
 
   return (
     <>
@@ -162,17 +162,6 @@ export function NeuralFinLanding({ locale }: Props) {
               </div>
             </div>
             <div className="infra-grid">
-              <article className="partner-feature">
-                <div className="section-label">{t.infrastructure.partnerLabel}</div>
-                <div className="partner-logo-plaque">
-                  <img src="/assets/DLS.png" alt="DL Securities" />
-                </div>
-                <h2>{t.infrastructure.partnerTitle}</h2>
-                <p>{t.infrastructure.partnerCopy}</p>
-                <div className="license-strip">
-                  {t.infrastructure.tags.map((tag: string) => <span key={tag}>{tag}</span>)}
-                </div>
-              </article>
               <article className="loop-panel">
                 <div className="section-label">{t.loop.label}</div>
                 <h2>{t.loop.title}</h2>

@@ -22,12 +22,11 @@ export const TRACKS = [
   { id: "markets", en: "How Markets Move", "zh-Hant": "市場如何運作", "zh-Hans": "市场如何运作", th: "ตลาดขยับยังไง", lessons: 32 },
   { id: "statements", en: "Reading the Numbers", "zh-Hant": "看懂財務數字", "zh-Hans": "看懂财务数字", th: "อ่านตัวเลขให้เป็น", lessons: 28 },
   { id: "psychology", en: "The Investor's Mind", "zh-Hant": "投資者心理學", "zh-Hans": "投资者心理学", th: "จิตวิทยานักลงทุน", lessons: 24 },
-  { id: "first-trade", en: "Your First Trade, Done Right", "zh-Hant": "第一筆交易做對", "zh-Hans": "第一笔交易做对", th: "เทรดแรกให้ถูกทาง", lessons: 20 },
 ] as const;
 
 export type TrackId = (typeof TRACKS)[number]["id"];
 
-export const LADDER_TRACKS: TrackId[] = ["foundations", "statements", "first-trade"];
+export const LADDER_TRACKS: TrackId[] = ["foundations", "statements"];
 
 export const MICRO_TAKEAWAYS = {
   en: [

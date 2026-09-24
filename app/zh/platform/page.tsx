@@ -3,28 +3,26 @@ import { homeScreens, marketScreens } from "@/lib/site";
 
 export const metadata = {
   title: "平台 | NeuralFin",
-  description: "NeuralFin 平台连接社交发现、AI 学习、社区信号与交易就绪的行动路径。",
+  description: "NeuralFin 平台连接社交发现、AI 学习与社区信号。",
   openGraph: {
     title: "平台 | NeuralFin",
-    description: "面向刷屏一代的消费金融界面，连接社交发现、AI 学习与市场行动。",
+    description: "面向刷屏一代的消费金融界面，连接社交发现与 AI 学习。",
   },
   twitter: {
     title: "平台 | NeuralFin",
-    description: "面向刷屏一代的消费金融界面，连接社交发现、AI 学习与市场行动。",
+    description: "面向刷屏一代的消费金融界面，连接社交发现与 AI 学习。",
   },
 };
 
 const pillars = [
   ["内容优先的投资入口", "关注专业人士与机构观点，高效吸收高信号金融内容。"],
   ["社区驱动的学习", "让投资学习从孤立行为变成协作式理解与讨论。"],
-  ["无缝走向行动", "当用户形成判断后，可顺畅进入交易与执行场景。"],
 ] as const;
 
 const journeys = [
   ["刷屏", "日常移动端注意力成为金融学习界面。"],
   ["学习", "AI 工具将市场内容压缩为可理解的金融教育。"],
   ["讨论", "社区洞察帮助用户比较观点、理解风险。"],
-  ["行动", "接入受监管交易基础设施，完成从洞察到行动的闭环。"],
 ] as const;
 
 export default function PlatformZhPage() {
@@ -42,7 +40,7 @@ export default function PlatformZhPage() {
           <div className="section-head">
             <div>
               <div className="section-label">产品界面</div>
-              <h2>一个面向发现、教育与市场行动的 AI 原生移动闭环。</h2>
+              <h2>一个面向发现与教育的 AI 原生移动闭环。</h2>
             </div>
             <p className="section-copy">平台围绕用户已经形成的行为设计：刷屏、关注、讨论、收藏，并在形成判断时进入行动。</p>
           </div>

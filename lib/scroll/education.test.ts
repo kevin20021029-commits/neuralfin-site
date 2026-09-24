@@ -30,8 +30,7 @@ test("lesson yield recomputes for common slider values", () => {
 test("course duration is paced by the flip commitment, not the slider", () => {
   assert.equal(getDaysToFinishTrack("foundations"), 20); // 40 lessons x 5 min / 10 min per day
   assert.equal(getDaysToFinishTrack("statements"), 14);
-  assert.equal(getDaysToFinishTrack("first-trade"), 10);
-  assert.equal(getLadderTotalDays(), 44);
+  assert.equal(getLadderTotalDays(), 34);
   assert.equal(FLIP_LESSONS_PER_DAY, 2);
 });
 
@@ -39,7 +38,7 @@ test("course duration is paced by the flip commitment, not the slider", () => {
 // captions are distinct rather than a frozen Week 1 / Month 1 / Month 6.
 test("ladder rung captions derive from the schedule and stay distinct", () => {
   const labels = getLadderSchedule().map((rung) => formatRungLabel(rung.days, "en"));
-  assert.deepEqual(labels, ["Week 3", "Week 5", "Week 7"]);
+  assert.deepEqual(labels, ["Week 3", "Week 5"]);
   assert.equal(new Set(labels).size, labels.length);
   assert.equal(formatRungLabel(20, "zh-Hant"), "\u7b2c3\u9031");
   assert.equal(formatRungLabel(90, "en"), "Month 3");
@@ -60,11 +59,11 @@ test("milestone date follows the ladder schedule, not a hardcoded year", () => {
   const milestone = getMilestoneDate(from);
 
   assert.equal(FLIP_MINUTES_PER_DAY, 10);
-  // 2026-07-28 + 44 days. Previously a hardcoded +365 that ignored the
+  // 2026-07-28 + 34 days. Previously a hardcoded +365 that ignored the
   // schedule entirely and printed "By July 2027" beside "in under a week".
-  assert.equal(formatMilestoneDate(milestone, "en"), "September 2026");
-  assert.equal(formatMilestoneDate(milestone, "zh-Hant"), "2026年9月");
-  assert.equal(formatMilestoneDate(milestone, "zh-Hans"), "2026年9月");
+  assert.equal(formatMilestoneDate(milestone, "en"), "August 2026");
+  assert.equal(formatMilestoneDate(milestone, "zh-Hant"), "2026年8月");
+  assert.equal(formatMilestoneDate(milestone, "zh-Hans"), "2026年8月");
 });
 
 test("education output includes personalized card line", () => {
@@ -74,7 +73,7 @@ test("education output includes personalized card line", () => {
   assert.equal(output.finishPhrase, "in 20 days");
   // A2: the card line sits beside "Flipping 10 min/day" so it must describe
   // THAT input — not the user's entire scroll time.
-  assert.equal(output.cardLine, "2 lessons/day · course done by September 2026");
+  assert.equal(output.cardLine, "2 lessons/day · course done by August 2026");
 });
 
 // A1 done-when: every on-screen duration agrees across the slider range.
@@ -82,21 +81,18 @@ test("durations do not vary with the slider", () => {
   for (const hours of [0.5, 3.5, 12]) {
     const output = getEducationOutput(hours, "en", new Date("2026-07-28T12:00:00Z"));
     assert.equal(output.finishPhrase, "in 20 days");
-    assert.equal(output.milestoneLabel, "September 2026");
-    assert.equal(output.cardLine, "2 lessons/day · course done by September 2026");
+    assert.equal(output.milestoneLabel, "August 2026");
+    assert.equal(output.cardLine, "2 lessons/day · course done by August 2026");
   }
 });
 
 test("ladder track names come from config in all locales", () => {
   assert.equal(getTrackName("foundations", "en"), "Investing Foundations");
   assert.equal(getTrackName("statements", "en"), "Reading the Numbers");
-  assert.equal(getTrackName("first-trade", "en"), "Your First Trade, Done Right");
   assert.equal(getTrackName("foundations", "zh-Hant"), "投資基礎");
   assert.equal(getTrackName("statements", "zh-Hant"), "看懂財務數字");
-  assert.equal(getTrackName("first-trade", "zh-Hant"), "第一筆交易做對");
   assert.equal(getTrackName("foundations", "zh-Hans"), "投资基础");
   assert.equal(getTrackName("statements", "zh-Hans"), "看懂财务数字");
-  assert.equal(getTrackName("first-trade", "zh-Hans"), "第一笔交易做对");
 });
 
 test("micro-takeaway is deterministic for fixed dates and rotates", () => {
