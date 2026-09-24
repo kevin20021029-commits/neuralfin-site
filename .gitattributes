@@ -1,5 +1,14 @@
-# ★ 本件必须【逐字节】原样上线:源件是纯 CRLF 的 224843 B HTML,线上响应体的 sha256 被当作验收判据。
+# ★ 本件必须【逐字节】原样上线:源件是纯 CRLF 的 225615 B HTML,线上响应体的 sha256 被当作验收判据。
 # 本机 core.autocrlf=true 且仓库原先没有 .gitattributes ⇒ git add 会把 CRLF 折成 LF,提交字节 ≠ 源件字节
 # (实测:raw sha1 6e7ea2f8… ≠ filtered sha1 e1cd7993…;同尺子量纯 LF 的 vercel.json 两者相同)。
 # ⇒ 对该路径关掉一切行尾/编码转换,保证 盘上字节 == 仓库字节 == 线上字节。
+#
+# ★★ 判据换代记录（2026-09-24，本件加 ICP 备案页脚）—— 旧值作废，改用新值：
+#    旧 sha256 fbc7d4b7d163bec6ec1edc5587aa8e9f1810f14212f6643f82043298c78a3edf   224843 B   CR 430
+#    新 sha256 63bc522936d232efa01c84a27ab37118ecc10dc42483e0eb8fe41def1696aef7   225615 B   CR 434
+#  ★ 旧值即刻作废：拿它复算本件会对不上。那【不是】有人动过，是本件按计划换了代。
+#  ★ 历史存档 D:/tmp/tc-docs/_01a0ae47_pos_lubuds_body.bin（224843 B，即旧值那件）
+#    记录的是「那一刻线上是什么」，永远成立 —— 【判据作废 ≠ 存档作废】，一个字节都不许改。
+#  ★ 新旧差异已证明：diff 2 个 hunk、0 行被删被改、新增 4 行（3 行 CSS + 1 行 HTML 页脚）；
+#    把那 4 行切掉后【逐字节】还原旧件。
 public/lubuds.html -text
