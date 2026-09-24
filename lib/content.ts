@@ -15,7 +15,6 @@ export const content = {
     appStoreAlt: "Download on the App Store",
     googlePlayAlt: "Get it on Google Play",
     apkAlt: "Download APK",
-    launchApp: "Launch App",
     stats: [
       ["Consumer fintech", "Designed around daily mobile attention and social discovery."],
       ["AI-native layer", "Financial content, community, and market data in one loop."],
@@ -83,7 +82,6 @@ export const content = {
     appStoreAlt: "在 App Store 下载",
     googlePlayAlt: "在 Google Play 获取",
     apkAlt: "直接下载 APK",
-    launchApp: "启动应用",
     stats: [
       ["消费金融科技", "围绕移动端注意力与社交发现重新设计。"],
       ["AI 原生层", "将金融内容、社区与市场数据整合进同一个闭环。"],

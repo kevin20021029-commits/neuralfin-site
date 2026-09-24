@@ -37,7 +37,6 @@ export function NeuralFinLanding({ locale }: Props) {
               ))
             )}
             <a className="nav-link" href={t.localePath}>{t.localeLabel}</a>
-            <a className="nav-link nav-cta" href={appLinks.webApp} target="_blank" rel="noreferrer">{t.launchApp}</a>
           </div>
         </div>
       </nav>
@@ -71,9 +70,6 @@ export function NeuralFinLanding({ locale }: Props) {
                 </a>
                 <a className="launch-button" href={appLinks.apk} aria-label={t.apkAlt} target="_blank" rel="noreferrer" data-track-store="apk">
                   {t.apkAlt}
-                </a>
-                <a className="launch-button" href={appLinks.webApp} target="_blank" rel="noreferrer">
-                  {t.launchApp}
                 </a>
               </div>
               <div className="roadshow-row" aria-label="NeuralFin investment narrative">

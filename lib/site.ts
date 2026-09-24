@@ -26,7 +26,6 @@ export const appLinks = {
   appStore: "https://apps.apple.com/cn/app/neuralfin/id6751037382",
   googlePlay: "https://play.google.com/store/apps/details?id=com.dlzq.rongmai",
   apk: "https://cn-assets.neuralfin.dl-holdings.cn/prod/app/OFFICIAL_H5_CN.apk",
-  webApp: "http://web.neuralfin.ai/",
 } as const;
 
 // App Store links are storefront-scoped. The scroll calculator offers HK, SG
