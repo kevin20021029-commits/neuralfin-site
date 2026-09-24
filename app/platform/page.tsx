@@ -46,7 +46,11 @@ export default function PlatformPage() {
             </div>
             <div className="moving-gallery light-moving-gallery compact-product-gallery" aria-label="Animated NeuralFin product screenshots">
               <div className="gallery-track">
-                {[...homeScreens, ...marketScreens.slice(0, 4), ...homeScreens, ...marketScreens.slice(0, 4)].map((screen, index) => (
+                {/* Screenshot face (card 01a0d154): market screens 1/2/3 are pulled — 1 carries the
+                    IPO-subscription block, 2 the orange "交易" order button, 3 is an entire IPO list.
+                    Only market-screen-4 stays: it shows nothing beyond the bottom-nav tab, the same
+                    degree already accepted for homeScreens. */}
+                {[...homeScreens, marketScreens[3], ...homeScreens, marketScreens[3]].map((screen, index) => (
                   <figure key={`${screen}-${index}`}>
                     <img src={`/assets/${screen}`} alt="NeuralFin app screenshot" loading="lazy" />
                   </figure>

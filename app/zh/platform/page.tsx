@@ -55,7 +55,10 @@ export default function PlatformZhPage() {
             </div>
             <div className="moving-gallery light-moving-gallery compact-product-gallery" aria-label="NeuralFin 产品截图">
               <div className="gallery-track">
-                {[...homeScreens, ...marketScreens.slice(0, 4), ...homeScreens, ...marketScreens.slice(0, 4)].map((screen, index) => (
+                {/* 截图面（卡 01a0d154）：market 截图 1/2/3 下线 —— 1 含「新股中心」整块、
+                    2 含橙色「交易」下单按钮、3 整页就是打新列表；只留 market-screen-4，
+                    它除底导航页签外没有别的东西，与已接受的 homeScreens 同程度。 */}
+                {[...homeScreens, marketScreens[3], ...homeScreens, marketScreens[3]].map((screen, index) => (
                   <figure key={`${screen}-${index}`}>
                     <img src={`/assets/${screen}`} alt="NeuralFin 应用截图" loading="lazy" />
                   </figure>
