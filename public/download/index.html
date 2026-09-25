@@ -2,6 +2,7 @@
 <html lang="zh-CN" class="no-js">
 <head>
 <script>document.documentElement.className="js";</script>
+<script>if(/MicroMessenger|FBAN|FBAV|Instagram|Line\//i.test(navigator.userAgent))document.documentElement.className+=" inapp";</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>下载 NeuralFin — 财富源于认知</title>
@@ -252,6 +253,47 @@ footer .inner p.icp-line a:hover{color:var(--gold-2)}
   *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
   .js .reveal{opacity:1;transform:none}
 }
+
+/* ---------- 应用内浏览器(微信等)下载引导 ----------
+   全部规则默认不生效:非 .inapp 环境下既不占位也不拦截,渲染与改动前一致。 */
+.inapp-hint{
+  display:none;margin:18px auto 0;max-width:32em;
+  font-size:13.5px;line-height:1.75;color:var(--muted);
+}
+.inapp-hint b{color:var(--gold-2);font-weight:600}
+.inapp .inapp-hint{display:block}
+
+.inapp-tip{
+  position:fixed;inset:0;z-index:90;display:none;
+  background:rgba(6,5,3,.93);
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+}
+.inapp-tip.on{display:block}
+html.tip-open body{overflow:hidden}
+.inapp-tip-arrow{
+  position:absolute;top:14px;right:24px;
+  font-size:42px;line-height:1;color:var(--gold-2);
+  animation:tipNudge 1.15s var(--ease) infinite;
+}
+@keyframes tipNudge{
+  0%,100%{transform:translate(0,0)}
+  50%{transform:translate(5px,-5px)}
+}
+.inapp-tip-inner{
+  height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:0 26px;
+}
+.inapp-tip-title{margin:0;font-size:19px;font-weight:600}
+.inapp-tip-sub{margin:12px 0 0;font-size:14.5px;line-height:1.85;color:var(--muted)}
+.inapp-tip-title b,.inapp-tip-sub b{color:var(--gold-2);font-weight:600}
+.inapp-tip-close{
+  margin-top:28px;padding:13px 36px;border-radius:11px;
+  border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);
+  color:var(--text);font-family:inherit;font-size:15px;font-weight:600;
+  cursor:pointer;transition:background .25s var(--ease),border-color .25s var(--ease);
+}
+.inapp-tip-close:hover{background:rgba(212,179,106,.1);border-color:var(--line-hi)}
 </style>
 </head>
 <body>
@@ -292,6 +334,8 @@ footer .inner p.icp-line a:hover{color:var(--gold-2)}
             下载 iOS 版
           </a>
         </div>
+
+        <p class="inapp-hint">当前在应用内浏览器中,无法直接下载安装。请点右上角 <b>⋯</b>,选择「<b>在浏览器打开</b>」后再下载。</p>
 
       </div>
     </section>
@@ -338,6 +382,16 @@ footer .inner p.icp-line a:hover{color:var(--gold-2)}
     </div>
   </footer>
 
+</div>
+
+<!-- 应用内浏览器下载引导层:非 .inapp 下 display:none,不占位、不拦截 -->
+<div class="inapp-tip" id="inappTip" role="dialog" aria-modal="true" aria-label="在浏览器中打开">
+  <div class="inapp-tip-arrow" aria-hidden="true">↗</div>
+  <div class="inapp-tip-inner">
+    <p class="inapp-tip-title">请点右上角 <b>⋯</b></p>
+    <p class="inapp-tip-sub">选择「<b>在浏览器打开</b>」<br />即可正常下载安装</p>
+    <button class="inapp-tip-close" type="button" id="inappTipClose">我知道了</button>
+  </div>
 </div>
 
 <script>
@@ -443,6 +497,29 @@ footer .inner p.icp-line a:hover{color:var(--gold-2)}
     el.style.transitionDelay = Math.min(i, 3) * 70 + "ms";
     io.observe(el);
   });
+
+  /* ---------- 应用内浏览器(微信等)下载引导 ----------
+     仅 .inapp 下挂监听;否则本块整体不执行 ⇒ 普通浏览器的点击行为与改动前完全一致。 */
+  if (document.documentElement.className.indexOf("inapp") !== -1) {
+    var tip = document.getElementById("inappTip");
+    var actions = document.querySelector(".actions");
+    if (tip && actions) {
+      var closeTip = function () {
+        tip.classList.remove("on");
+        document.documentElement.classList.remove("tip-open");
+      };
+      var openTip = function (e) {
+        e.preventDefault();               // 应用内浏览器不跟随 itms-appss:// 与 .apk ⇒ 弹层是唯一反馈
+        tip.classList.add("on");
+        document.documentElement.classList.add("tip-open");
+      };
+      Array.prototype.forEach.call(actions.querySelectorAll("a"), function (a) {
+        a.addEventListener("click", openTip);
+      });
+      document.getElementById("inappTipClose").addEventListener("click", closeTip);
+      tip.addEventListener("click", function (e) { if (e.target === tip) closeTip(); });
+    }
+  }
 })();
 </script>
 
