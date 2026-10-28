@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/arti",
+      "destination": "https://neuralfin-arti.vercel.app/"
+    },
+    {
+      "source": "/arti/:path*",
+      "destination": "https://neuralfin-arti.vercel.app/:path*"
+    },
+    {
       "source": "/lubuds",
       "destination": "/lubuds.html"
     },
