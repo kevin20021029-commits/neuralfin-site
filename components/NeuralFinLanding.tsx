@@ -69,6 +69,9 @@ export function NeuralFinLanding({ locale }: Props) {
                 <a className="store-button" href={appLinks.googlePlay} aria-label={t.googlePlayAlt} target="_blank" rel="noreferrer" data-track-store="play">
                   <img src="/assets/google-play.svg" alt={t.googlePlayAlt} />
                 </a>
+                <a className="store-button" href={appLinks.androidApk} aria-label="Download Android APK" data-track-store="apk">
+                  <img src="/assets/android-apk.svg" alt="Download Android APK" />
+                </a>
                 <a className="launch-button" href={appLinks.webApp} target="_blank" rel="noreferrer">
                   {t.launchApp}
                 </a>

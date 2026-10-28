@@ -1,0 +1,11 @@
+<svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="0.5" y="0.5" width="119" height="39" rx="5.5" fill="black"/>
+<rect x="0.5" y="0.5" width="119" height="39" rx="5.5" stroke="#A6A6A6"/>
+<g fill="#3DDC84">
+<path d="M15.4 12.6 16.9 9.9a.45.45 0 0 1 .78 0l1.5 2.7a6.9 6.9 0 0 1 2.64 0l1.5-2.7a.45.45 0 0 1 .78 0l1.5 2.7A6.4 6.4 0 0 1 29 18.6H12a6.4 6.4 0 0 1 3.4-6Z"/>
+</g>
+<circle cx="16.6" cy="16.4" r=".95" fill="#000"/>
+<circle cx="24.4" cy="16.4" r=".95" fill="#000"/>
+<text x="43" y="15.6" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="5.4" letter-spacing="1.1">GET IT ON</text>
+<text x="43" y="29.6" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="bold" letter-spacing=".1">Android APK</text>
+</svg>
