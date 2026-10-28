@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/12/",
+      "destination": "/12/index.html"
+    },
+    {
+      "source": "/12",
+      "destination": "/12/index.html"
+    },
+    {
       "source": "/arti",
       "destination": "https://neuralfin-arti.vercel.app/"
     },
