@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/12/one/",
+      "destination": "/12/one/index.html"
+    },
+    {
+      "source": "/12/one",
+      "destination": "/12/one/index.html"
+    },
+    {
       "source": "/12/",
       "destination": "/12/index.html"
     },
