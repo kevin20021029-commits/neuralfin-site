@@ -216,7 +216,7 @@ window.NF_I18N = {
       "up.kicker": "System upgrade",
       "up.l1": "On December 7,",
       "up.l2": "trading, rebuilt.",
-      "up.body": "Quotes, orders, research and community in one app. What gets faster isn't just execution — it's the few seconds before you decide.",
+      "up.body": "Quotes, orders, research, community — one app. What really speeds up is the seconds before you buy.",
       "up.cdlabel": "Upgrades in",
       "up.cddone": "Upgrade complete",
       "cd.days": "Days",
