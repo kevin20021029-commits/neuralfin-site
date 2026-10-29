@@ -4,12 +4,13 @@
   --ink: #f2ecdd;
   --ink-2: #b7b1a4;
   --ink-3: #807c72;
+  --ink-body: #a9a399;
   --gold: #e0bf7a;
   --gold-hi: #f4e2bd;
   --line: rgba(224, 191, 122, 0.17);
   --line-soft: rgba(255, 255, 255, 0.07);
-  --serif: "Cormorant Garamond", "Noto Serif SC", "Noto Serif TC", "Songti SC", "STSong", serif;
-  --sans: "Noto Serif SC", "Noto Serif TC", "Songti SC", "STSong", serif;
+  --serif: "Cormorant Garamond", Georgia, "Noto Serif SC", "Noto Serif TC", "Songti SC", "STSong", "SimSun", serif;
+  --sans: "Noto Serif SC", "Noto Serif TC", "Songti SC", "STSong", "SimSun", serif;
   --mono: "SFMono-Regular", "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
   --pad: clamp(16px, 4vw, 56px);
 }
@@ -93,13 +94,13 @@ body::before {
 .nav-dl {
   display: flex; align-items: center; gap: 5px;
   height: 28px; padding: 0 11px; border-radius: 999px;
-  background: linear-gradient(100deg, #caa45b, #f4e2bd 48%, #d8b473 82%, #bc9752);
-  color: #19140a; font: 600 9.5px/1 var(--sans); letter-spacing: 0.02em;
+  background: transparent;
+  border: 1px solid rgba(224, 191, 122, 0.42);
+  color: var(--gold-hi); font: 500 9.5px/1 var(--sans); letter-spacing: 0.02em;
   white-space: nowrap; flex: none;
-  box-shadow: 0 4px 18px -6px rgba(224, 191, 122, 0.7);
-  transition: filter 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
-.nav-dl:hover { filter: brightness(1.07); transform: translateY(-1px); }
+.nav-dl:hover { background: rgba(224, 191, 122, 0.1); border-color: rgba(224, 191, 122, 0.68); transform: translateY(-1px); }
 .nav-dl svg { flex: none; }
 
 /* ---------- stage ---------- */
@@ -117,9 +118,9 @@ body::before {
 .hero-title {
   margin: 0;
   font-family: var(--serif);
-  font-weight: 300;
+  font-weight: 400;
   font-size: clamp(20px, 4vh, 34px);
-  line-height: 1.2;
+  line-height: 1.1;
   letter-spacing: 0.005em;
   white-space: nowrap;
 }
@@ -137,7 +138,7 @@ body::before {
   color: #17130a; font: 600 13px/1 var(--sans); letter-spacing: 0.03em;
   white-space: nowrap;
   align-self: flex-start;
-  box-shadow: 0 12px 34px -14px rgba(224, 191, 122, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), 0 6px 18px -14px rgba(0, 0, 0, 0.9);
   overflow: hidden;
   transition: transform 0.2s ease, filter 0.2s ease;
 }
@@ -236,8 +237,6 @@ body::before {
   transition: opacity 0.35s ease;
 }
 .card:hover::after { opacity: 1; }
-.card .expand { color: var(--ink-3); flex: none; opacity: 0.8; transition: color 0.25s ease, transform 0.25s ease; }
-.card:hover .expand { color: var(--gold); transform: translate(1px, -1px); }
 
 /* window chrome reused by the ARTi room */
 .win-brand { display: flex; align-items: center; gap: 6px; font: 500 10px/1 var(--sans); color: var(--ink-2); letter-spacing: 0.02em; min-width: 0; }
@@ -308,7 +307,6 @@ body::before {
   color: rgba(224, 191, 122, 0.82);
   white-space: nowrap;
 }
-.stop-k .expand { color: rgba(224, 191, 122, 0.55); }
 .stop-title {
   font: 400 clamp(16px, 2.1vh, 20px)/1.3 var(--serif);
   letter-spacing: 0.01em; color: var(--ink);
@@ -336,10 +334,11 @@ body::before {
   color: rgba(224, 191, 122, 0.7);
 }
 .stop-meta > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.stop-cd { display: flex; align-items: baseline; gap: 4px; flex: none; }
-.stop-cd em { font: 400 6.5px/1 var(--mono); font-style: normal; letter-spacing: 0.1em; color: rgba(224, 191, 122, 0.65); }
-.stop-cd b { font: 300 13px/1 var(--serif); color: var(--gold-hi); }
-.stop-cd i { font: 400 7px/1 var(--sans); font-style: normal; color: var(--ink-3); }
+.stop-cd { display: flex; align-items: baseline; gap: 6px; flex: none; }
+.stop-cd em { font: 400 9px/1 var(--mono); font-style: normal; letter-spacing: 0.08em; color: rgba(224, 191, 122, 0.72); }
+.stop-cd b { font: 400 15px/1 var(--serif); color: var(--gold-hi); font-variant-numeric: tabular-nums; }
+.stop-cd i { font: 400 9.5px/1 var(--sans); font-style: normal; color: var(--ink-body); }
+.cd-div { width: 1px; height: 11px; flex: none; align-self: center; background: rgba(224, 191, 122, 0.3); }
 
 /* previews keep the cards honest about what is inside */
 .stop-pv { display: none; }
@@ -498,13 +497,14 @@ body::before {
   flex: none;
   height: calc(32px + env(safe-area-inset-bottom, 0px));
   padding: 0 var(--pad) env(safe-area-inset-bottom, 0px);
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
   font: 400 8.5px/1 var(--mono); letter-spacing: 0.05em; color: rgba(128, 124, 114, 0.78);
   border-top: 1px solid rgba(255, 255, 255, 0.035);
   position: relative;
   z-index: 3;
 }
 .foot > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.foot-dot { flex: none; color: rgba(224, 191, 122, 0.45); }
 .foot-disc {
   appearance: none; border: 0; background: none; padding: 4px 0; cursor: pointer;
   font: inherit; color: var(--ink-3); letter-spacing: 0.05em;
@@ -578,7 +578,7 @@ body::before {
 .room-lede {
   margin: 0;
   font: 400 clamp(10px, 1.35vh, 11.5px)/1.75 var(--sans);
-  color: var(--ink-3);
+  color: var(--ink-body);
   max-width: 46ch;
 }
 .room-cta { margin-top: 2px; height: 42px; padding: 0 20px; border-radius: 999px; width: auto; }
@@ -609,7 +609,7 @@ body::before {
 }
 .landing-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .landing-h { margin: 2px 0 0; font: 400 clamp(18px, 2.4vh, 24px)/1.24 var(--serif); letter-spacing: 0.01em; color: var(--ink); }
-.landing-sub { margin: 0; font: 400 9.5px/1.55 var(--sans); color: var(--ink-3); }
+.landing-sub { margin: 0; font: 400 9.5px/1.55 var(--sans); color: var(--ink-body); }
 .landing-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 2px; }
 .chip {
   display: flex; align-items: center;
@@ -693,7 +693,7 @@ body::before {
 .pcard-badge.is-live { border-color: rgba(224, 191, 122, 0.4); color: var(--gold); }
 .pcard-main strong { font: 500 clamp(15px, 2.1vh, 20px)/1.25 var(--serif); letter-spacing: 0.01em; color: var(--ink); }
 .pcard-d {
-  font: 400 clamp(9.5px, 1.25vh, 11.5px)/1.45 var(--sans); color: var(--ink-3);
+  font: 400 clamp(9.5px, 1.25vh, 11.5px)/1.45 var(--sans); color: var(--ink-body);
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
 }
 .pcard-go { flex: none; font: 300 14px/1 var(--mono); color: var(--ink-3); padding-left: 2px; }
@@ -736,7 +736,7 @@ html[lang="zh-Hant"] .stop-cd b { font-weight: 400; }
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 26px 60px -34px rgba(224, 191, 122, 0.55);
 }
 .up-shot img { width: 100%; height: 100%; object-fit: cover; }
-.up-quote { margin: 0; text-align: right; font: 400 clamp(9.5px, 1.3vh, 12px)/1.4 var(--serif); color: var(--ink-3); letter-spacing: 0.02em; }
+.up-quote { margin: 0; text-align: right; font: 400 clamp(9.5px, 1.3vh, 12px)/1.4 var(--serif); color: var(--ink-body); letter-spacing: 0.02em; }
 
 .feats { list-style: none; margin: 0; padding: 0; width: 100%; display: flex; flex-direction: column; }
 .feats li {
@@ -755,7 +755,7 @@ html[lang="zh-Hant"] .stop-cd b { font-weight: 400; }
 }
 .feat-ico svg { width: 13px; height: 13px; }
 .feats b { font: 500 10.5px/1.3 var(--sans); color: var(--ink); }
-.feats li > span:not(.feat-ico) { font: 400 9px/1.45 var(--sans); color: var(--ink-3); }
+.feats li > span:not(.feat-ico) { font: 400 9px/1.45 var(--sans); color: var(--ink-body); }
 
 /* ---------- disclaimer modal ---------- */
 .disc {
@@ -789,7 +789,6 @@ html[lang="zh-Hant"] .stop-cd b { font-weight: 400; }
   .stop-title { font-size: clamp(17px, 2.4vh, 21px); }
   .stop-sub { font-size: 10px; line-height: 1.5; }
   .stop-go { display: grid; }
-  .stop-k .expand { display: none; }
   html[data-lang="en"] .stop-arti .stop-title { font-size: clamp(20px, 2.8vh, 24px); }
 }
 
@@ -803,6 +802,7 @@ html[lang="zh-Hant"] .stop-cd b { font-weight: 400; }
   .stop-meta { font-size: 9px; letter-spacing: 0.04em; }
   .stop { padding-right: 54px; }
   .stop-up .stop-cd em { display: none; }
+  .stop-up .stop-cd .cd-div { display: none; }
   .stop-arti .stop-title { font-size: clamp(24px, 3.5vh, 35px); }
   html[data-lang="en"] .stop-arti .stop-title { font-size: clamp(21px, 2.9vh, 25px); }
 
@@ -828,6 +828,11 @@ html[lang="zh-Hant"] .stop-cd b { font-weight: 400; }
 /* 360px 宽的英文机：升级卡文案多一行，正文回落到 11px 才放得下 */
 @media (max-width: 389px) {
   html[lang="en"] .stop-up .stop-sub { font-size: 11px; }
+  /* narrow EN: chips don't fit beside the countdown, show the date instead */
+  html[lang="en"] .stop-up .stop-meta > span:first-child { display: none; }
+  html[lang="en"] .stop-up .stop-meta { justify-content: flex-end; }
+  html[lang="en"] .stop-up .stop-cd em { display: block; }
+  html[lang="en"] .stop-up .stop-cd .cd-div { display: block; }
 }
 
 /* ---------- desktop ---------- */
@@ -840,8 +845,8 @@ html[lang="zh-Hant"] .stop-cd b { font-weight: 400; }
 
   .stage {
     display: grid;
-    grid-template-columns: minmax(300px, 42%) minmax(0, 1fr);
-    gap: clamp(28px, 4vw, 72px);
+    grid-template-columns: minmax(330px, 43%) minmax(0, 1fr);
+    gap: clamp(22px, 2.5vw, 48px);
     padding-bottom: 8px;
   }
   .app.is-open .stage { display: flex; flex-direction: column; }
@@ -850,8 +855,8 @@ html[lang="zh-Hant"] .stop-cd b { font-weight: 400; }
     justify-content: center; align-items: flex-start;
     padding: 0 0 2vh;
   }
-  .hero-title { font-size: clamp(28px, 3.9vw, 58px); line-height: 1.14; }
-  .dl-btn { height: 54px; margin: clamp(20px, 3vh, 34px) 0 0; padding: 0 30px; font-size: 15px; align-self: flex-start; }
+  .hero-title { font-size: clamp(28px, 3.9vw, 58px); line-height: 1.08; }
+  .dl-btn { height: 54px; margin: clamp(18px, 2.6vh, 30px) 0 0; padding: 0 30px; font-size: 15px; align-self: flex-start; }
 
   .stage { padding-top: 8px; }
   .map { padding-left: 50px; gap: 14px; }
@@ -867,6 +872,8 @@ html[lang="zh-Hant"] .stop-cd b { font-weight: 400; }
   .stop-num { left: -48px; width: 28px; height: 28px; font-size: 9.5px; }
   .stop-main { justify-content: center; gap: 7px; }
   .stop-k { font-size: 14.5px; gap: 9px; letter-spacing: 0.09em; }
+  html[lang="en"] .stop-k { font-family: var(--mono); font-size: 11.5px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
+  .stop-sub { -webkit-line-clamp: 3; }
   .stop-arti .stop-title { font-size: clamp(29px, 3.9vh, 40px); }
   .stop-tag { font-size: 10.5px; }
   .stop-n { font-size: 10px; }
