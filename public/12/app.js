@@ -22,7 +22,7 @@ const LANG_KEY = "nf-campaign-lang";
 const I18N = {
   "zh-Hans": {
     title: "NeuralFin · 懂自己，才敢投｜2027 投资前瞻",
-    desc: "2027 财运开局：ARTi 智能投研、NBTI 投资人格测试、八字财格，以及 12.07 交易系统升级。",
+    desc: "2027 财运开局：ARTi 智能投研、NBTI 投资人格测试、五行财格，以及 12.07 交易系统升级。",
     locale: "zh_CN",
     s: {
       "nav.download": "下载 App",
@@ -87,13 +87,13 @@ const I18N = {
       "play.nbti.desc": "16 种投资人格，测你在贪婪与恐惧之间的真实坐标。",
       "play.nbti.badge": "16 题 · 5 分钟",
       "play.nbti.cta": "开始测试",
-      "play.bazi.label": "八字财格",
-      "play.bazi.title": "八字测你的财运财格",
-      "play.bazi.desc": "排出四柱，看你的财从哪里来、该怎么守。信不信由你，看懂自己不吃亏。",
+      "play.bazi.label": "五行财格",
+      "play.bazi.title": "测你的财富人格",
+      "play.bazi.desc": "输入生辰排出十二宫：财帛、风险偏好、未来十年。51.8 万种生辰，归为五十种财格；只在你的手机上推算，不上传、不留存。",
       "play.bazi.badge": "即将上线",
       "play.bazi.badgeLive": "在线测算",
-      "play.bazi.cta": "测财运",
-      "play.toast": "八字财格即将上线，敬请期待。",
+      "play.bazi.cta": "看看我的财格",
+      "play.toast": "五行财格即将上线，敬请期待。",
 
       "year.kicker": "终点 · 2027",
       "year.l1": "2027 怎么投？",
@@ -102,7 +102,7 @@ const I18N = {
       "year.dl": "下载 App",
       "year.arti": "问 ARTi",
       "year.nbti": "测试你的投资人格",
-      "year.bazi": "测你的财运财格",
+      "year.bazi": "看看我的财格",
 
       "sticky.text": "2027 怎么投？先测再说。",
       "sticky.btn": "去测一测",
@@ -117,7 +117,7 @@ const I18N = {
 
   "zh-Hant": {
     title: "NeuralFin · 懂自己，才敢投｜2027 投資前瞻",
-    desc: "2027 財運開局：ARTi 智能投研、NBTI 投資人格測試、八字財格，以及 12.07 交易系統升級。",
+    desc: "2027 財運開局：ARTi 智能投研、NBTI 投資人格測試、五行財格，以及 12.07 交易系統升級。",
     locale: "zh_HK",
     s: {
       "nav.download": "下載 App",
@@ -182,13 +182,13 @@ const I18N = {
       "play.nbti.desc": "16 種投資人格，測你在貪婪與恐懼之間的真實座標。",
       "play.nbti.badge": "16 題 · 5 分鐘",
       "play.nbti.cta": "開始測試",
-      "play.bazi.label": "八字財格",
-      "play.bazi.title": "八字測你的財運財格",
-      "play.bazi.desc": "排出四柱，睇你嘅財從邊度嚟、應該點樣守。信唔信由你，睇懂自己唔會蝕。",
+      "play.bazi.label": "五行財格",
+      "play.bazi.title": "測你的財富人格",
+      "play.bazi.desc": "輸入生辰排出十二宮：財帛、風險偏好、未來十年。51.8 萬種生辰，歸為五十種財格；只喺你部手機度推算，唔上傳、唔保留。",
       "play.bazi.badge": "即將上線",
       "play.bazi.badgeLive": "線上測算",
-      "play.bazi.cta": "測財運",
-      "play.toast": "八字財格即將上線，敬請期待。",
+      "play.bazi.cta": "睇睇我嘅財格",
+      "play.toast": "五行財格即將上線，敬請期待。",
 
       "year.kicker": "終點 · 2027",
       "year.l1": "2027 怎麼投？",
@@ -197,7 +197,7 @@ const I18N = {
       "year.dl": "下載 App",
       "year.arti": "問 ARTi",
       "year.nbti": "測試你的投資人格",
-      "year.bazi": "測你的財運財格",
+      "year.bazi": "睇睇我嘅財格",
 
       "sticky.text": "2027 怎麼投？先測再說。",
       "sticky.btn": "去測一測",
@@ -212,7 +212,7 @@ const I18N = {
 
   en: {
     title: "NeuralFin · Know yourself. Then invest. | 2027 Outlook",
-    desc: "2027, your wealth opening move: ARTi research, the NBTI investor test, a Bazi wealth reading, and the 12.07 trading upgrade.",
+    desc: "2027, your wealth opening move: ARTi research, the NBTI investor test, a five-element wealth chart, and the 12.07 trading upgrade.",
     locale: "en_US",
     s: {
       "nav.download": "Get the app",
@@ -277,13 +277,13 @@ const I18N = {
       "play.nbti.desc": "Sixteen investor personalities. Your true position between greed and fear.",
       "play.nbti.badge": "16 Q · 5 MIN",
       "play.nbti.cta": "Take the test",
-      "play.bazi.label": "Bazi wealth reading",
-      "play.bazi.title": "Read your wealth chart",
-      "play.bazi.desc": "Four pillars, one reading: where your money comes from, and how to keep it. Believe it or not — knowing yourself costs nothing.",
+      "play.bazi.label": "Wealth in Five Elements",
+      "play.bazi.title": "Read your wealth personality",
+      "play.bazi.desc": "A twelve-palace reading: wealth palace, risk appetite, the next ten years. 518,400 charts, 50 types — calculated on your phone, never uploaded.",
       "play.bazi.badge": "COMING SOON",
       "play.bazi.badgeLive": "ONLINE",
-      "play.bazi.cta": "Read my chart",
-      "play.toast": "The Bazi reading is coming soon.",
+      "play.bazi.cta": "See my wealth type",
+      "play.toast": "The wealth chart is coming soon.",
 
       "year.kicker": "DESTINATION · 2027",
       "year.l1": "How do you invest in 2027?",
@@ -292,7 +292,7 @@ const I18N = {
       "year.dl": "Get the app",
       "year.arti": "Ask ARTi",
       "year.nbti": "Test your investor type",
-      "year.bazi": "Read my wealth chart",
+      "year.bazi": "See my wealth type",
 
       "sticky.text": "How will you invest in 2027?",
       "sticky.btn": "Start",
