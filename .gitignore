@@ -8,3 +8,5 @@ tsconfig.tsbuildinfo
 *.traineddata
 *-review-export.md
 BACKTESTING_RESULT_AND_FIX_SOLUTION.zip
+.vercel
+.env*
