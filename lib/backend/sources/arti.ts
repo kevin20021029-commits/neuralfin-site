@@ -268,6 +268,7 @@ export async function loadArti(range: RangeKey, now = Date.now()): Promise<Sourc
     notes: [
       truncated ? "事件量触顶 2 万行，数字已截断" : "",
       "ARTi 埋点自 2026-10-29 起才有数据，历史口径为空",
+      "ARTi 不记录 utm 参数，来源归因暂不可用（12/one 侧的点击仍可统计）",
     ].filter(Boolean),
   };
 }

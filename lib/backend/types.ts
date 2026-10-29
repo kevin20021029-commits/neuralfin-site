@@ -59,6 +59,15 @@ export type UserRow = {
 
 export type Breakdown = { key: string; label: string; count: number };
 
+/** Traffic that arrived from the 12/one campaign (utm_source=12one). */
+export type Attribution = {
+  label: string;
+  param: string;
+  visitors: number;
+  events: number;
+  note: string;
+};
+
 export type Kpi = {
   visitors: number;
   events: number;
@@ -89,6 +98,8 @@ export type SourcePayload = {
   health: { lastTs: string | null; ageSec: number | null; todayEvents: number; stale: boolean };
   /** True when the source has no telemetry yet — render an honest empty state. */
   instrumented: boolean;
+  /** Present when the source can attribute arrivals from /12/one. */
+  attribution?: Attribution;
   notes: string[];
 };
 

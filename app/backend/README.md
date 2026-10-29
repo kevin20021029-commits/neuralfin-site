@@ -66,8 +66,12 @@ NBTI 看板 API ─ /api/dash-login + /api/stats ──┤
 - 时间一律 Asia/Shanghai 自然日；`range=all` 取全量但受 2 万行上限约束。
 - 转化率分母是访客（会话），不是事件数。
 - **12/one 的注册/登录不可归属**：点击外链后身份分离，最后一步只能统计到「点击外链」。
+- **来源归因**：12/one 的三类外链都带 `utm_source=12one&utm_medium=h5&utm_campaign=2027`。
+  NBTI 与八字页把 URL 存进 `events.url`，后台按 `utm_source=12one` 捞回并按 `user_id`/IP（八字按会话）去重。
+  ARTi 不记录 utm，暂不可归因。
 - **NBTI 的时长**是主版本完成耗时分位数（P50/P75），不是逐会话时长。
-- **八字没有埋点**：页面只调 `/api/auth`，事件无法归属到本页，目前显示空状态。
+- **八字页已埋点**：`bazi_view` / `bazi_chart_generated` / `bazi_auth_login`，由 NBTIMVP16 的
+  `bazi/index.html` 内联脚本同源上报到 `/api/event`。
 - 接口进程内缓存 20s，页面自动刷新 30s。
 
 ## 环境变量

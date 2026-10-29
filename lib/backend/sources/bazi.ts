@@ -21,6 +21,7 @@ import type { Breakdown, DayPoint, DurationBucket, SourcePayload, UsageRow, User
 type Row = {
   ts: string;
   event_name: string;
+  url: string | null;
   lang: string | null;
   country: string | null;
   ua: string | null;
@@ -62,7 +63,7 @@ function shortId(sid: string | undefined): string {
 export async function loadBazi(range: RangeKey, now = Date.now()): Promise<SourcePayload> {
   const from = rangeStart(range, now);
   const params: Record<string, string> = {
-    select: "ts,event_name,lang,country,ua,params",
+    select: "ts,event_name,url,lang,country,ua,params",
     or: "(page.eq.bazi,event_name.like.bazi_*)",
     order: "ts.desc",
   };
@@ -94,6 +95,13 @@ export async function loadBazi(range: RangeKey, now = Date.now()): Promise<Sourc
       breakdowns: { lang: [], country: [], device: [] },
       health: { lastTs: null, ageSec: null, todayEvents: 0, stale: true },
       instrumented: false,
+      attribution: {
+        label: "来自 12/one",
+        param: "utm_source=12one",
+        visitors: 0,
+        events: 0,
+        note: "按会话去重；只算带 utm 打开 /bazi 的会话",
+      },
       notes: [
         "八字页已接入埋点，但窗口内还没有收到 bazi_* 事件",
         "第一次打开 /bazi 就会产生 bazi_view；生成命盘与登录成功会自动补齐漏斗",
@@ -177,6 +185,9 @@ export async function loadBazi(range: RangeKey, now = Date.now()): Promise<Sourc
 
   const usedSessions = all.filter((s) => s.used).length;
   const loginSessions = all.filter((s) => s.loggedIn).length;
+  const arrivalRows = rows.filter((r) => (r.url ?? "").includes("utm_source=12one"));
+  const arrivalSessions = new Set(arrivalRows.map((r) => r.params?.session_id || `anon-${r.ts}`));
+
   const chartSessions = new Set(
     rows
       .filter((r) => r.event_name === "bazi_chart_generated")
@@ -240,6 +251,13 @@ export async function loadBazi(range: RangeKey, now = Date.now()): Promise<Sourc
     },
     health: { lastTs, ageSec, todayEvents: perDay.get(today)?.events ?? 0, stale: ageSec === null ? true : ageSec > 6 * 3600 },
     instrumented: true,
+    attribution: {
+      label: "来自 12/one",
+      param: "utm_source=12one",
+      visitors: arrivalSessions.size,
+      events: arrivalRows.length,
+      note: "按会话去重；只算带 utm 打开 /bazi 的会话",
+    },
     notes,
   };
 }

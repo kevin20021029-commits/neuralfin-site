@@ -2,8 +2,9 @@
 // inherits the official 口径 (pure / real-human filtering) instead of
 // reimplementing it against raw events.
 
-import { dayAxis, deviceOf, LANG_LABEL, parseShanghai, pct, rangeDays, shanghaiDay, type RangeKey } from "../time";
+import { dayAxis, deviceOf, LANG_LABEL, parseShanghai, pct, rangeDays, rangeStart, shanghaiDay, type RangeKey } from "../time";
 import { RANGE_LABEL } from "../time";
+import { sbSelect } from "../supabase";
 import type { Breakdown, DayPoint, DurationStage, SourcePayload, UsageRow, UserRow } from "../types";
 
 const BASE = (process.env.NBTI_BASE ?? "https://nbti.neuralfin.ai").replace(/\/+$/, "");
@@ -120,14 +121,60 @@ function breakdown(record: Record<string, number>, n: number): Breakdown[] {
     .map(([key, count]) => ({ key, label: key, count }));
 }
 
+type CampaignRow = {
+  ts: string;
+  event_name: string;
+  url: string | null;
+  user_id: string | null;
+  ip: string | null;
+};
+
+async function loadCampaignArrivals(range: RangeKey, now: number): Promise<CampaignRow[]> {
+  const from = rangeStart(range, now);
+  const params: Record<string, string> = {
+    select: "ts,event_name,url,user_id,ip",
+    url: "like.*utm_source=12one*",
+    order: "ts.desc",
+  };
+  if (from) params.ts = `gte.${from.toISOString()}`;
+  try {
+    const { rows } = await sbSelect<CampaignRow>("events", params, 20000);
+    return rows;
+  } catch {
+    // Attribution is a nice-to-have: never take the whole tab down for it.
+    return [];
+  }
+}
+
 export async function loadNbti(range: RangeKey, now = Date.now()): Promise<SourcePayload> {
   const days = rangeDays(range) ?? 180;
-  const [stats, auth, times, recent] = await Promise.all([
+  const [stats, auth, times, recent, campaignRows] = await Promise.all([
     dash<StatsShape>(null, days),
     dash<AuthShape>("auth", days),
     dash<TimesShape>("times", days),
     dash<RecentShape>("recent", days),
+    loadCampaignArrivals(range, now),
   ]);
+
+  // Arrivals that still carry utm_source=12one in the URL, split away from the
+  // bazi page (same host, counted by its own source).
+  const arrivals = campaignRows.filter((row) => {
+    if (!row.url) return false;
+    try {
+      const url = new URL(row.url);
+      return /(^|\.)nbti\.neuralfin\.ai$/.test(url.hostname) && !url.pathname.startsWith("/bazi");
+    } catch {
+      return false;
+    }
+  });
+  const arrivalKeys = new Set(arrivals.map((row) => row.user_id || (row.ip ? `ip:${row.ip}` : "")).filter(Boolean));
+  const attribution = {
+    label: "来自 12/one",
+    param: "utm_source=12one",
+    visitors: arrivalKeys.size,
+    events: arrivals.length,
+    note: "按 user_id / IP 去重；只算带 utm 的 NBTI 页面事件",
+  };
 
   const funnel = stats.funnel ?? {};
   const pageViews = funnel.page_view ?? 0;
@@ -240,10 +287,12 @@ export async function loadNbti(range: RangeKey, now = Date.now()): Promise<Sourc
       stale: ageSec === null ? true : ageSec > 6 * 3600,
     },
     instrumented: true,
+    attribution,
     notes: [
       "数据来自 NBTI 官方 /api/stats，口径与 nbti 看板一致（纯净 / 完全真人）",
       `统计窗口 ${days} 天 · 注册 ${auth.kpi?.registered ?? 0} 人（含造号机 ${auth.kpi?.bot_registered ?? 0}）`,
       "完成时长取主版本分位数，非逐会话时长",
+      "来源归因只认 URL 里的 utm_source=12one，直接输域名进来不计",
     ],
   };
 }

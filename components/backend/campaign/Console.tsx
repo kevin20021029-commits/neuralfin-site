@@ -394,6 +394,20 @@ function SourceView({
         <Kpi label="时长 P50" value={k.durationP50} unit="s" sub={`样本 ${num(payload.duration.n)}`} />
       </div>
 
+      {payload.attribution && (
+        <div className="bk-attr">
+          <span className="bk-attr-label">{payload.attribution.label}</span>
+          <code>{payload.attribution.param}</code>
+          <span className="bk-attr-num">
+            <b>{num(payload.attribution.visitors)}</b> 人到达
+          </span>
+          <span className="bk-attr-num">
+            <b>{num(payload.attribution.events)}</b> 事件
+          </span>
+          <em>{payload.attribution.note}</em>
+        </div>
+      )}
+
       {!payload.instrumented && (
         <div className="bk-notice">
           <b>该端还没有埋点数据。</b> 下方为空状态；接入事件后自动填充。
