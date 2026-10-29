@@ -385,7 +385,11 @@ function SourceView({
         <Kpi label="访客 / 会话" value={k.visitors} sub="按会话去重" />
         <Kpi label="事件" value={k.events} sub={payload.rangeLabel} />
         <Kpi label="核心使用" value={k.core} sub={payload.src === "nbti" ? "开始测试次数" : `${share(k.core, k.visitors)}% 的访客`} />
-        <Kpi label="注册 / 登录" value={k.logins} sub={k.logins ? "可归属登录" : "该端不可归属"} />
+        <Kpi
+          label="注册 / 登录"
+          value={k.logins}
+          sub={k.logins ? "可归属登录" : payload.src === "onepage" ? "该端不可归属" : "窗口内无登录"}
+        />
         <Kpi label="转化率" value={k.conversion} unit="%" sub="登录 / 访客" />
         <Kpi label="时长 P50" value={k.durationP50} unit="s" sub={`样本 ${num(payload.duration.n)}`} />
       </div>
