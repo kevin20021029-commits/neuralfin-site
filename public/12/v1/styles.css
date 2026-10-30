@@ -799,6 +799,7 @@ html[lang="zh-Hant"] .stop-cd b { font-weight: 400; }
   .stop-sub { font-size: 11.5px; }
   .stop-up .stop-sub { -webkit-line-clamp: 3; }
   html[lang="en"] .stop-up .stop-sub { -webkit-line-clamp: 4; }
+  .stop-play .stop-sub { -webkit-line-clamp: 4; }
   .stop-meta { font-size: 9px; letter-spacing: 0.04em; }
   .stop { padding-right: 54px; }
   .stop-up .stop-cd em { display: none; }
@@ -874,6 +875,15 @@ html[lang="zh-Hant"] .stop-cd b { font-weight: 400; }
   .stop-k { font-size: 14.5px; gap: 9px; letter-spacing: 0.09em; }
   html[lang="en"] .stop-k { font-family: var(--mono); font-size: 11.5px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
   .stop-sub { -webkit-line-clamp: 3; }
+  .stop-play .stop-sub { -webkit-line-clamp: 5; }
+  @media (max-height: 840px) {
+    /* the play card now carries two sentences; buy back the 8px it needs */
+    .stop-main { gap: 5px; }
+    .stop-meta { margin-top: 1px; padding-top: 6px; }
+  }
+  @media (max-height: 800px) {
+    .stop { padding-top: 12px; padding-bottom: 12px; }
+  }
   .stop-arti .stop-title { font-size: clamp(29px, 3.9vh, 40px); }
   .stop-tag { font-size: 10.5px; }
   .stop-n { font-size: 10px; }
@@ -969,6 +979,7 @@ html[lang="zh-Hant"] .stop-cd b { font-weight: 400; }
   .stop-k { font-size: 8px; gap: 5px; }
   .stop-title { font-size: 14px; }
   .stop-sub { font-size: 8px; line-height: 1.4; -webkit-line-clamp: 1; }
+  .stop-play .stop-sub { -webkit-line-clamp: 3; }
 
   .room { padding-top: 24px; }
   .room-grid { gap: 8px; }
