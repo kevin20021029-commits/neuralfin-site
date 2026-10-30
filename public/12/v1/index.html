@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="zh-Hans" data-lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>以 AI 为镜，明投资得失｜NeuralFin</title>
+  <meta name="description" content="ARTi 九个分析师交叉验证一只股票，NBTI 和五行财格测你是什么投资者，12.07 交易系统升级。免费下载 NeuralFin。" />
+  <meta name="theme-color" content="#070907" />
+  <meta property="og:title" content="以 AI 为镜，明投资得失｜NeuralFin" />
+  <meta property="og:description" content="ARTi 九个分析师交叉验证一只股票，NBTI 和五行财格测你是什么投资者，12.07 交易系统升级。免费下载 NeuralFin。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://www.neuralfin.ai/12/assets/upgrade.jpg" />
+  <link rel="icon" href="/12/assets/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600&family=Noto+Serif+TC:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/12/v1/styles.css?v=20261030a" />
+</head>
+<body>
+<div class="app" id="app">
+  <canvas class="dust" id="dust" aria-hidden="true"></canvas>
+
+  <header class="nav">
+    <a class="brand" href="https://neuralfin.ai" target="_blank" rel="noopener" aria-label="NeuralFin">
+      <img class="brand-mark" src="/12/assets/mark.png" alt="" width="22" height="22" />
+      <img class="brand-word" src="/12/assets/word-white.png" alt="NeuralFin" />
+    </a>
+    <div class="nav-right">
+      <div class="langs" role="group" aria-label="Language">
+        <button type="button" data-lang="zh-Hans" class="is-on">简</button>
+        <button type="button" data-lang="zh-Hant">繁</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+      <a class="nav-dl" href="https://neuralfin.ai" target="_blank" rel="noopener">
+        <svg viewBox="0 0 20 20" width="13" height="13" aria-hidden="true"><path d="M10 2.5v9m0 0l3.4-3.4M10 11.5L6.6 8.1M4 13.5v2.2c0 .7.5 1.3 1.2 1.3h9.6c.7 0 1.2-.6 1.2-1.3v-2.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-i18n="year.dl">下载 App</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="stage" id="stage">
+
+    <section class="hero" id="hero">
+      <h1 class="hero-title">
+        <span class="hl"><span data-i18n="play.l1">以 AI 为镜</span></span>
+        <span class="hl"><span class="gold" data-i18n="play.l2">明投资得失</span></span>
+      </h1>
+      <a class="dl-btn" href="https://neuralfin.ai" target="_blank" rel="noopener">
+        <span data-i18n="hero.dl">下载 NeuralFin 2027 财运开局</span>
+        <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 2.5v9m0 0l3.4-3.4M10 11.5L6.6 8.1M4 13.5v2.2c0 .7.5 1.3 1.2 1.3h9.6c.7 0 1.2-.6 1.2-1.3v-2.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </section>
+
+    <div class="panel" id="panel">
+      <div class="aura" aria-hidden="true"></div>
+
+      <div class="map" id="map">
+        <button class="card stop stop-arti" type="button" data-room="arti" aria-expanded="false" aria-controls="room-arti">
+          <span class="stop-num" aria-hidden="true">01</span>
+          <span class="stop-main">
+            <span class="stop-k">
+              <span data-i18n="arti.kicker">AI 智能投研</span>
+            </span>
+            <span class="stop-title" data-i18n="arti.mock.title">和 NeuralFin 聊一只股票</span>
+            <span class="stop-sub" data-i18n="arti.mock.sub">ARTi 研究引擎现场出报告。行情、估值、事件，一次说清。</span>
+            <span class="stop-meta"><span data-i18n="stop.arti.meta">行情 · 估值 · 事件 · 财报</span></span>
+          </span>
+          <span class="stop-go" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5.2 10.8 10.8 5.2M6 5.2h4.8V10" /></svg>
+          </span>
+          <span class="stop-pv" aria-hidden="true">
+            <span class="pv pv-arti">
+              <span class="pv-top"><i></i>NEURALFIN <em>ARTi</em></span>
+              <span class="pv-h" data-i18n="arti.mock.title">和 NeuralFin 聊一只股票</span>
+              <span class="pv-chips"><i>9988.HK</i><i>AAPL</i><i>NVDA</i><i>0700.HK</i></span>
+              <span class="pv-field"><span data-i18n="arti.mock.ph">问一只股票，例如 AAPL 现在贵不贵</span><b>↑</b></span>
+            </span>
+          </span>
+        </button>
+
+        <button class="card stop stop-play" type="button" data-room="play" aria-expanded="false" aria-controls="room-play">
+          <span class="stop-num" aria-hidden="true">02</span>
+          <span class="stop-main">
+            <span class="stop-k">
+              <span data-i18n="play.kicker">趣玩投资</span>
+            </span>
+            <span class="stop-title" data-i18n="tile.play.h">NBTI · 五行财格</span>
+            <span class="stop-sub" data-i18n="play.body">两个小测试，不能保证你赚钱。但至少能让你知道，自己是哪一种人。</span>
+            <span class="stop-meta"><span data-i18n="stop.play.meta">人格 · 财格 · 财运</span></span>
+          </span>
+          <span class="stop-go" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5.2 10.8 10.8 5.2M6 5.2h4.8V10" /></svg>
+          </span>
+          <span class="stop-pv" aria-hidden="true">
+            <span class="pv pv-play">
+              <span class="pv-tile">
+                <img src="/12/assets/nbti.jpg" alt="" loading="lazy" />
+                <i data-i18n="play.nbti.badge">16 题 · 5 分钟</i>
+              </span>
+              <span class="pv-tile pv-bazi">
+                <span class="pv-seal"><b>五</b><b>行</b></span>
+                <i data-i18n="play.bazi.badgeLive">在线测算</i>
+              </span>
+            </span>
+          </span>
+        </button>
+
+        <button class="card stop stop-up" type="button" data-room="up" aria-expanded="false" aria-controls="room-up">
+          <span class="stop-num" aria-hidden="true">03</span>
+          <span class="stop-main">
+            <span class="stop-k">
+              <span data-i18n="up.kicker">系统升级</span>
+            </span>
+            <span class="stop-title"><span data-i18n="up.l1">12 月 7 日</span><span class="gold" data-i18n="up.l2"> 交易系统升级</span></span>
+            <span class="stop-sub" data-i18n="up.body">行情、下单、研报、社区，收进同一个 App。快的不只是成交速度，是你按下买入前那几秒。</span>
+            <span class="stop-meta">
+              <span data-i18n="stop.up.meta">行情 · 研报 · 社区</span>
+              <span class="stop-cd"><em>12.07</em><span class="cd-div" aria-hidden="true"></span><b data-cd="d">--</b><i data-i18n="cd.days">天</i></span>
+            </span>
+          </span>
+          <span class="stop-go" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5.2 10.8 10.8 5.2M6 5.2h4.8V10" /></svg>
+          </span>
+          <span class="stop-pv" aria-hidden="true">
+            <span class="pv pv-up"><img src="/12/assets/upgrade.jpg" alt="" loading="lazy" /></span>
+          </span>
+        </button>
+      </div>
+
+      <article class="room" id="room-arti" data-room="arti" role="region" aria-labelledby="h-arti" tabindex="-1">
+        <span class="room-ghost" aria-hidden="true">01</span>
+        <button class="room-x" type="button" data-close aria-label="关闭">
+          <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+        <div class="room-grid">
+          <div class="room-main">
+            <header class="room-head">
+              <div class="stop"><span class="stop-n">01</span><span class="stop-tag" data-i18n="arti.kicker">AI 智能投研</span></div>
+              <h2 id="h-arti"><span data-i18n="arti.l1">以 ARTi 为引擎 </span><span class="gold" data-i18n="arti.l2">重新定义投研</span></h2>
+            </header>
+            <p class="room-lede" data-i18n="arti.body">NeuralFin 推出 AI 智能投研平台。九个分析师各自出结论，再交叉验证——分歧不藏，错的那次也留着。</p>
+            <a class="btn btn-gold room-cta" href="https://neuralfin.ai/arti?utm_source=12v1&utm_medium=h5&utm_campaign=2027" target="_blank" rel="noopener">
+              <span data-i18n="arti.cta">问 ARTi</span><span class="arr" aria-hidden="true">→</span>
+            </a>
+          </div>
+          <div class="room-side">
+            <div class="landing">
+              <div class="landing-top">
+                <span class="win-brand"><img src="/12/assets/mark.png" alt="" /> NeuralFin <em>ARTi</em></span>
+                <span class="win-live"><i></i><span data-i18n="arti.mock.live">在线</span></span>
+              </div>
+              <h3 class="landing-h" data-i18n="arti.mock.title">和 NeuralFin 聊一只股票</h3>
+              <p class="landing-sub" data-i18n="arti.mock.sub">ARTi 研究引擎现场出报告。行情、估值、事件，一次说清。</p>
+              <div class="chips landing-chips">
+                <a class="chip" href="https://neuralfin.ai/arti?utm_source=12v1&utm_medium=h5&utm_campaign=2027" target="_blank" rel="noopener" data-i18n="arti.mock.q1">9988.HK 现在有哪些风险</a>
+                <a class="chip" href="https://neuralfin.ai/arti?utm_source=12v1&utm_medium=h5&utm_campaign=2027" target="_blank" rel="noopener" data-i18n="arti.mock.q2">帮我体检 AAPL</a>
+                <a class="chip" href="https://neuralfin.ai/arti?utm_source=12v1&utm_medium=h5&utm_campaign=2027" target="_blank" rel="noopener" data-i18n="arti.mock.q3">NVDA 的估值贵不贵</a>
+                <a class="chip" href="https://neuralfin.ai/arti?utm_source=12v1&utm_medium=h5&utm_campaign=2027" target="_blank" rel="noopener" data-i18n="arti.mock.q4">0700.HK 值不值得拿</a>
+              </div>
+              <a class="landing-input" href="https://neuralfin.ai/arti?utm_source=12v1&utm_medium=h5&utm_campaign=2027" target="_blank" rel="noopener">
+                <span data-i18n="arti.mock.ph">问一只股票，例如 AAPL 现在贵不贵</span>
+                <b aria-hidden="true">↑</b>
+              </a>
+              <p class="room-note" data-i18n="arti.mock.note">教育性信息整理，不构成投资建议。</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="room" id="room-play" data-room="play" role="region" aria-labelledby="h-play" tabindex="-1">
+        <span class="room-ghost" aria-hidden="true">02</span>
+        <button class="room-x" type="button" data-close aria-label="关闭">
+          <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+        <div class="room-grid">
+          <div class="room-main">
+            <header class="room-head">
+              <div class="stop"><span class="stop-n">02</span><span class="stop-tag" data-i18n="play.kicker">趣玩投资</span></div>
+              <h2 id="h-play" class="h2-slogan"><span data-i18n="hero.l1">懂自己 </span><span class="gold" data-i18n="hero.l2">才敢投</span></h2>
+            </header>
+            <p class="room-lede" data-i18n="play.body">两个小测试，不能保证你赚钱。但至少能让你知道，自己是哪一种人。</p>
+          </div>
+          <div class="room-side play-cards">
+            <a class="pcard" href="https://nbti.neuralfin.ai/?utm_source=12v1&utm_medium=h5&utm_campaign=2027" target="_blank" rel="noopener">
+              <span class="pcard-art"><img src="/12/assets/nbti.jpg" alt="" loading="lazy" /></span>
+              <span class="pcard-main">
+                <span class="pcard-k"><span data-i18n="play.nbti.label">人格测试</span><i class="pcard-badge" data-i18n="play.nbti.badge">16 题 · 5 分钟</i></span>
+                <strong data-i18n="play.nbti.title">NBTI 投资人格测试</strong>
+                <span class="pcard-d" data-i18n="play.nbti.desc">16 种投资人格，测你在贪婪与恐惧之间的真实坐标。</span>
+              </span>
+              <span class="pcard-go" aria-hidden="true">→</span>
+            </a>
+            <a class="pcard" href="https://nbti.neuralfin.ai/bazi?utm_source=12v1&utm_medium=h5&utm_campaign=2027" target="_blank" rel="noopener">
+              <span class="pcard-art pcard-art-bazi" aria-hidden="true"><span>五</span><span>行</span></span>
+              <span class="pcard-main">
+                <span class="pcard-k"><span data-i18n="play.bazi.label">五行财格</span><i class="pcard-badge is-live" data-i18n="play.bazi.badgeLive">在线测算</i></span>
+                <strong data-i18n="play.bazi.title">测你的财富人格</strong>
+                <span class="pcard-d" data-i18n="play.bazi.desc">排出四柱，看你的财从哪里来、该怎么守。信不信由你，看懂自己不吃亏。</span>
+              </span>
+              <span class="pcard-go" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <article class="room" id="room-up" data-room="up" role="region" aria-labelledby="h-up" tabindex="-1">
+        <span class="room-ghost" aria-hidden="true">03</span>
+        <button class="room-x" type="button" data-close aria-label="关闭">
+          <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+        <div class="room-grid">
+          <div class="room-main">
+            <header class="room-head">
+              <div class="stop"><span class="stop-n">03</span><span class="stop-tag" data-i18n="up.kicker">系统升级</span></div>
+              <h2 id="h-up"><span data-i18n="up.l1">12 月 7 日</span><span class="gold" data-i18n="up.l2"> 交易系统升级</span></h2>
+            </header>
+            <p class="room-lede" data-i18n="up.body">行情、下单、研报、社区，收进同一个 App。快的不只是成交速度，是你按下买入前那几秒。</p>
+            <ul class="feats">
+              <li>
+                <span class="feat-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 6-7"/><path d="M14 8h4v4"/><path d="M3 21h18"/></svg></span>
+                <b data-i18n="up.f1t">即时行情交易</b><span data-i18n="up.f1d">美股、港股、A股、日股和加密资产，一个界面看全。</span>
+              </li>
+              <li>
+                <span class="feat-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 16h5"/></svg></span>
+                <b data-i18n="up.f2t">AI 投资研报</b><span data-i18n="up.f2d">多维分析，机构级洞察，一起讲清楚。</span>
+              </li>
+              <li>
+                <span class="feat-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="3"/><path d="M3.5 20c.6-3.1 2.8-5 5.5-5s4.9 1.9 5.5 5"/><circle cx="17" cy="10" r="2.4"/><path d="M15.5 15.2c2.4.2 4.2 2 4.7 4.6"/></svg></span>
+                <b data-i18n="up.f3t">投资社区交流</b><span data-i18n="up.f3d">分享观点，讨论策略，和认真看盘的人待在一起。</span>
+              </li>
+            </ul>
+          </div>
+          <div class="room-side up-side">
+            <div class="cd">
+              <div class="cd-top"><span data-i18n="up.cdlabel">距离升级</span><b>2026.12.07</b></div>
+              <div class="cd-units">
+                <span class="cd-u"><b data-cd="d">--</b><em data-i18n="cd.days">天</em></span>
+                <span class="cd-u"><b data-cd="h">--</b><em data-i18n="cd.hours">时</em></span>
+                <span class="cd-u"><b data-cd="m">--</b><em data-i18n="cd.mins">分</em></span>
+                <span class="cd-u"><b data-cd="s">--</b><em data-i18n="cd.secs">秒</em></span>
+              </div>
+            </div>
+            <figure class="up-shot">
+              <img src="/12/assets/upgrade.jpg" alt="" loading="lazy" />
+            </figure>
+            <p class="up-quote" data-i18n="up.quote">不止交易，更懂投资判断。</p>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </main>
+
+  <nav class="rail" id="rail" role="group" aria-label="Stations">
+    <button type="button" data-room="arti" aria-controls="room-arti" aria-pressed="true"><b>01</b><span>ARTi</span></button>
+    <button type="button" data-room="play" aria-controls="room-play" aria-pressed="false"><b>02</b><span data-i18n="rail.play">趣玩</span></button>
+    <button type="button" data-room="up" aria-controls="room-up" aria-pressed="false"><b>03</b><span data-i18n="rail.up">升级</span></button>
+  </nav>
+
+  <footer class="foot">
+    <span data-i18n="foot.rights">© 2026 NeuralFin. 保留所有权利。</span>
+    <span class="foot-dot" aria-hidden="true">·</span>
+    <button class="foot-disc" id="discBtn" type="button" data-i18n="disc.btn">免责声明</button>
+  </footer>
+
+</div>
+
+<div class="disc" id="disc" hidden>
+  <div class="disc-box" role="dialog" aria-modal="true" aria-labelledby="discTitle">
+    <button class="disc-x" id="discClose" type="button" aria-label="关闭">
+      <svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+    <h2 id="discTitle" data-i18n="disc.btn">免责声明</h2>
+    <p data-i18n="foot.disc">本页面内容为教育性信息整理与风险提示，不构成任何证券、虚拟资产或其他投资产品的要约、招揽或投资建议。市场有风险，投资需谨慎。交易服务由香港证监会持牌机构德林证券提供；虚拟资产服务仅限专业投资者。</p>
+  </div>
+</div>
+
+<script src="/12/v1/i18n.js?v=20261030a"></script>
+<script src="/12/v1/app.js?v=20261030a"></script>
+<script src="/12/v1/track-2027.js?v=20261030a" defer></script>
+</body>
+</html>

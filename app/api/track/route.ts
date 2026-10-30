@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CAMPAIGN_EVENTS, ROOMS, TARGETS, clip, insertCampaignEvent, supabaseConfigured } from "@/lib/campaign/events";
+import { CAMPAIGN_EVENTS, PAGES, ROOMS, TARGETS, clip, insertCampaignEvent, supabaseConfigured } from "@/lib/campaign/events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
   try {
     await insertCampaignEvent({
       event_name: eventName as (typeof CAMPAIGN_EVENTS)[number],
-      page: "12-one",
+      page: (PAGES as readonly string[]).includes(String(body.page)) ? String(body.page) : "12-one",
       lang: clip(body.lang, 16),
       url: clip(body.url, 500),
       ua: clip(request.headers.get("user-agent") ?? "", 300),

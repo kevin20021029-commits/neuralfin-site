@@ -12,10 +12,25 @@ export const CAMPAIGN_PREFIX = "nf2027_";
 export const CAMPAIGN_EVENTS = ["nf2027_view", "nf2027_room_open", "nf2027_cta_click"] as const;
 export type CampaignEventName = (typeof CAMPAIGN_EVENTS)[number];
 
-export const ROOMS = ["arti", "play", "up"] as const;
+export const ROOMS = [
+  "arti",
+  "play",
+  "up",
+  "feed",
+  "ai",
+  "trade",
+  "nbti",
+  "bazi",
+  "download",
+  "ziwei",
+  "upgrade",
+  "web",
+] as const;
 export type RoomKey = (typeof ROOMS)[number];
 
 export const TARGETS = ["arti", "bazi", "nbti", "download", "home", "other"] as const;
+
+export const PAGES = ["12-one", "12-two", "12-v1"] as const;
 export type TargetKey = (typeof TARGETS)[number];
 
 const SUPABASE_URL = (process.env.SUPABASE_URL ?? "").replace(/\/+$/, "");
