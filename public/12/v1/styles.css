@@ -783,8 +783,25 @@ html[lang="zh-Hant"] .stop-cd b { font-weight: 400; }
 
 /* ---------- phones / tablets: stacked stations ---------- */
 @media (max-width: 899px) {
+  /* The three cards used to be forced into equal thirds of the viewport. On a
+     phone the browser chrome eats ~190px, so the row was shorter than its own
+     copy and cards overlapped. Let the stage scroll instead of squeezing. */
+  .stage {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .stage::-webkit-scrollbar { display: none; }
+  .panel { flex: none; }
+  .map { height: auto; grid-template-rows: none; align-content: start; }
+
+  /* rooms are children of .panel; when open they must fill the stage again */
+  .app.is-open .stage { overflow: hidden; }
+  .app.is-open .panel { flex: 1 1 auto; }
+
   .stop { align-items: stretch; padding: 15px 58px 15px 17px; }
-  .stop-main { height: 100%; justify-content: flex-start; }
+  .stop-main { justify-content: flex-start; }
   .stop-meta { margin-top: auto; font-size: 8px; }
   .stop-title { font-size: clamp(17px, 2.4vh, 21px); }
   .stop-sub { font-size: 10px; line-height: 1.5; }
@@ -876,6 +893,13 @@ html[lang="zh-Hant"] .stop-cd b { font-weight: 400; }
   html[lang="en"] .stop-k { font-family: var(--mono); font-size: 11.5px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
   .stop-sub { -webkit-line-clamp: 3; }
   .stop-play .stop-sub { -webkit-line-clamp: 5; }
+
+  @media (max-width: 1199px) {
+    /* below 1200 the card's preview column leaves ~220px for the copy and
+       clips it; drop the decoration, keep the text readable */
+    .stop { grid-template-columns: minmax(0, 1fr); }
+    .stop-pv { display: none; }
+  }
   @media (max-height: 840px) {
     /* the play card now carries two sentences; buy back the 8px it needs */
     .stop-main { gap: 5px; }
@@ -978,7 +1002,7 @@ html[lang="zh-Hant"] .stop-cd b { font-weight: 400; }
   .stop-main { gap: 3px; }
   .stop-k { font-size: 8px; gap: 5px; }
   .stop-title { font-size: 14px; }
-  .stop-sub { font-size: 8px; line-height: 1.4; -webkit-line-clamp: 1; }
+  .stop-sub { font-size: 8px; line-height: 1.4; -webkit-line-clamp: 3; }
   .stop-play .stop-sub { -webkit-line-clamp: 3; }
 
   .room { padding-top: 24px; }
